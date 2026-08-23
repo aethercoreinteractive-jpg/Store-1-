@@ -3,14 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Store Admin - Control Center</title>
+    <title>Store Front - Quick Order</title>
     <style>
         :root {
             --primary: #4f46e5;
             --primary-hover: #4338ca;
             --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
             --bg: #f8fafc;
             --card-bg: #ffffff;
             --text: #1e293b;
@@ -19,119 +17,61 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
-        body { background: var(--bg); color: var(--text); padding: 12px; padding-bottom: 50px; }
+        body { background: var(--bg); color: var(--text); padding: 16px; max-width: 600px; margin: 0 auto; padding-bottom: 60px; }
 
-        /* Login Screen */
-        #loginOverlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px);
-            display: flex; justify-content: center; align-items: center; z-index: 1000; padding: 20px;
-        }
-        .login-card {
-            background: var(--card-bg); width: 100%; max-width: 380px; padding: 30px;
-            border-radius: 20px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); text-align: center;
-        }
-        .login-card h2 { margin-bottom: 20px; font-size: 1.5rem; color: var(--text); }
-        .login-card input { width: 100%; padding: 12px 16px; margin-bottom: 16px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; }
-        .login-card button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; }
-        .error-msg { color: var(--danger); font-size: 0.875rem; margin-bottom: 12px; display: none; }
+        header { background: var(--card-bg); padding: 20px; border-radius: 16px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); text-align: center; }
+        header h1 { font-size: 1.5rem; color: var(--text); }
+        header p { color: var(--text-light); font-size: 0.9rem; margin-top: 4px; }
 
-        /* Main Layout */
-        .container { max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
-        header { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 16px 20px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-        header h1 { font-size: 1.25rem; font-weight: 700; color: var(--text); }
+        .section-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 12px; color: var(--text); }
+
+        /* Product Grid */
+        .product-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 30px; }
+        .product-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
+        .product-img { width: 100%; height: 200px; object-fit: cover; background: #e2e8f0; }
+        .product-content { padding: 16px; display: flex; flex-direction: column; gap: 8px; flex-grow: 1; }
         
-        .card { background: var(--card-bg); padding: 20px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-        .card h2 { font-size: 1.1rem; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; color: var(--text); }
+        .category-tag { display: inline-block; background: #e0e7ff; color: var(--primary); font-size: 0.75rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; width: fit-content; }
+        .product-title { font-size: 1.1rem; font-weight: 700; color: var(--text); }
+        .product-desc { font-size: 0.85rem; color: var(--text-light); line-height: 1.4; }
+        .product-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 12px; }
+        .product-price { font-size: 1.1rem; font-weight: 700; color: var(--primary); }
 
-        /* Form Controls */
-        input, textarea, select { width: 100%; padding: 12px 14px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 0.95rem; background: #fff; }
-        textarea { resize: vertical; min-height: 80px; }
-        
-        .btn { width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 600; cursor: pointer; display: inline-flex; justify-content: center; align-items: center; gap: 8px; transition: opacity 0.2s; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: var(--primary-hover); }
-        .btn-success { background: var(--success); color: white; }
-        .btn-danger { background: var(--danger); color: white; }
-        .btn-secondary { background: #e2e8f0; color: var(--text); }
+        .btn { padding: 10px 16px; border: none; border-radius: 10px; font-size: 0.9rem; font-weight: 600; cursor: pointer; background: var(--primary); color: white; transition: background 0.2s; }
+        .btn:hover { background: var(--primary-hover); }
 
-        /* Product Mobile List Cards */
-        .product-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; background: #fafafa; }
-        .product-info h4 { font-size: 0.95rem; color: var(--text); }
-        .product-info p { font-size: 0.8rem; color: var(--text-light); margin-top: 2px; }
-        .category-tag { display: inline-block; background: #e0e7ff; color: var(--primary); font-size: 0.7rem; font-weight: 600; padding: 2px 6px; border-radius: 4px; margin-bottom: 4px; text-transform: uppercase; }
-        .product-actions { display: flex; gap: 6px; }
-        .product-actions button { padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; }
-
-        /* Orders Mobile Cards */
-        .order-card { background: #f8fafc; border: 1px solid var(--border); padding: 14px; border-radius: 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px; }
-        .order-header { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 1rem; }
-        .order-details { font-size: 0.85rem; color: var(--text-light); }
+        /* Active Orders Status Section */
+        .orders-section { background: var(--card-bg); border: 1px solid var(--border); padding: 20px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .customer-order-card { background: #f8fafc; border: 1px solid var(--border); padding: 12px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
         .badge { padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
         .badge-pending { background: #fef3c7; color: #d97706; }
         .badge-preparing { background: #e0e7ff; color: #4f46e5; }
         .badge-ready { background: #d1fae5; color: #059669; }
-
-        .form-row { display: flex; gap: 8px; }
     </style>
 </head>
 <body>
 
-    <!-- LOGIN SCREEN -->
-    <div id="loginOverlay">
-        <div class="login-card">
-            <h2>🔐 Admin Portal</h2>
-            <div id="loginError" class="error-msg">Incorrect Password</div>
-            <input type="password" id="adminPasswordInput" placeholder="Enter Admin Password">
-            <button class="btn btn-primary" onclick="verifyPassword()">Login</button>
+    <header>
+        <h1>🛍️ Store Front</h1>
+        <p>Browse items and place your quick orders below</p>
+    </header>
+
+    <div class="section-title">Available Products</div>
+    <div id="storeProductGrid" class="product-grid">
+        <p style="color: var(--text-light);">Loading products...</p>
+    </div>
+
+    <div class="orders-section">
+        <div class="section-title" style="margin-bottom: 12px;">📢 Live Order Trackers</div>
+        <div id="customerOrdersList">
+            <p style="color: var(--text-light); font-size: 0.85rem;">No active orders tracking.</p>
         </div>
     </div>
 
-    <!-- MAIN DASHBOARD -->
-    <div id="adminContent" class="container" style="display:none;">
-        <header>
-            <h1>⚡ Dashboard</h1>
-            <button class="btn btn-danger" style="width: auto; padding: 8px 14px; font-size: 0.85rem;" onclick="logoutAdmin()">Logout</button>
-        </header>
-
-        <!-- PRODUCT MANAGEMENT -->
-        <div class="card">
-            <h2>📦 Product Control</h2>
-            <input type="hidden" id="editProductId">
-            <input type="text" id="productName" placeholder="Product Name">
-            <input type="text" id="productCategory" placeholder="Category (e.g. Snacks, Drinks)">
-            <textarea id="productDesc" placeholder="Product Description"></textarea>
-            <input type="number" id="productPrice" placeholder="Price (₹)">
-            <input type="text" id="productImage" placeholder="Google Drive Image Link">
-            
-            <div class="form-row">
-                <button class="btn btn-primary" onclick="saveProduct()" id="saveBtn">Add Product</button>
-                <button class="btn btn-secondary" onclick="clearProductForm()" id="cancelEditBtn" style="display:none;">Cancel</button>
-            </div>
-
-            <h3 style="font-size: 0.95rem; margin: 20px 0 10px 0; color: var(--text-light);">Inventory Items</h3>
-            <div id="productListContainer">Loading inventory...</div>
-        </div>
-
-        <!-- ORDERS & QUEUE WORKFLOW -->
-        <div class="card">
-            <h2>🔥 Live Orders <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-light);">(Max 3 Preparing)</span></h2>
-            <div id="ordersContainer">Loading live orders...</div>
-        </div>
-
-        <!-- SETTINGS PANEL -->
-        <div class="card">
-            <h2>⚙️ Settings</h2>
-            <input type="password" id="currentPass" placeholder="Current Password">
-            <input type="password" id="newPass" placeholder="New Password (Min 4 chars)">
-            <button class="btn btn-secondary" onclick="changePassword()">Update Password</button>
-        </div>
-    </div>
-
-    <!-- Firebase Script Logic -->
+    <!-- Firebase SDK Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCevmUKn9jsh3VrttK8MAyXEO5JjaFOTyM",
@@ -146,190 +86,113 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- AUTHENTICATION ---
-        if (!localStorage.getItem("adminPassword")) {
-            localStorage.setItem("adminPassword", "Admin@123");
-        }
-
-        window.verifyPassword = function() {
-            const inputVal = document.getElementById('adminPasswordInput').value;
-            if (inputVal === localStorage.getItem("adminPassword")) {
-                document.getElementById('loginOverlay').style.display = 'none';
-                document.getElementById('adminContent').style.display = 'flex';
-                loadProducts();
-                initOrderListener();
-            } else {
-                document.getElementById('loginError').style.display = 'block';
+        // Helper function to convert standard Google Drive share links into clean direct image viewer links
+        function getDriveDirectUrl(url) {
+            if (!url) return "https://via.placeholder.com/400x200?text=No+Image+Provided";
+            
+            // Check if it's a standard Google Drive share link containing file ID
+            let match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+            if (match && match[1]) {
+                return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`; //
             }
-        }
-
-        window.logoutAdmin = function() {
-            document.getElementById('adminContent').style.display = 'none';
-            document.getElementById('loginOverlay').style.display = 'flex';
-            document.getElementById('adminPasswordInput').value = "";
-            document.getElementById('loginError').style.display = 'none';
-        }
-
-        window.changePassword = function() {
-            const currentInput = document.getElementById('currentPass').value;
-            const newInput = document.getElementById('newPass').value;
-            if (currentInput !== localStorage.getItem("adminPassword")) {
-                alert("Incorrect current password!");
-                return;
-            }
-            if (!newInput || newInput.length < 4) {
-                alert("Password must be at least 4 characters long.");
-                return;
-            }
-            localStorage.setItem("adminPassword", newInput);
-            alert("Password updated successfully!");
-            document.getElementById('currentPass').value = "";
-            document.getElementById('newPass').value = "";
-        }
-
-        // --- PRODUCT CRUD ---
-        window.saveProduct = async function() {
-            const id = document.getElementById('editProductId').value;
-            const name = document.getElementById('productName').value;
-            const category = document.getElementById('productCategory').value || 'General';
-            const description = document.getElementById('productDesc').value;
-            const price = document.getElementById('productPrice').value;
-            const image = document.getElementById('productImage').value;
-
-            if (!name || !price) {
-                alert("Please provide at least a Product Name and Price.");
-                return;
+            
+            // Check if it's already structured with an id parameter
+            let idParam = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+            if (idParam && idParam[1]) {
+                return `https://drive.google.com/thumbnail?id=${idParam[1]}&sz=w1000`; //
             }
 
+            // Fallback if user used a direct image link or external source link
+            return url;
+        }
+
+        // Load Products into Storefront Grid
+        async function loadStoreProducts() {
+            const grid = document.getElementById('storeProductGrid');
             try {
-                if (id) {
-                    await updateDoc(doc(db, "products", id), { name, category, description, price, image });
-                    alert("Product updated successfully!");
-                } else {
-                    await addDoc(collection(db, "products"), { name, category, description, price, image });
-                    alert("Product added successfully!");
-                }
-                clearProductForm();
-                loadProducts();
-            } catch (e) {
-                console.error("Error saving product: ", e);
-            }
-        }
-
-        async function loadProducts() {
-            const container = document.getElementById('productListContainer');
-            container.innerHTML = "";
-            const querySnapshot = await getDocs(collection(db, "products"));
-            
-            if (querySnapshot.empty) {
-                container.innerHTML = "<p style='color:var(--text-light); font-size:0.85rem;'>No products added yet.</p>";
-                return;
-            }
-
-            querySnapshot.forEach((docSnap) => {
-                const p = docSnap.data();
-                container.innerHTML += `
-                    <div class="product-item">
-                        <div class="product-info">
-                            <span class="category-tag">${p.category || 'General'}</span>
-                            <h4>${p.name} (₹${p.price})</h4>
-                            <p>${p.description ? p.description.substring(0, 40) + '...' : 'No description'}</p>
-                        </div>
-                        <div class="product-actions">
-                            <button style="background:#e0e7ff; color:#4f46e5;" onclick="editProduct('${docSnap.id}', '${encodeURIComponent(p.name)}', '${encodeURIComponent(p.category || '')}', '${encodeURIComponent(p.description || '')}', '${p.price}', '${encodeURIComponent(p.image || '')}')">Edit</button>
-                            <button style="background:#fee2e2; color:#ef4444;" onclick="deleteProduct('${docSnap.id}')">Delete</button>
-                        </div>
-                    </div>
-                `;
-            });
-        }
-
-        window.editProduct = function(id, name, category, desc, price, image) {
-            document.getElementById('editProductId').value = id;
-            document.getElementById('productName').value = decodeURIComponent(name);
-            document.getElementById('productCategory').value = decodeURIComponent(category);
-            document.getElementById('productDesc').value = decodeURIComponent(desc);
-            document.getElementById('productPrice').value = price;
-            document.getElementById('productImage').value = decodeURIComponent(image !== "undefined" ? image : "");
-            
-            document.getElementById('saveBtn').innerText = "Update Product";
-            document.getElementById('cancelEditBtn').style.display = "block";
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        window.clearProductForm = function() {
-            document.getElementById('editProductId').value = "";
-            document.getElementById('productName').value = "";
-            document.getElementById('productCategory').value = "";
-            document.getElementById('productDesc').value = "";
-            document.getElementById('productPrice').value = "";
-            document.getElementById('productImage').value = "";
-            document.getElementById('saveBtn').innerText = "Add Product";
-            document.getElementById('cancelEditBtn').style.display = "none";
-        }
-
-        window.deleteProduct = async function(id) {
-            if (confirm("Are you sure you want to delete this product?")) {
-                await deleteDoc(doc(db, "products", id));
-                loadProducts();
-            }
-        }
-
-        // --- ORDER QUEUE WORKFLOW ---
-        function initOrderListener() {
-            onSnapshot(collection(db, "orders"), (snapshot) => {
-                const container = document.getElementById('ordersContainer');
-                container.innerHTML = "";
-
-                let orders = [];
-                snapshot.forEach(docSnap => {
-                    orders.push({ id: docSnap.id, ...docSnap.data() });
-                });
-
-                const preparingCount = orders.filter(o => o.status === "preparing").length;
-
-                if (orders.length === 0) {
-                    container.innerHTML = "<p style='color:var(--text-light); font-size:0.85rem;'>No active customer orders.</p>";
+                const querySnapshot = await getDocs(collection(db, "products"));
+                if (querySnapshot.empty) {
+                    grid.innerHTML = "<p style='color:var(--text-light);'>No products available right now.</p>";
                     return;
                 }
 
-                orders.forEach(order => {
-                    let actionButton = "";
-                    let badgeClass = "badge-pending";
+                grid.innerHTML = "";
+                querySnapshot.forEach((docSnap) => {
+                    const p = docSnap.data();
+                    const directImageUrl = getDriveDirectUrl(p.image);
+                    const categoryText = p.category || 'General';
 
-                    if (order.status === "pending") {
-                        if (preparingCount < 3) {
-                            actionButton = `<button class="btn btn-primary" style="padding:8px; font-size:0.85rem;" onclick="updateOrderStatus('${order.id}', 'preparing')">Accept Order</button>`;
-                        } else {
-                            actionButton = `<span style="color:var(--warning); font-size:0.85rem; font-weight:600;">Queue Full (Max 3)</span>`;
-                        }
-                    } else if (order.status === "preparing") {
-                        badgeClass = "badge-preparing";
-                        actionButton = `<button class="btn btn-success" style="padding:8px; font-size:0.85rem;" onclick="updateOrderStatus('${order.id}', 'ready')">Mark as Ready</button>`;
-                    } else {
-                        badgeClass = "badge-ready";
-                        actionButton = `<span style="color:var(--success); font-size:0.85rem; font-weight:600;">Ready for Pickup</span>`;
-                    }
+                    grid.innerHTML += `
+                        <div class="product-card">
+                            <img src="${directImageUrl}" alt="${p.name}" class="product-img" onerror="this.src='https://via.placeholder.com/400x200?text=Image+Load+Error'">
+                            <div class="product-content">
+                                <span class="category-tag">${categoryText}</span>
+                                <div class="product-title">${p.name}</div>
+                                <div class="product-desc">${p.description || 'No description available.'}</div>
+                                <div class="product-footer">
+                                    <div class="product-price">₹${p.price}</div>
+                                    <button class="btn" onclick="placeOrder('${p.name.replace(/'/g, "\\'")}', '${p.price}')">Order Now</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch (e) {
+                console.error("Error loading products:", e);
+                grid.innerHTML = "<p style='color:var(--danger);'>Failed to load products.</p>";
+            }
+        }
+
+        // Place a Live Order
+        window.placeOrder = async function(productName, price) {
+            try {
+                const randomOrderNum = Math.floor(100 + Math.random() * 900);
+                await addDoc(collection(db, "orders"), {
+                    orderNumber: randomOrderNum,
+                    productName: productName,
+                    price: price,
+                    status: "pending",
+                    createdAt: new Date()
+                });
+                alert(`Order #${randomOrderNum} placed successfully! Check status below.`);
+            } catch (e) {
+                console.error("Error placing order: ", e);
+                alert("Could not place order. Please try again.");
+            }
+        }
+
+        // Listen for live order changes
+        function initCustomerOrderListener() {
+            onSnapshot(collection(db, "orders"), (snapshot) => {
+                const container = document.getElementById('customerOrdersList');
+                if (snapshot.empty) {
+                    container.innerHTML = "<p style='color:var(--text-light); font-size:0.85rem;'>No active orders tracking.</p>";
+                    return;
+                }
+
+                container.innerHTML = "";
+                snapshot.forEach(docSnap => {
+                    const order = docSnap.data();
+                    let badgeClass = "badge-pending";
+                    if (order.status === "preparing") badgeClass = "badge-preparing";
+                    if (order.status === "ready") badgeClass = "badge-ready";
 
                     container.innerHTML += `
-                        <div class="order-card">
-                            <div class="order-header">
-                                <span>Order #${order.orderNumber}</span>
-                                <span class="badge ${badgeClass}">${order.status}</span>
+                        <div class="customer-order-card">
+                            <div>
+                                <strong style="font-size: 0.9rem;">Order #${order.orderNumber}</strong>
+                                <div style="font-size: 0.8rem; color: var(--text-light);">${order.productName} (₹${order.price})</div>
                             </div>
-                            <div class="order-details">
-                                <strong>Item:</strong> ${order.productName || 'Custom Item'} (${order.price ? '₹' + order.price : ''})
-                            </div>
-                            <div>${actionButton}</div>
+                            <span class="badge ${badgeClass}">${order.status}</span>
                         </div>
                     `;
                 });
             });
         }
 
-        window.updateOrderStatus = async function(id, newStatus) {
-            await updateDoc(doc(db, "orders", id), { status: newStatus });
-        }
+        // Initialize App on Load
+        loadStoreProducts();
+        initCustomerOrderListener();
     </script>
 </body>
 </html>
