@@ -31,17 +31,25 @@
         .nav-btn { background: rgba(255,255,255,0.1); border: none; color: white; padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; transition: background 0.2s; }
         .nav-btn:hover { background: rgba(255,255,255,0.2); }
 
+        /* Tab Navigation Bar */
+        .tab-nav { display: flex; gap: 8px; background: var(--card-bg); padding: 6px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .tab-btn { flex: 1; padding: 10px; border: none; background: transparent; border-radius: 8px; font-size: 0.9rem; font-weight: 700; color: var(--text-light); cursor: pointer; transition: all 0.2s; }
+        .tab-btn.active { background: var(--kfc-red); color: white; }
+
         .card { background: var(--card-bg); padding: 16px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border); }
         .card h2 { font-size: 1.1rem; margin-bottom: 12px; font-weight: 800; }
 
-        .live-order-card { background: #fafafa; border: 1px solid var(--border); padding: 14px; border-radius: 12px; margin-top: 10px; }
-        .declined-section { background: #fff5f5; border: 1px solid #fecaca; padding: 14px; border-radius: 12px; margin-top: 10px; }
+        .live-order-card { background: #fafafa; border: 1px solid var(--border); padding: 14px; border-radius: 12px; margin-bottom: 10px; }
+        .declined-order-card { background: #fff5f5; border: 1px solid #fecaca; padding: 14px; border-radius: 12px; margin-bottom: 10px; }
         
         .badge { padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
         .badge-pending { background: #fef3c7; color: #d97706; }
         .badge-preparing { background: #e0e7ff; color: #4f46e5; }
         .badge-ready { background: #d1fae5; color: #059669; }
         .badge-declined { background: #fee2e2; color: var(--danger); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
     </style>
 </head>
 <body>
@@ -52,18 +60,26 @@
             <a href="index.html" class="nav-btn">← Back to Menu</a>
         </header>
 
-        <!-- LIVE ORDER TRACKER PANEL (3 Active Statuses) -->
-        <div class="card">
-            <h2>🔔 Active Order Status</h2>
-            <div id="trackerContainer">
-                <p style="color:var(--text-light); font-size:0.85rem;">No active order found. Place an order from the menu first!</p>
+        <!-- TABS BAR -->
+        <div class="tab-nav">
+            <button type="button" class="tab-btn active" data-target="acceptedTab">Accepted Orders</button>
+            <button type="button" class="tab-btn" data-target="declinedTab">Declined Orders</button>
+        </div>
+
+        <!-- ACCEPTED ORDERS TAB -->
+        <div id="acceptedTab" class="card tab-content active">
+            <h2>🔔 Active Queue <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-light);">(Max 3 Shown)</span></h2>
+            <div id="acceptedContainer">
+                <p style="color:var(--text-light); font-size:0.85rem;">No active orders found.</p>
             </div>
         </div>
 
-        <!-- DECLINED ORDERS SIDE SECTION -->
-        <div class="card" id="declinedCardWrapper" style="display: none;">
-            <h2 style="color: var(--danger);">⚠️ Cancelled / Declined Orders</h2>
-            <div id="declinedContainer"></div>
+        <!-- DECLINED ORDERS TAB -->
+        <div id="declinedTab" class="card tab-content">
+            <h2 style="color: var(--danger);">⚠️ Declined Queue <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-light);">(Max 3 Shown)</span></h2>
+            <div id="declinedContainer">
+                <p style="color:var(--text-light); font-size:0.85rem;">No declined orders found.</p>
+            </div>
         </div>
     </div>
 
@@ -85,82 +101,105 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        function initLiveTracker() {
-            const targetOrderNum = localStorage.getItem("lastActiveOrderNum");
-            const trackerContainer = document.getElementById('trackerContainer');
-            const declinedCardWrapper = document.getElementById('declinedCardWrapper');
+        // --- TAB SWITCHING INTERACTION ---
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                tabBtns.forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                btn.classList.add('active');
+                const targetId = btn.getAttribute('data-target');
+                document.getElementById(targetId).classList.add('active');
+            });
+        });
+
+        function initTracker() {
+            const acceptedContainer = document.getElementById('acceptedContainer');
             const declinedContainer = document.getElementById('declinedContainer');
 
-            if (!targetOrderNum) {
-                trackerContainer.innerHTML = `<p style="color:var(--text-light); font-size:0.85rem;">No active order found. Place an order from the menu first!</p>`;
-                return;
-            }
-
             onSnapshot(collection(db, "orders"), (snapshot) => {
-                let foundOrder = null;
+                let acceptedOrders = [];
+                let declinedOrders = [];
+
                 snapshot.forEach(docSnap => {
                     const data = docSnap.data();
-                    if (data.orderNumber == targetOrderNum) {
-                        foundOrder = data;
+                    if (data.status === "declined") {
+                        declinedOrders.push({ id: docSnap.id, ...data });
+                    } else if (["pending", "preparing", "ready"].includes(data.status)) {
+                        acceptedOrders.push({ id: docSnap.id, ...data });
                     }
                 });
 
-                if (!foundOrder) {
-                    trackerContainer.innerHTML = `<p style="color:var(--success); font-size:0.85rem; font-weight:600;">✅ Order #${targetOrderNum} has been completed and picked up! Thank you.</p>`;
-                    declinedCardWrapper.style.display = 'none';
-                    return;
-                }
+                // Sort accepted by creation date or order number descending/ascending
+                acceptedOrders.sort((a, b) => (a.orderNumber || 0) - (b.orderNumber || 0));
 
-                // If the order status is declined, isolate it into the bottom side section
-                if (foundOrder.status === "declined") {
-                    trackerContainer.innerHTML = `<p style="color:var(--text-light); font-size:0.85rem;">No standard active orders running. Check details below.</p>`;
-                    declinedCardWrapper.style.display = 'block';
-                    declinedContainer.innerHTML = `
-                        <div class="declined-section">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px; font-weight:700;">
-                                <span>Order #${foundOrder.orderNumber}</span>
-                                <span class="badge badge-declined">Declined</span>
-                            </div>
-                            <div style="font-size:0.85rem; color:var(--text-light); margin-bottom: 8px;">
-                                <strong>Item:</strong> ${foundOrder.productName} (₹${foundOrder.price})
-                            </div>
-                            <div style="font-size:0.9rem; font-weight:700; color:var(--danger); margin-bottom: 6px;">❌ Declined by Admin</div>
-                            <p style="font-size:0.8rem; color:var(--text-light); line-height: 1.4;">Unfortunately, your order could not be processed at this time. Please contact counter staff for assistance.</p>
-                        </div>
-                    `;
-                    return;
-                }
-
-                // Otherwise, render one of the 3 supported standard active statuses
-                declinedCardWrapper.style.display = 'none';
-
-                let badgeClass = "badge-pending";
-                let statusText = "Pending Confirmation from Kitchen";
+                // Sort declined so newest come last or first (FIFO rule: keep latest 3)
+                declinedOrders.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
                 
-                if (foundOrder.status === "preparing") {
-                    badgeClass = "badge-preparing";
-                    statusText = "Kitchen is Preparing your Order 🔥";
-                } else if (foundOrder.status === "ready") {
-                    badgeClass = "badge-ready";
-                    statusText = "Ready for Counter Pickup! 🎉";
+                // If more than 3 declined orders exist, slice to keep only the latest 3 (FIFO style rotation)
+                if (declinedOrders.length > 3) {
+                    declinedOrders = declinedOrders.slice(declinedOrders.length - 3);
                 }
 
-                trackerContainer.innerHTML = `
-                    <div class="live-order-card">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px; font-weight:700;">
-                            <span>Order #${foundOrder.orderNumber}</span>
-                            <span class="badge ${badgeClass}">${foundOrder.status}</span>
-                        </div>
-                        <div style="font-size:0.85rem; color:var(--text-light); margin-bottom: 6px;">
-                            <strong>Item:</strong> ${foundOrder.productName} (₹${foundOrder.price})
-                        </div>
-                        <div style="font-size:0.9rem; font-weight:700; color:var(--kfc-red);">${statusText}</div>
-                    </div>
-                `;
+                // --- RENDER ACCEPTED ORDERS (Max 3) ---
+                if (acceptedOrders.length === 0) {
+                    acceptedContainer.innerHTML = `<p style="color:var(--text-light); font-size:0.85rem;">No active orders found.</p>`;
+                } else {
+                    acceptedContainer.innerHTML = "";
+                    const displayAccepted = acceptedOrders.slice(0, 3);
+                    displayAccepted.forEach(order => {
+                        let badgeClass = "badge-pending";
+                        let statusText = "Pending Confirmation from Kitchen";
+                        
+                        if (order.status === "preparing") {
+                            badgeClass = "badge-preparing";
+                            statusText = "Kitchen is Preparing your Order 🔥";
+                        } else if (order.status === "ready") {
+                            badgeClass = "badge-ready";
+                            statusText = "Ready for Counter Pickup! 🎉";
+                        }
+
+                        acceptedContainer.innerHTML += `
+                            <div class="live-order-card">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px; font-weight:700;">
+                                    <span>Order #${order.orderNumber}</span>
+                                    <span class="badge ${badgeClass}">${order.status}</span>
+                                </div>
+                                <div style="font-size:0.85rem; color:var(--text-light); margin-bottom: 6px;">
+                                    <strong>Item:</strong> ${order.productName} (₹${order.price})
+                                </div>
+                                <div style="font-size:0.9rem; font-weight:700; color:var(--kfc-red);">${statusText}</div>
+                            </div>
+                        `;
+                    });
+                }
+
+                // --- RENDER DECLINED ORDERS (Max 3, FIFO) ---
+                if (declinedOrders.length === 0) {
+                    declinedContainer.innerHTML = `<p style="color:var(--text-light); font-size:0.85rem;">No declined orders found.</p>`;
+                } else {
+                    declinedContainer.innerHTML = "";
+                    declinedOrders.forEach(order => {
+                        declinedContainer.innerHTML += `
+                            <div class="declined-order-card">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px; font-weight:700;">
+                                    <span>Order #${order.orderNumber}</span>
+                                    <span class="badge badge-declined">Declined</span>
+                                </div>
+                                <div style="font-size:0.85rem; color:var(--text-light); margin-bottom: 8px;">
+                                    <strong>Item:</strong> ${order.productName} (₹${order.price})
+                                </div>
+                                <div style="font-size:0.9rem; font-weight:700; color:var(--danger); margin-bottom: 6px;">❌ Declined by Admin</div>
+                                <p style="font-size:0.8rem; color:var(--text-light); line-height: 1.4;">Unfortunately, your order could not be processed. Please contact counter staff.</p>
+                            </div>
+                        `;
+                    });
+                }
             });
         }
 
-        initLiveTracker();
+        initTracker();
     </script>
 </body>
 </html>
