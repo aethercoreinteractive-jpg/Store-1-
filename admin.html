@@ -337,9 +337,9 @@
                     } else if (order.status === "preparing") {
                         badgeClass = "badge-preparing";
                         actionButton = `<button class="btn btn-success" style="padding:8px; font-size:0.85rem;" onclick="updateOrderStatus('${order.id}', 'ready')">Mark as Ready</button>`;
-                    } else {
+                    } else if (order.status === "ready") {
                         badgeClass = "badge-ready";
-                        actionButton = `<span style="color:var(--success); font-size:0.85rem; font-weight:600;">Ready for Pickup</span>`;
+                        actionButton = `<button class="btn btn-primary" style="padding:8px; font-size:0.85rem; background: var(--kfc-dark);" onclick="markAsPicked('${order.id}')">Mark as Picked</button>`;
                     }
 
                     container.innerHTML += `
@@ -361,7 +361,16 @@
         window.updateOrderStatus = async function(id, newStatus) {
             await updateDoc(doc(db, "orders", id), { status: newStatus });
         }
+
+        window.markAsPicked = async function(id) {
+            if (confirm("Has the customer picked up this order? This will clear it from the live queue.")) {
+                try {
+                    await deleteDoc(doc(db, "orders", id));
+                } catch (e) {
+                    console.error("Error removing picked order: ", e);
+                }
+            }
+        }
     </script>
 </body>
 </html>
-    
