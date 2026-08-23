@@ -3,47 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Store Front - Quick Order</title>
+    <title>QuickBites - Menu & Ordering</title>
     <style>
         :root {
-            --primary: #4f46e5;
-            --primary-hover: #4338ca;
-            --success: #10b981;
-            --bg: #f8fafc;
+            --kfc-red: #e4002b;
+            --kfc-dark: #202124;
+            --bg: #f4f4f5;
             --card-bg: #ffffff;
-            --text: #1e293b;
-            --text-light: #64748b;
-            --border: #e2e8f0;
+            --text: #18181b;
+            --text-light: #71717a;
+            --border: #e4e4e7;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
-        body { background: var(--bg); color: var(--text); padding: 16px; max-width: 600px; margin: 0 auto; padding-bottom: 60px; }
+        body { background: var(--bg); color: var(--text); padding-bottom: 90px; }
 
-        header { background: var(--card-bg); padding: 20px; border-radius: 16px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); text-align: center; }
-        header h1 { font-size: 1.5rem; color: var(--text); }
-        header p { color: var(--text-light); font-size: 0.9rem; margin-top: 4px; }
+        /* Header Bar */
+        header { background: var(--kfc-dark); color: white; padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .logo { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.5px; color: #fff; display: flex; align-items: center; gap: 8px; }
+        .logo span { color: var(--kfc-red); }
 
-        .section-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 12px; color: var(--text); }
+        /* Category Filter Bar */
+        .category-nav { display: flex; gap: 10px; overflow-x: auto; padding: 14px 16px; background: white; border-bottom: 1px solid var(--border); position: sticky; top: 61px; z-index: 90; scrollbar-width: none; }
+        .category-nav::-webkit-scrollbar { display: none; }
+        .cat-chip { padding: 8px 18px; background: var(--bg); border: 1px solid var(--border); border-radius: 30px; font-size: 0.85rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s; color: var(--text-light); }
+        .cat-chip.active { background: var(--kfc-red); color: white; border-color: var(--kfc-red); }
 
-        /* Product Grid */
-        .product-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 30px; }
-        .product-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
-        .product-img { width: 100%; height: 200px; object-fit: cover; background: #e2e8f0; }
-        .product-content { padding: 16px; display: flex; flex-direction: column; gap: 8px; flex-grow: 1; }
+        /* Main Container */
+        .container { max-width: 800px; margin: 0 auto; padding: 16px; }
+        .section-title { font-size: 1.2rem; font-weight: 800; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* Product Grid (KFC Layout Style) */
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; margin-bottom: 30px; }
+        .product-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: transform 0.2s; }
+        .product-card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.06); }
         
-        .category-tag { display: inline-block; background: #e0e7ff; color: var(--primary); font-size: 0.75rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; width: fit-content; }
-        .product-title { font-size: 1.1rem; font-weight: 700; color: var(--text); }
-        .product-desc { font-size: 0.85rem; color: var(--text-light); line-height: 1.4; }
-        .product-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 12px; }
-        .product-price { font-size: 1.1rem; font-weight: 700; color: var(--primary); }
+        .product-img-wrapper { width: 100%; height: 160px; background: #f1f1f3; position: relative; }
+        .product-img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .product-content { padding: 14px; display: flex; flex-direction: column; gap: 6px; flex-grow: 1; }
+        .product-category-tag { font-size: 0.7rem; font-weight: 700; color: var(--kfc-red); text-transform: uppercase; }
+        .product-title { font-size: 1rem; font-weight: 700; color: var(--text); }
+        .product-desc { font-size: 0.8rem; color: var(--text-light); line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        
+        .product-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 10px; }
+        .product-price { font-size: 1.05rem; font-weight: 800; color: var(--text); }
+        
+        .btn-add { background: var(--kfc-red); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: background 0.2s; }
+        .btn-add:hover { background: #c50024; }
 
-        .btn { padding: 10px 16px; border: none; border-radius: 10px; font-size: 0.9rem; font-weight: 600; cursor: pointer; background: var(--primary); color: white; transition: background 0.2s; }
-        .btn:hover { background: var(--primary-hover); }
-
-        /* Active Orders Status Section */
-        .orders-section { background: var(--card-bg); border: 1px solid var(--border); padding: 20px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-        .customer-order-card { background: #f8fafc; border: 1px solid var(--border); padding: 12px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .badge { padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+        /* Live Order Trackers Section */
+        .orders-section { background: var(--card-bg); border: 1px solid var(--border); padding: 18px; border-radius: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); }
+        .customer-order-card { background: #fafafa; border: 1px solid var(--border); padding: 12px 16px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        
+        .badge { padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
         .badge-pending { background: #fef3c7; color: #d97706; }
         .badge-preparing { background: #e0e7ff; color: #4f46e5; }
         .badge-ready { background: #d1fae5; color: #059669; }
@@ -52,19 +65,26 @@
 <body>
 
     <header>
-        <h1>🛍️ Store Front</h1>
-        <p>Browse items and place your quick orders below</p>
+        <div class="logo">🍗 Quick<span>Bites</span></div>
+        <div style="font-size: 0.85rem; font-weight: 600; background: rgba(255,255,255,0.1); padding: 6px 12px; border-radius: 20px;">⚡ Express Lane</div>
     </header>
 
-    <div class="section-title">Available Products</div>
-    <div id="storeProductGrid" class="product-grid">
-        <p style="color: var(--text-light);">Loading products...</p>
+    <!-- Category Dynamic Filter Bar -->
+    <div class="category-nav" id="categoryNavContainer">
+        <div class="cat-chip active" onclick="filterCategory('All', this)">All Items</div>
     </div>
 
-    <div class="orders-section">
-        <div class="section-title" style="margin-bottom: 12px;">📢 Live Order Trackers</div>
-        <div id="customerOrdersList">
-            <p style="color: var(--text-light); font-size: 0.85rem;">No active orders tracking.</p>
+    <div class="container">
+        <div class="section-title">Our Menu</div>
+        <div id="storeProductGrid" class="product-grid">
+            <p style="color: var(--text-light);">Loading menu items...</p>
+        </div>
+
+        <div class="orders-section" style="margin-top: 30px;">
+            <div class="section-title" style="font-size: 1rem; margin-bottom: 12px;">Live Order Status</div>
+            <div id="customerOrdersList">
+                <p style="color: var(--text-light); font-size: 0.85rem;">No active orders found.</p>
+            </div>
         </div>
     </div>
 
@@ -86,29 +106,31 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Helper function to convert standard Google Drive share links into clean direct image viewer links
+        let allProducts = [];
+        let currentCategory = 'All';
+
+        // Helper function for converting Google Drive sharing link into a direct rendering image link
         function getDriveDirectUrl(url) {
-            if (!url) return "https://via.placeholder.com/400x200?text=No+Image+Provided";
+            if (!url) return "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=500&auto=format&fit=crop&q=60"; // appetizing fallback image
             
-            // Check if it's a standard Google Drive share link containing file ID
             let match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
             if (match && match[1]) {
-                return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`; //
+                return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`;
             }
             
-            // Check if it's already structured with an id parameter
             let idParam = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
             if (idParam && idParam[1]) {
-                return `https://drive.google.com/thumbnail?id=${idParam[1]}&sz=w1000`; //
+                return `https://drive.google.com/thumbnail?id=${idParam[1]}&sz=w1000`;
             }
 
-            // Fallback if user used a direct image link or external source link
             return url;
         }
 
-        // Load Products into Storefront Grid
+        // Fetch products and populate menu
         async function loadStoreProducts() {
             const grid = document.getElementById('storeProductGrid');
+            const navContainer = document.getElementById('categoryNavContainer');
+            
             try {
                 const querySnapshot = await getDocs(collection(db, "products"));
                 if (querySnapshot.empty) {
@@ -116,34 +138,72 @@
                     return;
                 }
 
-                grid.innerHTML = "";
-                querySnapshot.forEach((docSnap) => {
-                    const p = docSnap.data();
-                    const directImageUrl = getDriveDirectUrl(p.image);
-                    const categoryText = p.category || 'General';
+                allProducts = [];
+                let categories = new Set();
 
-                    grid.innerHTML += `
-                        <div class="product-card">
-                            <img src="${directImageUrl}" alt="${p.name}" class="product-img" onerror="this.src='https://via.placeholder.com/400x200?text=Image+Load+Error'">
-                            <div class="product-content">
-                                <span class="category-tag">${categoryText}</span>
-                                <div class="product-title">${p.name}</div>
-                                <div class="product-desc">${p.description || 'No description available.'}</div>
-                                <div class="product-footer">
-                                    <div class="product-price">₹${p.price}</div>
-                                    <button class="btn" onclick="placeOrder('${p.name.replace(/'/g, "\\'")}', '${p.price}')">Order Now</button>
-                                </div>
-                            </div>
-                        </div>
-                    `;
+                querySnapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    allProducts.push({ id: docSnap.id, ...data });
+                    categories.add(data.category || 'General');
                 });
+
+                // Build category chips dynamically
+                navContainer.innerHTML = `<div class="cat-chip active" onclick="filterCategory('All', this)">All Items</div>`;
+                categories.forEach(cat => {
+                    navContainer.innerHTML += `<div class="cat-chip" onclick="filterCategory('${cat}', this)">${cat}</div>`;
+                });
+
+                renderFilteredProducts();
             } catch (e) {
                 console.error("Error loading products:", e);
-                grid.innerHTML = "<p style='color:var(--danger);'>Failed to load products.</p>";
+                grid.innerHTML = "<p style='color:#e4002b;'>Failed to load menu items.</p>";
             }
         }
 
-        // Place a Live Order
+        // Filter product items by selected category tab
+        window.filterCategory = function(category, element) {
+            currentCategory = category;
+            document.querySelectorAll('.cat-chip').forEach(chip => chip.classList.remove('active'));
+            element.classList.add('active');
+            renderFilteredProducts();
+        }
+
+        function renderFilteredProducts() {
+            const grid = document.getElementById('storeProductGrid');
+            const filtered = currentCategory === 'All' 
+                ? allProducts 
+                : allProducts.filter(p => (p.category || 'General') === currentCategory);
+
+            if (filtered.length === 0) {
+                grid.innerHTML = "<p style='color:var(--text-light); font-size:0.9rem;'>No items found in this category.</p>";
+                return;
+            }
+
+            grid.innerHTML = "";
+            filtered.forEach(p => {
+                const directImageUrl = getDriveDirectUrl(p.image);
+                const categoryText = p.category || 'General';
+
+                grid.innerHTML += `
+                    <div class="product-card">
+                        <div class="product-img-wrapper">
+                            <img src="${directImageUrl}" alt="${p.name}" class="product-img" onerror="this.src='https://images.unsplash.com/photo-1513104890138-7c749659a591?w=500&auto=format&fit=crop&q=60'">
+                        </div>
+                        <div class="product-content">
+                            <span class="product-category-tag">${categoryText}</span>
+                            <div class="product-title">${p.name}</div>
+                            <div class="product-desc">${p.description || 'Delicious freshly prepared item.'}</div>
+                            <div class="product-footer">
+                                <div class="product-price">₹${p.price}</div>
+                                <button class="btn-add" onclick="placeOrder('${p.name.replace(/'/g, "\\'")}', '${p.price}')">+ Add</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // Place a live order
         window.placeOrder = async function(productName, price) {
             try {
                 const randomOrderNum = Math.floor(100 + Math.random() * 900);
@@ -154,14 +214,14 @@
                     status: "pending",
                     createdAt: new Date()
                 });
-                alert(`Order #${randomOrderNum} placed successfully! Check status below.`);
+                alert(`Order #${randomOrderNum} placed successfully! Track status below.`);
             } catch (e) {
                 console.error("Error placing order: ", e);
                 alert("Could not place order. Please try again.");
             }
         }
 
-        // Listen for live order changes
+        // Listen for live customer orders status update
         function initCustomerOrderListener() {
             onSnapshot(collection(db, "orders"), (snapshot) => {
                 const container = document.getElementById('customerOrdersList');
@@ -190,7 +250,7 @@
             });
         }
 
-        // Initialize App on Load
+        // Initialize Store Front
         loadStoreProducts();
         initCustomerOrderListener();
     </script>
