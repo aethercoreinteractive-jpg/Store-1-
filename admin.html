@@ -15,44 +15,79 @@
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         th { background: #f8f9fa; }
         .order-card { background: #e9ecef; padding: 10px; margin-bottom: 10px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
+        
+        /* Login Overlay Styles */
+        #loginOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 1000;
+        }
+        .login-box { background: white; padding: 30px; border-radius: 8px; text-align: center; width: 300px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        .login-box input { width: 90%; margin-bottom: 15px; }
+        .error-msg { color: red; font-size: 13px; margin-bottom: 10px; display: none; }
     </style>
 </head>
 <body>
 
-    <h1>Admin Dashboard</h1>
-
-    <!-- PRODUCT MANAGEMENT SECTION -->
-    <div class="section">
-        <h2>Manage Products</h2>
-        <input type="hidden" id="editProductId">
-        <input type="text" id="productName" placeholder="Product Name"><br>
-        <input type="text" id="productPrice" placeholder="Price"><br>
-        <input type="text" id="productImage" placeholder="Google Drive Image Link"><br>
-        <button onclick="saveProduct()">Save Product</button>
-
-        <h3>Product List</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Price</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="productTableBody"></tbody>
-        </table>
+    <!-- PASSWORD LOGIN OVERLAY -->
+    <div id="loginOverlay">
+        <div class="login-box">
+            <h2>Admin Login</h2>
+            <div id="loginError" class="error-msg">Incorrect Password!</div>
+            <input type="password" id="adminPasswordInput" placeholder="Enter Password">
+            <br>
+            <button onclick="verifyPassword()" style="width: 100%;">Login</button>
+        </div>
     </div>
 
-    <!-- ORDERS & QUEUE MANAGEMENT SECTION -->
-    <div class="section">
-        <h2>Customer Orders (Max 3 in Queue)</h2>
-        <div id="ordersContainer">Loading orders...</div>
+    <!-- MAIN ADMIN CONTENT (Hidden until logged in) -->
+    <div id="adminContent" style="display:none;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1>Admin Dashboard</h1>
+            <button onclick="logoutAdmin()" style="background: #dc3545;">Logout</button>
+        </div>
+
+        <!-- PRODUCT MANAGEMENT SECTION -->
+        <div class="section">
+            <h2>Manage Products</h2>
+            <input type="hidden" id="editProductId">
+            <input type="text" id="productName" placeholder="Product Name"><br>
+            <input type="text" id="productPrice" placeholder="Price"><br>
+            <input type="text" id="productImage" placeholder="Google Drive Image Link"><br>
+            <button onclick="saveProduct()">Save Product</button>
+
+            <h3>Product List</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Price</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="productTableBody"></tbody>
+            </table>
+        </div>
+
+        <!-- ORDERS & QUEUE MANAGEMENT SECTION -->
+        <div class="section">
+            <h2>Customer Orders (Max 3 in Queue)</h2>
+            <div id="ordersContainer">Loading orders...</div>
+        </div>
+
+        <!-- SETTINGS SECTION (Change Password) -->
+        <div class="section">
+            <h2>Settings</h2>
+            <h3>Change Admin Password</h3>
+            <input type="password" id="currentPass" placeholder="Current Password"><br>
+            <input type="password" id="newPass" placeholder="New Password"><br>
+            <button onclick="changePassword()">Update Password</button>
+        </div>
     </div>
 
     <!-- Firebase SDK Scripts CDN -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCevmUKn9jsh3VrttK8MAyXEO5JjaFOTyM",
@@ -66,6 +101,54 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+
+        // --- AUTHENTICATION & PASSWORD LOGIC ---
+        // Set default password if none exists in browser storage
+        if (!localStorage.getItem("adminPassword")) {
+            localStorage.setItem("adminPassword", "Admin@123");
+        }
+
+        window.verifyPassword = function() {
+            const inputVal = document.getElementById('adminPasswordInput').value;
+            const storedPass = localStorage.getItem("adminPassword");
+
+            if (inputVal === storedPass) {
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('adminContent').style.display = 'block';
+                loadProducts();
+                initOrderListener();
+            } else {
+                document.getElementById('loginError').style.display = 'block';
+            }
+        }
+
+        window.logoutAdmin = function() {
+            document.getElementById('adminContent').style.display = 'none';
+            document.getElementById('loginOverlay').style.display = 'flex';
+            document.getElementById('adminPasswordInput').value = "";
+            document.getElementById('loginError').style.display = 'none';
+        }
+
+        window.changePassword = function() {
+            const currentInput = document.getElementById('currentPass').value;
+            const newInput = document.getElementById('newPass').value;
+            const storedPass = localStorage.getItem("adminPassword");
+
+            if (currentInput !== storedPass) {
+                alert("Current password is incorrect!");
+                return;
+            }
+
+            if (!newInput || newInput.length < 4) {
+                alert("New password must be at least 4 characters long.");
+                return;
+            }
+
+            localStorage.setItem("adminPassword", newInput);
+            alert("Password updated successfully!");
+            document.getElementById('currentPass').value = "";
+            document.getElementById('newPass').value = "";
+        }
 
         // --- PRODUCT CRUD ---
         window.saveProduct = async function() {
@@ -134,51 +217,49 @@
             document.getElementById('productImage').value = "";
         }
 
-        loadProducts();
-
         // --- ORDERS & QUEUE WORKFLOW ---
-        // Real-time listener for orders
-        onSnapshot(collection(db, "orders"), (snapshot) => {
-            const container = document.getElementById('ordersContainer');
-            container.innerHTML = "";
+        function initOrderListener() {
+            onSnapshot(collection(db, "orders"), (snapshot) => {
+                const container = document.getElementById('ordersContainer');
+                container.innerHTML = "";
 
-            let orders = [];
-            snapshot.forEach(docSnap => {
-                orders.push({ id: docSnap.id, ...docSnap.data() });
-            });
+                let orders = [];
+                snapshot.forEach(docSnap => {
+                    orders.push({ id: docSnap.id, ...docSnap.data() });
+                });
 
-            // Count how many orders are currently preparing
-            const preparingCount = orders.filter(o => o.status === "preparing").length;
+                const preparingCount = orders.filter(o => o.status === "preparing").length;
 
-            if(orders.length === 0) {
-                container.innerHTML = "<p>No active orders.</p>";
-                return;
-            }
-
-            orders.forEach(order => {
-                let actionButton = "";
-                if (order.status === "pending") {
-                    if (preparingCount < 3) {
-                        actionButton = `<button onclick="updateOrderStatus('${order.id}', 'preparing')">Accept Order</button>`;
-                    } else {
-                        actionButton = `<span style="color:orange; font-weight:bold;">Queue Full (Max 3)</span>`;
-                    }
-                } else if (order.status === "preparing") {
-                    actionButton = `<button onclick="updateOrderStatus('${order.id}', 'ready')" style="background:#28a745;">Mark as Ready</button>`;
-                } else {
-                    actionButton = `<span style="color:green;">Ready / Completed</span>`;
+                if(orders.length === 0) {
+                    container.innerHTML = "<p>No active orders.</p>";
+                    return;
                 }
 
-                container.innerHTML += `
-                    <div class="order-card">
-                        <div>
-                            <strong>Order #${order.orderNumber}</strong> - Status: <em>${order.status}</em>
+                orders.forEach(order => {
+                    let actionButton = "";
+                    if (order.status === "pending") {
+                        if (preparingCount < 3) {
+                            actionButton = `<button onclick="updateOrderStatus('${order.id}', 'preparing')">Accept Order</button>`;
+                        } else {
+                            actionButton = `<span style="color:orange; font-weight:bold;">Queue Full (Max 3)</span>`;
+                        }
+                    } else if (order.status === "preparing") {
+                        actionButton = `<button onclick="updateOrderStatus('${order.id}', 'ready')" style="background:#28a745;">Mark as Ready</button>`;
+                    } else {
+                        actionButton = `<span style="color:green;">Ready / Completed</span>`;
+                    }
+
+                    container.innerHTML += `
+                        <div class="order-card">
+                            <div>
+                                <strong>Order #${order.orderNumber}</strong> (${order.productName}) - Status: <em>${order.status}</em>
+                            </div>
+                            <div>${actionButton}</div>
                         </div>
-                        <div>${actionButton}</div>
-                    </div>
-                `;
+                    `;
+                });
             });
-        });
+        }
 
         window.updateOrderStatus = async function(id, newStatus) {
             await updateDoc(doc(db, "orders", id), { status: newStatus });
