@@ -34,13 +34,11 @@
         }
         .login-card h2 { margin-bottom: 20px; font-size: 1.5rem; color: var(--text); }
         
-        .password-wrapper { position: relative; width: 100%; margin-bottom: 16px; }
+        .password-wrapper { position: relative; width: 100%; margin-bottom: 8px; }
         .password-wrapper input { width: 100%; padding: 12px 42px 12px 16px; margin-bottom: 0; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; background: #fff; }
         .toggle-password { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.1rem; color: var(--text-light); }
 
-        .login-card button.btn-login { width: 100%; padding: 12px; background: var(--kfc-red); color: white; border: none; border-radius: 10px; font-size: 1rem; font-weight: 700; cursor: pointer; }
-        .login-card button.btn-login:hover { background: var(--kfc-red-hover); }
-        .error-msg { color: var(--danger); font-size: 0.875rem; margin-bottom: 12px; display: none; }
+        .error-msg { color: var(--danger); font-size: 0.875rem; margin-top: 8px; display: none; }
 
         /* Main Layout */
         .container { max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
@@ -91,12 +89,11 @@
     <div id="loginOverlay">
         <div class="login-card">
             <h2>🔐 Admin Portal</h2>
-            <div id="loginError" class="error-msg">Incorrect Password</div>
             <div class="password-wrapper">
-                <input type="password" id="adminPasswordInput" placeholder="Enter Admin Password">
+                <input type="password" id="adminPasswordInput" placeholder="Enter Admin Password" oninput="checkAutoLogin()">
                 <button type="button" class="toggle-password" onclick="toggleVisibility('adminPasswordInput', this)">👁️</button>
             </div>
-            <button class="btn btn-login" onclick="verifyPassword()">Login</button>
+            <div id="loginHint" style="font-size: 0.75rem; color: var(--text-light); margin-top: 6px;">Auto-logs in when correct password is entered.</div>
         </div>
     </div>
 
@@ -182,15 +179,13 @@
             localStorage.setItem("adminPassword", "Admin@123");
         }
 
-        window.verifyPassword = function() {
+        window.checkAutoLogin = function() {
             const inputVal = document.getElementById('adminPasswordInput').value;
             if (inputVal === localStorage.getItem("adminPassword")) {
                 document.getElementById('loginOverlay').style.display = 'none';
                 document.getElementById('adminContent').style.display = 'flex';
                 loadProducts();
                 initOrderListener();
-            } else {
-                document.getElementById('loginError').style.display = 'block';
             }
         }
 
@@ -198,7 +193,6 @@
             document.getElementById('adminContent').style.display = 'none';
             document.getElementById('loginOverlay').style.display = 'flex';
             document.getElementById('adminPasswordInput').value = "";
-            document.getElementById('loginError').style.display = 'none';
         }
 
         window.changePassword = function() {
@@ -373,4 +367,5 @@
         }
     </script>
 </body>
-</html>
+                </html>
+                
