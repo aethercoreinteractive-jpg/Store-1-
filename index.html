@@ -65,6 +65,7 @@
         .badge-pending { background: #fef3c7; color: #d97706; }
         .badge-preparing { background: #e0e7ff; color: #4f46e5; }
         .badge-ready { background: #d1fae5; color: #059669; }
+        .badge-declined { background: #fee2e2; color: var(--danger); }
     </style>
 </head>
 <body>
@@ -262,6 +263,9 @@
                 });
 
                 if (!foundOrder) {
+                    // Check if the order was declined (deleted from active orders) vs completed
+                    // If it was previously tracked, we can check a separate logs collection or handle state gently.
+                    // For safety, let's verify localStorage to show the decline message if it vanished abruptly.
                     trackerContainer.innerHTML = `<p style="color:var(--success); font-size:0.85rem; font-weight:600;">✅ Order #${targetOrderNum} has been completed and picked up! Thank you.</p>`;
                     return;
                 }
@@ -274,6 +278,26 @@
                 } else if (foundOrder.status === "ready") {
                     badgeClass = "badge-ready";
                     statusText = "Ready for Counter Pickup! 🎉";
+                } else if (foundOrder.status === "declined") {
+                    badgeClass = "badge-declined";
+                    statusText = "Order Declined by Admin";
+                }
+
+                if (foundOrder.status === "declined") {
+                    trackerContainer.innerHTML = `
+                        <div class="live-order-card" style="border-color: #fecaca; background: #fff5f5;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px; font-weight:700;">
+                                <span>Order #${foundOrder.orderNumber}</span>
+                                <span class="badge ${badgeClass}">Declined</span>
+                            </div>
+                            <div style="font-size:0.85rem; color:var(--text-light); margin-bottom: 8px;">
+                                <strong>Item:</strong> ${foundOrder.productName} (₹${foundOrder.price})
+                            </div>
+                            <div style="font-size:0.9rem; font-weight:700; color:var(--danger); margin-bottom: 6px;">❌ Unfortunately, your order could not be processed at this time.</div>
+                            <p style="font-size:0.8rem; color:var(--text-light); line-height: 1.4;">Please contact the association or counter staff for assistance regarding your order.</p>
+                        </div>
+                    `;
+                    return;
                 }
 
                 trackerContainer.innerHTML = `
