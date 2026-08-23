@@ -76,7 +76,6 @@
         .product-info p { font-size: 0.8rem; color: var(--text-light); margin-top: 2px; }
         .category-tag { display: inline-block; background: #fee2e2; color: var(--kfc-red); font-size: 0.7rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-bottom: 4px; text-transform: uppercase; }
         .product-actions { display: flex; gap: 6px; }
-        .product-actions button { padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; }
 
         /* Orders Mobile Cards */
         .order-card { background: #fafafa; border: 1px solid var(--border); padding: 14px; border-radius: 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px; }
@@ -106,7 +105,7 @@
                 <button type="button" id="toggleLoginPass" class="toggle-password">👁️</button>
             </div>
             <button type="button" id="manualLoginBtn" class="btn btn-primary">Login</button>
-            <div id="loginHint" style="font-size: 0.75rem; color: var(--text-light); margin-top: 10px;">Auto-logs in when correct password is entered.</div>
+            <div id="loginHint" style="font-size: 0.75rem; color: var(--text-light); margin-top: 10px;">Type password or click Login. (Default: Admin@123)</div>
         </div>
     </div>
 
@@ -162,11 +161,11 @@
             <h2>⚙️ Settings</h2>
             <div class="input-with-eye">
                 <input type="password" id="currentPass" placeholder="Current Password">
-                <button type="button" class="toggle-password" onclick="toggleVisibility('currentPass', this)">👁️</button>
+                <button type="button" class="toggle-password" data-target="currentPass">👁️</button>
             </div>
             <div class="input-with-eye">
                 <input type="password" id="newPass" placeholder="New Password (Min 4 chars)">
-                <button type="button" class="toggle-password" onclick="toggleVisibility('newPass', this)">👁️</button>
+                <button type="button" class="toggle-password" data-target="newPass">👁️</button>
             </div>
             <button class="btn btn-secondary" id="updatePassBtn">Update Password</button>
         </div>
@@ -193,18 +192,31 @@
         // --- PASSWORD VISIBILITY TOGGLE GLOBAL UTILITY ---
         window.toggleVisibility = function(fieldId, btn) {
             const inputField = document.getElementById(fieldId);
-            if (inputField.type === "password") {
-                inputField.type = "text";
-                btn.textContent = "🙈";
-            } else {
-                inputField.type = "password";
-                btn.textContent = "👁️";
+            if (inputField) {
+                if (inputField.type === "password") {
+                    inputField.type = "text";
+                    btn.textContent = "🙈";
+                } else {
+                    inputField.type = "password";
+                    btn.textContent = "👁️";
+                }
             }
-        }
+        };
 
-        // Login screen eye toggle bindings
-        document.getElementById('toggleLoginPass').addEventListener('click', function() {
-            window.toggleVisibility('adminPasswordInput', this);
+        // Attach event listeners for all password toggle eye buttons safely
+        document.addEventListener('click', (e) => {
+            const toggleBtn = e.target.closest('.toggle-password');
+            if (!toggleBtn) return;
+
+            // Check if it's the login toggle or a data-target toggle
+            if (toggleBtn.id === 'toggleLoginPass') {
+                window.toggleVisibility('adminPasswordInput', toggleBtn);
+            } else {
+                const targetId = toggleBtn.getAttribute('data-target');
+                if (targetId) {
+                    window.toggleVisibility(targetId, toggleBtn);
+                }
+            }
         });
 
         // --- AUTHENTICATION & SESSION HANDLING ---
@@ -231,21 +243,21 @@
             initOrderListener();
         }
 
-        // Auto login check on input
-        document.getElementById('adminPasswordInput').addEventListener('input', function() {
-            const inputVal = this.value;
-            if (inputVal === localStorage.getItem("adminPassword")) {
+        // Login input listener
+        const passwordInput = document.getElementById('adminPasswordInput');
+        passwordInput.addEventListener('input', function() {
+            if (this.value === localStorage.getItem("adminPassword")) {
                 performLogin();
             }
         });
 
-        // Manual login button check
+        // Manual login button listener
         document.getElementById('manualLoginBtn').addEventListener('click', function() {
-            const inputVal = document.getElementById('adminPasswordInput').value;
+            const inputVal = passwordInput.value;
             if (inputVal === localStorage.getItem("adminPassword")) {
                 performLogin();
             } else {
-                alert("Incorrect password! Please try again.");
+                alert("Incorrect password! Please check your password (Default is Admin@123).");
             }
         });
 
@@ -253,7 +265,7 @@
             sessionStorage.removeItem("adminLoggedIn");
             document.getElementById('adminContent').style.display = 'none';
             document.getElementById('loginOverlay').style.display = 'flex';
-            document.getElementById('adminPasswordInput').value = "";
+            passwordInput.value = "";
         });
 
         // --- STORE OPEN/CLOSED & COUNTER SYNC ---
@@ -374,5 +386,4 @@
                         <p>${p.description ? p.description.substring(0, 40) + '...' : 'No description'}</p>
                     </div>
                     <div class="product-actions">
-                        <button class="edit-btn" style="background:#e0e7ff; color:#4f46e5; padding:6px 12px; font-size:0.8rem; border-radius:6px; border:none; cursor:pointer; font-weight:600;">Edit</button>
-                        <button class="del-btn" style="background:#fee2e2; color:#ef4444; padding:6px 12px; font-size:0.8rem; border-radius:6px; border:none; cursor:pointer; fon
+                        <button class="edit-btn" style="backgroun
