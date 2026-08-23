@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Storefront - Place Order</title>
+    <title>Store Front - Quick Order</title>
     <style>
         :root {
             --primary: #4f46e5;
             --primary-hover: #4338ca;
             --success: #10b981;
-            --warning: #f59e0b;
             --bg: #f8fafc;
             --card-bg: #ffffff;
             --text: #1e293b;
@@ -18,73 +17,61 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
-        body { background: var(--bg); color: var(--text); padding: 16px; padding-bottom: 50px; }
+        body { background: var(--bg); color: var(--text); padding: 16px; max-width: 600px; margin: 0 auto; padding-bottom: 60px; }
 
-        .container { max-width: 600px; margin: 0 auto; }
-        header { text-align: center; margin-bottom: 24px; }
-        header h1 { font-size: 1.5rem; font-weight: 700; color: var(--text); }
+        header { background: var(--card-bg); padding: 20px; border-radius: 16px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); text-align: center; }
+        header h1 { font-size: 1.5rem; color: var(--text); }
         header p { color: var(--text-light); font-size: 0.9rem; margin-top: 4px; }
 
+        .section-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 12px; color: var(--text); }
+
         /* Product Grid */
-        .product-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
-        @media(min-width: 480px) {
-            .product-grid { grid-template-columns: repeat(2, 1fr); }
-        }
+        .product-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 30px; }
+        .product-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
+        .product-img { width: 100%; height: 200px; object-fit: cover; background: #e2e8f0; }
+        .product-content { padding: 16px; display: flex; flex-direction: column; gap: 8px; flex-grow: 1; }
+        
+        .category-tag { display: inline-block; background: #e0e7ff; color: var(--primary); font-size: 0.75rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; width: fit-content; }
+        .product-title { font-size: 1.1rem; font-weight: 700; color: var(--text); }
+        .product-desc { font-size: 0.85rem; color: var(--text-light); line-height: 1.4; }
+        .product-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 12px; }
+        .product-price { font-size: 1.1rem; font-weight: 700; color: var(--primary); }
 
-        .product-card {
-            background: var(--card-bg); border-radius: 16px; overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border);
-            display: flex; flex-direction: column; justify-content: space-between;
-        }
-        .product-img { width: 100%; height: 160px; object-fit: cover; background: #e2e8f0; }
-        .product-content { padding: 16px; display: flex; flex-direction: column; gap: 6px; flex-grow: 1; }
-        .product-title { font-size: 1rem; font-weight: 600; color: var(--text); }
-        .product-desc { font-size: 0.85rem; color: var(--text-light); line-height: 1.4; flex-grow: 1; }
-        .product-price { font-size: 1.05rem; font-weight: 700; color: var(--primary); margin-top: 4px; }
+        .btn { padding: 10px 16px; border: none; border-radius: 10px; font-size: 0.9rem; font-weight: 600; cursor: pointer; background: var(--primary); color: white; transition: background 0.2s; }
+        .btn:hover { background: var(--primary-hover); }
 
-        .btn { width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: var(--primary-hover); }
-
-        /* Order Live Tracker Box */
-        #orderTrackerCard {
-            display: none; margin-top: 24px; background: var(--card-bg);
-            border: 2px solid var(--primary); border-radius: 16px; padding: 20px; text-align: center;
-            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.1);
-        }
-        #orderTrackerCard h2 { font-size: 1.1rem; margin-bottom: 8px; color: var(--text); }
-        .tracker-status { font-size: 1.1rem; font-weight: 700; margin-top: 8px; }
-        .status-pending { color: var(--warning); }
-        .status-preparing { color: var(--primary); }
-        .status-ready { color: var(--success); }
-
-        .empty-state { text-align: center; color: var(--text-light); padding: 40px 0; font-size: 0.95rem; grid-column: 1 / -1; }
+        /* Active Orders Status Section */
+        .orders-section { background: var(--card-bg); border: 1px solid var(--border); padding: 20px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .customer-order-card { background: #f8fafc; border: 1px solid var(--border); padding: 12px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+        .badge-pending { background: #fef3c7; color: #d97706; }
+        .badge-preparing { background: #e0e7ff; color: #4f46e5; }
+        .badge-ready { background: #d1fae5; color: #059669; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <header>
-            <h1>🛒 Quick Store</h1>
-            <p>Browse available items and order instantly</p>
-        </header>
+    <header>
+        <h1>🛍️ Store Front</h1>
+        <p>Browse items and place your quick orders below</p>
+    </header>
 
-        <!-- PRODUCT GRID -->
-        <div class="product-grid" id="productGrid">
-            <div class="empty-state">Loading products...</div>
-        </div>
+    <div class="section-title">Available Products</div>
+    <div id="storeProductGrid" class="product-grid">
+        <p style="color: var(--text-light);">Loading products...</p>
+    </div>
 
-        <!-- LIVE ACTIVE ORDER TRACKER -->
-        <div id="orderTrackerCard">
-            <h2>🔔 Live Order Status</h2>
-            <div id="trackerInfo"></div>
+    <div class="orders-section">
+        <div class="section-title" style="margin-bottom: 12px;">📢 Live Order Trackers</div>
+        <div id="customerOrdersList">
+            <p style="color: var(--text-light); font-size: 0.85rem;">No active orders tracking.</p>
         </div>
     </div>
 
-    <!-- Firebase SDK Scripts CDN -->
+    <!-- Firebase SDK Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, getDocs, addDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCevmUKn9jsh3VrttK8MAyXEO5JjaFOTyM",
@@ -99,79 +86,113 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- LOAD PRODUCTS ---
-        async function loadStoreProducts() {
-            const grid = document.getElementById('productGrid');
-            grid.innerHTML = "";
-            const querySnapshot = await getDocs(collection(db, "products"));
+        // Helper function to convert standard Google Drive share links into clean direct image viewer links
+        function getDriveDirectUrl(url) {
+            if (!url) return "https://via.placeholder.com/400x200?text=No+Image+Provided";
             
-            if (querySnapshot.empty) {
-                grid.innerHTML = `<div class="empty-state">No products available right now. Check back soon!</div>`;
-                return;
+            // Check if it's a standard Google Drive share link containing file ID
+            let match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+            if (match && match[1]) {
+                return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`; //
+            }
+            
+            // Check if it's already structured with an id parameter
+            let idParam = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+            if (idParam && idParam[1]) {
+                return `https://drive.google.com/thumbnail?id=${idParam[1]}&sz=w1000`; //
             }
 
-            querySnapshot.forEach((docSnap) => {
-                const p = docSnap.data();
-                let imgUrl = p.image ? p.image : "https://via.placeholder.com/300x160?text=No+Image";
+            // Fallback if user used a direct image link or external source link
+            return url;
+        }
 
-                grid.innerHTML += `
-                    <div class="product-card">
-                        <img src="${imgUrl}" class="product-img" alt="${p.name}" onerror="this.src='https://via.placeholder.com/300x160?text=Image+Error'">
-                        <div class="product-content">
-                            <div class="product-title">${p.name}</div>
-                            <div class="product-desc">${p.description || 'No description provided.'}</div>
-                            <div class="product-price">₹${p.price}</div>
+        // Load Products into Storefront Grid
+        async function loadStoreProducts() {
+            const grid = document.getElementById('storeProductGrid');
+            try {
+                const querySnapshot = await getDocs(collection(db, "products"));
+                if (querySnapshot.empty) {
+                    grid.innerHTML = "<p style='color:var(--text-light);'>No products available right now.</p>";
+                    return;
+                }
+
+                grid.innerHTML = "";
+                querySnapshot.forEach((docSnap) => {
+                    const p = docSnap.data();
+                    const directImageUrl = getDriveDirectUrl(p.image);
+                    const categoryText = p.category || 'General';
+
+                    grid.innerHTML += `
+                        <div class="product-card">
+                            <img src="${directImageUrl}" alt="${p.name}" class="product-img" onerror="this.src='https://via.placeholder.com/400x200?text=Image+Load+Error'">
+                            <div class="product-content">
+                                <span class="category-tag">${categoryText}</span>
+                                <div class="product-title">${p.name}</div>
+                                <div class="product-desc">${p.description || 'No description available.'}</div>
+                                <div class="product-footer">
+                                    <div class="product-price">₹${p.price}</div>
+                                    <button class="btn" onclick="placeOrder('${p.name.replace(/'/g, "\\'")}', '${p.price}')">Order Now</button>
+                                </div>
+                            </div>
                         </div>
-                        <div style="padding: 16px; padding-top: 0;">
-                            <button class="btn btn-primary" onclick="placeOrder('${p.name.replace(/'/g, "\\'")}', '${p.price}')">Order Now</button>
+                    `;
+                });
+            } catch (e) {
+                console.error("Error loading products:", e);
+                grid.innerHTML = "<p style='color:var(--danger);'>Failed to load products.</p>";
+            }
+        }
+
+        // Place a Live Order
+        window.placeOrder = async function(productName, price) {
+            try {
+                const randomOrderNum = Math.floor(100 + Math.random() * 900);
+                await addDoc(collection(db, "orders"), {
+                    orderNumber: randomOrderNum,
+                    productName: productName,
+                    price: price,
+                    status: "pending",
+                    createdAt: new Date()
+                });
+                alert(`Order #${randomOrderNum} placed successfully! Check status below.`);
+            } catch (e) {
+                console.error("Error placing order: ", e);
+                alert("Could not place order. Please try again.");
+            }
+        }
+
+        // Listen for live order changes
+        function initCustomerOrderListener() {
+            onSnapshot(collection(db, "orders"), (snapshot) => {
+                const container = document.getElementById('customerOrdersList');
+                if (snapshot.empty) {
+                    container.innerHTML = "<p style='color:var(--text-light); font-size:0.85rem;'>No active orders tracking.</p>";
+                    return;
+                }
+
+                container.innerHTML = "";
+                snapshot.forEach(docSnap => {
+                    const order = docSnap.data();
+                    let badgeClass = "badge-pending";
+                    if (order.status === "preparing") badgeClass = "badge-preparing";
+                    if (order.status === "ready") badgeClass = "badge-ready";
+
+                    container.innerHTML += `
+                        <div class="customer-order-card">
+                            <div>
+                                <strong style="font-size: 0.9rem;">Order #${order.orderNumber}</strong>
+                                <div style="font-size: 0.8rem; color: var(--text-light);">${order.productName} (₹${order.price})</div>
+                            </div>
+                            <span class="badge ${badgeClass}">${order.status}</span>
                         </div>
-                    </div>
-                `;
+                    `;
+                });
             });
         }
 
-        // --- PLACE ORDER ---
-        window.placeOrder = async function(productName, productPrice) {
-            const orderNumber = Math.floor(100 + Math.random() * 900); // 3-digit order token
-
-            try {
-                const docRef = await addDoc(collection(db, "orders"), {
-                    orderNumber: orderNumber,
-                    productName: productName,
-                    price: productPrice,
-                    status: "pending",
-                    timestamp: new Date()
-                });
-
-                // Show & Setup Tracker Card
-                const trackerCard = document.getElementById('orderTrackerCard');
-                const trackerInfo = document.getElementById('trackerInfo');
-                trackerCard.style.display = "block";
-                trackerInfo.innerHTML = `Order <strong>#${orderNumber}</strong> (${productName})<div class="tracker-status status-pending">Status: Pending Admin Approval</div>`;
-                
-                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-
-                // Listen to live changes for this specific order
-                onSnapshot(doc(db, "orders", docRef.id), (docSnap) => {
-                    if (docSnap.exists()) {
-                        const status = docSnap.data().status;
-                        if (status === "pending") {
-                            trackerInfo.innerHTML = `Order <strong>#${orderNumber}</strong> (${productName})<div class="tracker-status status-pending">Status: Pending Admin Approval</div>`;
-                        } else if (status === "preparing") {
-                            trackerInfo.innerHTML = `Order <strong>#${orderNumber}</strong> (${productName})<div class="tracker-status status-preparing">Status: Preparing in Queue 👨‍🍳</div>`;
-                        } else if (status === "ready") {
-                            trackerInfo.innerHTML = `Order <strong>#${orderNumber}</strong> (${productName})<div class="tracker-status status-ready">Status: Ready for Pickup! 🎉</div>`;
-                        }
-                    }
-                });
-
-            } catch (e) {
-                console.error("Error placing order: ", e);
-                alert("Failed to place order. Please try again.");
-            }
-        }
-
+        // Initialize App on Load
         loadStoreProducts();
+        initCustomerOrderListener();
     </script>
 </body>
 </html>
