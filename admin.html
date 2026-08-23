@@ -198,14 +198,26 @@
             }
         }
 
-        // --- AUTHENTICATION ---
+        // --- AUTHENTICATION & SESSION HANDLING ---
         if (!localStorage.getItem("adminPassword")) {
             localStorage.setItem("adminPassword", "Admin@123");
         }
 
+        // Check on initial page load if session storage already holds an active admin session
+        window.addEventListener('DOMContentLoaded', () => {
+            if (sessionStorage.getItem("adminLoggedIn") === "true") {
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('adminContent').style.display = 'flex';
+                loadProducts();
+                initStoreStatus();
+                initOrderListener();
+            }
+        });
+
         window.checkAutoLogin = function() {
             const inputVal = document.getElementById('adminPasswordInput').value;
             if (inputVal === localStorage.getItem("adminPassword")) {
+                sessionStorage.setItem("adminLoggedIn", "true");
                 document.getElementById('loginOverlay').style.display = 'none';
                 document.getElementById('adminContent').style.display = 'flex';
                 loadProducts();
@@ -215,6 +227,7 @@
         }
 
         window.logoutAdmin = function() {
+            sessionStorage.removeItem("adminLoggedIn");
             document.getElementById('adminContent').style.display = 'none';
             document.getElementById('loginOverlay').style.display = 'flex';
             document.getElementById('adminPasswordInput').value = "";
@@ -229,9 +242,8 @@
                 const data = snap.data();
                 const isOpen = data.isOpen || false;
                 document.getElementById('storeToggle').checked = isOpen;
-                if (data.nextOrderNumber) {
-                    // Show current baseline start or tracking number base
-                    document.getElementById('startOrderNumInput').value = data.customStartNumber || 200;
+                if (data.customStartNumber) {
+                    document.getElementById('startOrderNumInput').value = data.customStartNumber;
                 }
                 updateStatusLabel(isOpen);
             } else {
@@ -356,15 +368,4 @@
             document.getElementById('productPrice').value = price;
             document.getElementById('productImage').value = decodeURIComponent(image !== "undefined" ? image : "");
             
-            document.getElementById('saveBtn').innerText = "Update Product";
-            document.getElementById('cancelEditBtn').style.display = "block";
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        window.clearProductForm = function() {
-            document.getElementById('editProductId').value = "";
-            document.getElementById('productName').value = "";
-            document.getElementById('productCategory').value = "";
-            document.getElementById('productDesc').value = "";
-            document.getElementById('productPrice').value = "";
-            document.getElementB
+            document.getElementById('saveBtn').inner
