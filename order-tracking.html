@@ -42,6 +42,9 @@
         .live-order-card { background: #fafafa; border: 1px solid var(--border); padding: 8px 10px; border-radius: 8px; flex-shrink: 0; }
         .declined-order-card { background: #fff5f5; border: 1px solid #fecaca; padding: 8px 10px; border-radius: 8px; flex-shrink: 0; }
         
+        /* Common banner message styling */
+        .common-notice { background: #fee2e2; border: 1px solid #fecaca; color: var(--danger); font-size: 0.75rem; font-weight: 700; padding: 6px 10px; border-radius: 6px; margin-bottom: 6px; flex-shrink: 0; text-align: center; }
+
         .badge { padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; }
         .badge-pending { background: #fef3c7; color: #d97706; }
         .badge-preparing { background: #e0e7ff; color: #4f46e5; }
@@ -79,6 +82,7 @@
                     <span>⚠️ Declined Orders</span>
                     <span class="limit-label">Max 3</span>
                 </h2>
+                <div id="declinedNoticeContainer"></div>
                 <div class="list-container" id="declinedContainer">
                     <p style="color:var(--text-light); font-size:0.8rem;">No declined orders found.</p>
                 </div>
@@ -107,6 +111,7 @@
         function initTracker() {
             const acceptedContainer = document.getElementById('acceptedContainer');
             const declinedContainer = document.getElementById('declinedContainer');
+            const declinedNoticeContainer = document.getElementById('declinedNoticeContainer');
 
             onSnapshot(collection(db, "orders"), (snapshot) => {
                 let acceptedOrders = [];
@@ -162,10 +167,12 @@
                     });
                 }
 
-                // --- RENDER DECLINED ORDERS (Max 3, FIFO) ---
+                // --- RENDER DECLINED ORDERS (Max 3, FIFO) & COMMON BANNER ---
                 if (declinedOrders.length === 0) {
+                    declinedNoticeContainer.innerHTML = "";
                     declinedContainer.innerHTML = `<p style="color:var(--text-light); font-size:0.8rem;">No declined orders found.</p>`;
                 } else {
+                    declinedNoticeContainer.innerHTML = `<div class="common-notice">Order Declined. Contact Associate for further assistance.</div>`;
                     declinedContainer.innerHTML = "";
                     declinedOrders.forEach(order => {
                         declinedContainer.innerHTML += `
@@ -176,7 +183,7 @@
                                 </div>
                                 <div style="font-size:0.75rem; color:var(--text-light); display: flex; justify-content: space-between;">
                                     <span>₹${order.price}</span>
-                                    <span style="color:var(--danger); font-weight:600;">Order Declined. Contact Associate for further assistance.</span>
+                                    <span style="color:var(--danger); font-weight:600;">Cancelled</span>
                                 </div>
                             </div>
                         `;
