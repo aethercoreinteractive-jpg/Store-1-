@@ -7,7 +7,11 @@
     <style>
         :root {
             --kfc-red: #e4002b;
+            --kfc-red-hover: #c50024;
             --kfc-dark: #202124;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
             --bg: #f4f4f5;
             --card-bg: #ffffff;
             --text: #18181b;
@@ -16,47 +20,38 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
-        body { background: var(--bg); color: var(--text); padding-bottom: 90px; }
+        body { background: var(--bg); color: var(--text); padding: 12px; padding-bottom: 80px; }
 
-        /* Header Bar */
-        header { background: var(--kfc-dark); color: white; padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .logo { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.5px; color: #fff; display: flex; align-items: center; gap: 8px; }
-        .logo span { color: var(--kfc-red); }
+        .container { max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+        
+        header { background: var(--kfc-dark); color: white; padding: 16px 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        header h1 { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.5px; }
+        header h1 span { color: var(--kfc-red); }
 
-        /* Category Filter Bar */
-        .category-nav { display: flex; gap: 10px; overflow-x: auto; padding: 14px 16px; background: white; border-bottom: 1px solid var(--border); position: sticky; top: 61px; z-index: 90; scrollbar-width: none; }
-        .category-nav::-webkit-scrollbar { display: none; }
-        .cat-chip { padding: 8px 18px; background: var(--bg); border: 1px solid var(--border); border-radius: 30px; font-size: 0.85rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s; color: var(--text-light); }
-        .cat-chip.active { background: var(--kfc-red); color: white; border-color: var(--kfc-red); }
+        .store-alert { padding: 12px 16px; border-radius: 12px; font-weight: 700; font-size: 0.9rem; text-align: center; }
+        .store-alert.closed { background: #fee2e2; color: var(--danger); border: 1px solid #fecaca; }
+        .store-alert.open { background: #d1fae5; color: var(--success); border: 1px solid #a7f3d0; }
 
-        /* Main Container */
-        .container { max-width: 800px; margin: 0 auto; padding: 16px; }
-        .section-title { font-size: 1.2rem; font-weight: 800; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .card { background: var(--card-bg); padding: 16px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border); }
+        .card h2 { font-size: 1.1rem; margin-bottom: 12px; font-weight: 800; }
 
-        /* Product Grid (KFC Layout Style) */
-        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; margin-bottom: 30px; }
-        .product-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: transform 0.2s; }
-        .product-card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.06); }
-        
-        .product-img-wrapper { width: 100%; height: 160px; background: #f1f1f3; position: relative; }
-        .product-img { width: 100%; height: 100%; object-fit: cover; }
-        
-        .product-content { padding: 14px; display: flex; flex-direction: column; gap: 6px; flex-grow: 1; }
-        .product-category-tag { font-size: 0.7rem; font-weight: 700; color: var(--kfc-red); text-transform: uppercase; }
-        .product-title { font-size: 1rem; font-weight: 700; color: var(--text); }
-        .product-desc { font-size: 0.8rem; color: var(--text-light); line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        
-        .product-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 10px; }
-        .product-price { font-size: 1.05rem; font-weight: 800; color: var(--text); }
-        
-        .btn-add { background: var(--kfc-red); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: background 0.2s; }
-        .btn-add:hover { background: #c50024; }
+        /* Menu Item Layout */
+        .menu-item { display: flex; gap: 12px; padding: 12px; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; background: #fafafa; align-items: center; }
+        .menu-item img { width: 70px; height: 70px; object-fit: cover; border-radius: 8px; background: #e4e4e7; flex-shrink: 0; }
+        .menu-details { flex-grow: 1; }
+        .category-tag { display: inline-block; background: #fee2e2; color: var(--kfc-red); font-size: 0.65rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-bottom: 4px; text-transform: uppercase; }
+        .menu-details h3 { font-size: 0.95rem; font-weight: 700; color: var(--text); }
+        .menu-details p { font-size: 0.75rem; color: var(--text-light); margin: 2px 0 6px 0; line-height: 1.2; }
+        .price { font-weight: 800; font-size: 0.9rem; color: var(--text); }
 
-        /* Live Order Trackers Section */
-        .orders-section { background: var(--card-bg); border: 1px solid var(--border); padding: 18px; border-radius: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); }
-        .customer-order-card { background: #fafafa; border: 1px solid var(--border); padding: 12px 16px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        
-        .badge { padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+        .btn { width: 100%; padding: 10px; border: none; border-radius: 10px; font-size: 0.9rem; font-weight: 700; cursor: pointer; display: inline-flex; justify-content: center; align-items: center; gap: 8px; transition: opacity 0.2s; }
+        .btn-primary { background: var(--kfc-red); color: white; }
+        .btn-primary:hover { background: var(--kfc-red-hover); }
+        .btn:disabled { background: #cbd5e1; cursor: not-allowed; }
+
+        /* Order Status Panel */
+        .live-order-card { background: #fafafa; border: 1px solid var(--border); padding: 14px; border-radius: 12px; margin-top: 10px; }
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
         .badge-pending { background: #fef3c7; color: #d97706; }
         .badge-preparing { background: #e0e7ff; color: #4f46e5; }
         .badge-ready { background: #d1fae5; color: #059669; }
@@ -64,34 +59,34 @@
 </head>
 <body>
 
-    <header>
-        <div class="logo">🍗 Quick<span>Bites</span></div>
-        <div style="font-size: 0.85rem; font-weight: 600; background: rgba(255,255,255,0.1); padding: 6px 12px; border-radius: 20px;">⚡ Express Lane</div>
-    </header>
-
-    <!-- Category Dynamic Filter Bar -->
-    <div class="category-nav" id="categoryNavContainer">
-        <div class="cat-chip active" onclick="filterCategory('All', this)">All Items</div>
-    </div>
-
     <div class="container">
-        <div class="section-title">Our Menu</div>
-        <div id="storeProductGrid" class="product-grid">
-            <p style="color: var(--text-light);">Loading menu items...</p>
+        <header>
+            <h1>🍗 Quick<span>Bites</span></h1>
+            <a href="admin.html" style="color: white; font-size: 0.8rem; text-decoration: none; background: rgba(255,255,255,0.1); padding: 6px 10px; border-radius: 6px;">Admin</a>
+        </header>
+
+        <!-- STORE STATUS BANNER -->
+        <div id="storeAlertContainer">
+            <div class="store-alert closed">Checking store status...</div>
         </div>
 
-        <div class="orders-section" style="margin-top: 30px;">
-            <div class="section-title" style="font-size: 1rem; margin-bottom: 12px;">Live Order Status</div>
-            <div id="customerOrdersList">
-                <p style="color: var(--text-light); font-size: 0.85rem;">No active orders found.</p>
-            </div>
+        <!-- MENU LIST -->
+        <div class="card">
+            <h2>📜 Our Menu</h2>
+            <div id="menuContainer">Loading menu...</div>
+        </div>
+
+        <!-- LIVE ORDER TRACKER -->
+        <div class="card" id="trackerCard" style="display:none;">
+            <h2>🔔 Your Live Order</h2>
+            <div id="trackerContainer"></div>
         </div>
     </div>
 
-    <!-- Firebase SDK Logic -->
+    <!-- Firebase Script Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, getDocs, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCevmUKn9jsh3VrttK8MAyXEO5JjaFOTyM",
@@ -106,153 +101,175 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        let allProducts = [];
-        let currentCategory = 'All';
+        let isStoreOpen = false;
 
-        // Helper function for converting Google Drive sharing link into a direct rendering image link
-        function getDriveDirectUrl(url) {
-            if (!url) return "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=500&auto=format&fit=crop&q=60"; // appetizing fallback image
-            
-            let match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-            if (match && match[1]) {
-                return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`;
-            }
-            
-            let idParam = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-            if (idParam && idParam[1]) {
-                return `https://drive.google.com/thumbnail?id=${idParam[1]}&sz=w1000`;
-            }
+        // --- CHECK STORE STATUS & LISTEN TO CHANGES ---
+        function initStoreListener() {
+            onSnapshot(doc(db, "settings", "storeStatus"), (docSnap) => {
+                const alertContainer = document.getElementById('storeAlertContainer');
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    isStoreOpen = data.isOpen || false;
 
-            return url;
+                    if (isStoreOpen) {
+                        alertContainer.innerHTML = `<div class="store-alert open">🟢 Store is OPEN! Place your orders below.</div>`;
+                    } else {
+                        alertContainer.innerHTML = `<div class="store-alert closed">🔴 Store is currently CLOSED. We are not accepting orders right now.</div>`;
+                    }
+                    loadMenu();
+                } else {
+                    alertContainer.innerHTML = `<div class="store-alert closed">🔴 Store status unavailable.</div>`;
+                }
+            });
         }
 
-        // Fetch products and populate menu
-        async function loadStoreProducts() {
-            const grid = document.getElementById('storeProductGrid');
-            const navContainer = document.getElementById('categoryNavContainer');
+        // --- CONVERT GOOGLE DRIVE LINK TO DIRECT EMBED IMAGE URL ---
+        function getDirectImageUrl(url) {
+            if (!url) return "https://via.placeholder.com/70?text=No+Image";
+            const match = url.match(/\/d\/(.*?)\/view/) || url.match(/id=([^&]+)/);
+            if (match && match[1]) {
+                return `https://lh3.googleusercontent.com/d/${match[1]}`;
+            }
+            return url; // fallback if direct link or external URL is provided
+        }
+
+        // --- LOAD MENU ITEMS ---
+        async function loadMenu() {
+            const menuContainer = document.getElementById('menuContainer');
+            menuContainer.innerHTML = "";
             
             try {
                 const querySnapshot = await getDocs(collection(db, "products"));
                 if (querySnapshot.empty) {
-                    grid.innerHTML = "<p style='color:var(--text-light);'>No products available right now.</p>";
+                    menuContainer.innerHTML = "<p style='color:var(--text-light); font-size:0.85rem;'>No menu items available at the moment.</p>";
                     return;
                 }
 
-                allProducts = [];
-                let categories = new Set();
-
                 querySnapshot.forEach((docSnap) => {
-                    const data = docSnap.data();
-                    allProducts.push({ id: docSnap.id, ...data });
-                    categories.add(data.category || 'General');
+                    const p = docSnap.data();
+                    const directImg = getDirectImageUrl(p.image);
+                    
+                    menuContainer.innerHTML += `
+                        <div class="menu-item">
+                            <img src="${directImg}" alt="${p.name}" onerror="this.src='https://via.placeholder.com/70?text=Food'">
+                            <div class="menu-details">
+                                <span class="category-tag">${p.category || 'General'}</span>
+                                <h3>${p.name}</h3>
+                                <p>${p.description || 'Delicious meal item prepared fresh.'}</p>
+                                <div class="price">₹${p.price}</div>
+                            </div>
+                            <button class="btn btn-primary" style="width: auto; padding: 8px 14px; font-size: 0.85rem;" 
+                                ${!isStoreOpen ? 'disabled' : ''} 
+                                onclick="placeOrder('${p.name}', '${p.price}')">
+                                ${isStoreOpen ? 'Order' : 'Closed'}
+                            </button>
+                        </div>
+                    `;
                 });
-
-                // Build category chips dynamically
-                navContainer.innerHTML = `<div class="cat-chip active" onclick="filterCategory('All', this)">All Items</div>`;
-                categories.forEach(cat => {
-                    navContainer.innerHTML += `<div class="cat-chip" onclick="filterCategory('${cat}', this)">${cat}</div>`;
-                });
-
-                renderFilteredProducts();
             } catch (e) {
-                console.error("Error loading products:", e);
-                grid.innerHTML = "<p style='color:#e4002b;'>Failed to load menu items.</p>";
+                console.error("Error loading menu: ", e);
+                menuContainer.innerHTML = "<p style='color:var(--danger); font-size:0.85rem;'>Failed to load menu items.</p>";
             }
         }
 
-        // Filter product items by selected category tab
-        window.filterCategory = function(category, element) {
-            currentCategory = category;
-            document.querySelectorAll('.cat-chip').forEach(chip => chip.classList.remove('active'));
-            element.classList.add('active');
-            renderFilteredProducts();
-        }
-
-        function renderFilteredProducts() {
-            const grid = document.getElementById('storeProductGrid');
-            const filtered = currentCategory === 'All' 
-                ? allProducts 
-                : allProducts.filter(p => (p.category || 'General') === currentCategory);
-
-            if (filtered.length === 0) {
-                grid.innerHTML = "<p style='color:var(--text-light); font-size:0.9rem;'>No items found in this category.</p>";
+        // --- PLACE ORDER WITH AUTO-INCREMENTING ORDER NUMBER ---
+        window.placeOrder = async function(productName, price) {
+            if (!isStoreOpen) {
+                alert("Sorry, the store is closed and cannot accept orders.");
                 return;
             }
 
-            grid.innerHTML = "";
-            filtered.forEach(p => {
-                const directImageUrl = getDriveDirectUrl(p.image);
-                const categoryText = p.category || 'General';
+            if (!confirm(`Confirm order for ${productName} (₹${price})?`)) return;
 
-                grid.innerHTML += `
-                    <div class="product-card">
-                        <div class="product-img-wrapper">
-                            <img src="${directImageUrl}" alt="${p.name}" class="product-img" onerror="this.src='https://images.unsplash.com/photo-1513104890138-7c749659a591?w=500&auto=format&fit=crop&q=60'">
+            try {
+                const storeRef = doc(db, "settings", "storeStatus");
+                const storeSnap = await getDoc(storeRef);
+                
+                let currentOrderNum = 200;
+                if (storeSnap.exists() && storeSnap.data().nextOrderNumber) {
+                    currentOrderNum = storeSnap.data().nextOrderNumber;
+                }
+
+                // Push new order to Firestore
+                await addDoc(collection(db, "orders"), {
+                    orderNumber: currentOrderNum,
+                    productName: productName,
+                    price: price,
+                    status: "pending",
+                    createdAt: new Date().toISOString()
+                });
+
+                // Increment counter for the next incoming order
+                await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js").then(async ({ updateDoc }) => {
+                    await updateDoc(storeRef, { nextOrderNumber: currentOrderNum + 1 });
+                });
+
+                alert(`Order placed successfully! Your Order Number is #${currentOrderNum}`);
+                
+                // Save tracker session reference
+                localStorage.setItem("lastActiveOrderNum", currentOrderNum);
+                initLiveTracker(currentOrderNum);
+
+            } catch (e) {
+                console.error("Error placing order: ", e);
+                alert("Failed to place order. Please try again.");
+            }
+        }
+
+        // --- REAL-TIME ORDER TRACKING ---
+        function initLiveTracker(targetOrderNum) {
+            const trackerCard = document.getElementById('trackerCard');
+            const trackerContainer = document.getElementById('trackerContainer');
+            
+            trackerCard.style.display = "block";
+
+            onSnapshot(collection(db, "orders"), (snapshot) => {
+                let foundOrder = null;
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (data.orderNumber == targetOrderNum) {
+                        foundOrder = data;
+                    }
+                });
+
+                if (!foundOrder) {
+                    trackerContainer.innerHTML = `<p style="color:var(--success); font-size:0.85rem; font-weight:600;">✅ Order #${targetOrderNum} has been completed and picked up! Thank you.</p>`;
+                    return;
+                }
+
+                let badgeClass = "badge-pending";
+                let statusText = "Pending Confirmation from Kitchen";
+                if (foundOrder.status === "preparing") {
+                    badgeClass = "badge-preparing";
+                    statusText = "Kitchen is Preparing your Order 🔥";
+                } else if (foundOrder.status === "ready") {
+                    badgeClass = "badge-ready";
+                    statusText = "Ready for Counter Pickup! 🎉";
+                }
+
+                trackerContainer.innerHTML = `
+                    <div class="live-order-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px; font-weight:700;">
+                            <span>Order #${foundOrder.orderNumber}</span>
+                            <span class="badge ${badgeClass}">${foundOrder.status}</span>
                         </div>
-                        <div class="product-content">
-                            <span class="product-category-tag">${categoryText}</span>
-                            <div class="product-title">${p.name}</div>
-                            <div class="product-desc">${p.description || 'Delicious freshly prepared item.'}</div>
-                            <div class="product-footer">
-                                <div class="product-price">₹${p.price}</div>
-                                <button class="btn-add" onclick="placeOrder('${p.name.replace(/'/g, "\\'")}', '${p.price}')">+ Add</button>
-                            </div>
+                        <div style="font-size:0.85rem; color:var(--text-light); margin-bottom: 6px;">
+                            <strong>Item:</strong> ${foundOrder.productName} (₹${foundOrder.price})
                         </div>
+                        <div style="font-size:0.9rem; font-weight:700; color:var(--kfc-red);">${statusText}</div>
                     </div>
                 `;
             });
         }
 
-        // Place a live order
-        window.placeOrder = async function(productName, price) {
-            try {
-                const randomOrderNum = Math.floor(100 + Math.random() * 900);
-                await addDoc(collection(db, "orders"), {
-                    orderNumber: randomOrderNum,
-                    productName: productName,
-                    price: price,
-                    status: "pending",
-                    createdAt: new Date()
-                });
-                alert(`Order #${randomOrderNum} placed successfully! Track status below.`);
-            } catch (e) {
-                console.error("Error placing order: ", e);
-                alert("Could not place order. Please try again.");
-            }
+        // Run initialization
+        initStoreListener();
+        
+        // Auto-resume tracker if user refreshed page while having an active order
+        const savedOrderNum = localStorage.getItem("lastActiveOrderNum");
+        if (savedOrderNum) {
+            initLiveTracker(savedOrderNum);
         }
-
-        // Listen for live customer orders status update
-        function initCustomerOrderListener() {
-            onSnapshot(collection(db, "orders"), (snapshot) => {
-                const container = document.getElementById('customerOrdersList');
-                if (snapshot.empty) {
-                    container.innerHTML = "<p style='color:var(--text-light); font-size:0.85rem;'>No active orders tracking.</p>";
-                    return;
-                }
-
-                container.innerHTML = "";
-                snapshot.forEach(docSnap => {
-                    const order = docSnap.data();
-                    let badgeClass = "badge-pending";
-                    if (order.status === "preparing") badgeClass = "badge-preparing";
-                    if (order.status === "ready") badgeClass = "badge-ready";
-
-                    container.innerHTML += `
-                        <div class="customer-order-card">
-                            <div>
-                                <strong style="font-size: 0.9rem;">Order #${order.orderNumber}</strong>
-                                <div style="font-size: 0.8rem; color: var(--text-light);">${order.productName} (₹${order.price})</div>
-                            </div>
-                            <span class="badge ${badgeClass}">${order.status}</span>
-                        </div>
-                    `;
-                });
-            });
-        }
-
-        // Initialize Store Front
-        loadStoreProducts();
-        initCustomerOrderListener();
     </script>
 </body>
 </html>
