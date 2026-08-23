@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickBites - Order Tracking</title>
+    <style>
+        :root {
+            --kfc-red: #e4002b;
+            --kfc-red-hover: #c50024;
+            --kfc-dark: #202124;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg: #f4f4f5;
+            --card-bg: #ffffff;
+            --text: #18181b;
+            --text-light: #71717a;
+            --border: #e4e4e7;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        body { background: var(--bg); color: var(--text); padding: 12px; padding-bottom: 80px; }
+
+        .container { max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+        
+        header { background: var(--kfc-dark); color: white; padding: 16px 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        header h1 { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.5px; }
+        header h1 span { color: var(--kfc-red); }
+
+        .nav-btn { background: rgba(255,255,255,0.1); border: none; color: white; padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; transition: background 0.2s; }
+        .nav-btn:hover { background: rgba(255,255,255,0.2); }
+
+        .card { background: var(--card-bg); padding: 16px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border); }
+        .card h2 { font-size: 1.1rem; margin-bottom: 12px; font-weight: 800; }
+
+        .live-order-card { background: #fafafa; border: 1px solid var(--border); padding: 14px; border-radius: 12px; margin-top: 10px; }
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+        .badge-pending { background: #fef3c7; color: #d97706; }
+        .badge-preparing { background: #e0e7ff; color: #4f46e5; }
+        .badge-ready { background: #d1fae5; color: #059669; }
+        .badge-declined { background: #fee2e2; color: var(--danger); }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>📦 Order <span>Tracker</span></h1>
+            <a href="index.html" class="nav-btn">← Back to Menu</a>
+        </header>
+
+        <!-- LIVE ORDER TRACKER PANEL -->
+        <div class="card">
+            <h2>🔔 Active Order Status</h2>
+            <div id="trackerContainer">
+                <p style="color:var(--text-light); font-size:0.85rem;">No active order found. Place an order from the menu first!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Script Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCevmUKn9jsh3VrttK8MAyXEO5JjaFOTyM",
+            authDomain: "store-1-4fbf7.firebaseapp.com",
+            projectId: "store-1-4fbf7",
+            storageBucket: "store-1-4fbf7.firebasestorage.app",
+            messagingSenderId: "183172029649",
+            appId: "1:183172029649:web:cc403927d797b3e53279f0",
+            measurementId: "G-W34ETBHTPB"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        function initLiveTracker() {
+            const targetOrderNum = localStorage.getItem("lastActiveOrderNum");
+            const trackerContainer = document.getElementById('trackerContainer');
+
+            if (!targetOrderNum) {
+                trackerContainer.innerHTML = `<p style="color:var(--text-light); font-size:0.85rem;">No active order found. Place an order from the menu first!</p>`;
+                return;
+            }
+
+            onSnapshot(collection(db, "orders"), (snapshot) => {
+                let foundOrder = null;
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (data.orderNumber == targetOrderNum) {
+                        foundOrder = data;
+                    }
+                });
+
+                if (!foundOrder) {
+                    trackerContainer.innerHTML = `<p style="color:var(--success); font-size:0.85rem; font-weight:600;">✅ Order #${targetOrderNum} has been completed and picked up! Thank you.</p>`;
+                    return;
+                }
+
+                let badgeClass = "badge-pending";
+                let statusText = "Pending Confirmation from Kitchen";
+                if (foundOrder.status === "preparing") {
+                    badgeClass = "badge-preparing";
+                    statusText = "Kitchen is Preparing your Order 🔥";
+                } else if (foundOrder.status === "ready") {
+                    badgeClass = "badge-ready";
+                    statusText = "Ready for Counter Pickup! 🎉";
+                } else if (foundOrder.status === "declined") {
+                    badgeClass = "badge-declined";
+                    statusText = "Order Declined by Admin";
+                }
+
+                if (foundOrder.status === "declined") {
+                    trackerContainer.innerHTML = `
+                        <div class="live-order-card" style="border-color: #fecaca; background: #fff5f5;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px; font-weight:700;">
+                                <span>Order #${foundOrder.orderNumber}</span>
+                                <span class="badge ${badgeClass}">Declined</span>
+                            </div>
+                            <div style="font-size:0.85rem; color:var(--text-light); margin-bottom: 8px;">
+                                <strong>Item:</strong> ${foundOrder.productName} (₹${foundOrder.price})
+                            </div>
+                            <div style="font-size:0.9rem; font-weight:700; color:var(--danger); margin-bottom: 6px;">❌ Unfortunately, your order could not be processed at this time.</div>
+                            <p style="font-size:0.8rem; color:var(--text-light); line-height: 1.4;">Please contact the association or counter staff for assistance regarding your order.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                trackerContainer.innerHTML = `
+                    <div class="live-order-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px; font-weight:700;">
+                            <span>Order #${foundOrder.orderNumber}</span>
+                            <span class="badge ${badgeClass}">${foundOrder.status}</span>
+                        </div>
+                        <div style="font-size:0.85rem; color:var(--text-light); margin-bottom: 6px;">
+                            <strong>Item:</strong> ${foundOrder.productName} (₹${foundOrder.price})
+                        </div>
+                        <div style="font-size:0.9rem; font-weight:700; color:var(--kfc-red);">${statusText}</div>
+                    </div>
+                `;
+            });
+        }
+
+        initLiveTracker();
+    </script>
+</body>
+</html>
