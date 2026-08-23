@@ -24,9 +24,13 @@
 
         .container { max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
         
-        header { background: var(--kfc-dark); color: white; padding: 16px 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); position: relative; }
+        header { background: var(--kfc-dark); color: white; padding: 16px 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
         header h1 { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.5px; }
         header h1 span { color: var(--kfc-red); }
+
+        .header-nav { display: flex; gap: 8px; align-items: center; }
+        .nav-btn { background: rgba(255,255,255,0.1); border: none; color: white; padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; transition: background 0.2s; }
+        .nav-btn:hover { background: rgba(255,255,255,0.2); }
 
         /* Gear Icon & Menu Dropdown */
         .settings-menu-container { position: relative; }
@@ -58,14 +62,6 @@
         .btn-primary { background: var(--kfc-red); color: white; }
         .btn-primary:hover { background: var(--kfc-red-hover); }
         .btn:disabled { background: #cbd5e1; cursor: not-allowed; }
-
-        /* Order Status Panel */
-        .live-order-card { background: #fafafa; border: 1px solid var(--border); padding: 14px; border-radius: 12px; margin-top: 10px; }
-        .badge { padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
-        .badge-pending { background: #fef3c7; color: #d97706; }
-        .badge-preparing { background: #e0e7ff; color: #4f46e5; }
-        .badge-ready { background: #d1fae5; color: #059669; }
-        .badge-declined { background: #fee2e2; color: var(--danger); }
     </style>
 </head>
 <body>
@@ -73,12 +69,15 @@
     <div class="container">
         <header>
             <h1>🍗 Quick<span>Bites</span></h1>
-            
-            <!-- GEAR ICON WITH ADMIN DROPDOWN -->
-            <div class="settings-menu-container">
-                <button type="button" class="gear-btn" id="gearBtn" title="Settings">⚙️</button>
-                <div id="adminDropdown" class="dropdown-content">
-                    <a href="admin.html">🔐 Admin Login</a>
+            <div class="header-nav">
+                <a href="order-tracking.html" class="nav-btn">📦 Track Orders</a>
+                
+                <!-- GEAR ICON WITH ADMIN DROPDOWN -->
+                <div class="settings-menu-container">
+                    <button type="button" class="gear-btn" id="gearBtn" title="Settings">⚙️</button>
+                    <div id="adminDropdown" class="dropdown-content">
+                        <a href="admin.html">🔐 Admin Login</a>
+                    </div>
                 </div>
             </div>
         </header>
@@ -92,12 +91,6 @@
         <div class="card">
             <h2>📜 Our Menu</h2>
             <div id="menuContainer">Loading menu...</div>
-        </div>
-
-        <!-- LIVE ORDER TRACKER -->
-        <div class="card" id="trackerCard" style="display:none;">
-            <h2>🔔 Your Live Order</h2>
-            <div id="trackerContainer"></div>
         </div>
     </div>
 
@@ -235,10 +228,10 @@
                     await updateDoc(storeRef, { nextOrderNumber: currentOrderNum + 1 });
                 });
 
-                alert(`Order placed successfully! Your Order Number is #${currentOrderNum}`);
-                
                 localStorage.setItem("lastActiveOrderNum", currentOrderNum);
-                initLiveTracker(currentOrderNum);
+                alert(`Order placed successfully! Your Order Number is #${currentOrderNum}\n\nRedirecting to Order Tracking...`);
+                
+                window.location.href = "order-tracking.html";
 
             } catch (e) {
                 console.error("Error placing order: ", e);
@@ -246,81 +239,7 @@
             }
         }
 
-        // --- REAL-TIME ORDER TRACKING ---
-        function initLiveTracker(targetOrderNum) {
-            const trackerCard = document.getElementById('trackerCard');
-            const trackerContainer = document.getElementById('trackerContainer');
-            
-            trackerCard.style.display = "block";
-
-            onSnapshot(collection(db, "orders"), (snapshot) => {
-                let foundOrder = null;
-                snapshot.forEach(docSnap => {
-                    const data = docSnap.data();
-                    if (data.orderNumber == targetOrderNum) {
-                        foundOrder = data;
-                    }
-                });
-
-                if (!foundOrder) {
-                    // Check if the order was declined (deleted from active orders) vs completed
-                    // If it was previously tracked, we can check a separate logs collection or handle state gently.
-                    // For safety, let's verify localStorage to show the decline message if it vanished abruptly.
-                    trackerContainer.innerHTML = `<p style="color:var(--success); font-size:0.85rem; font-weight:600;">✅ Order #${targetOrderNum} has been completed and picked up! Thank you.</p>`;
-                    return;
-                }
-
-                let badgeClass = "badge-pending";
-                let statusText = "Pending Confirmation from Kitchen";
-                if (foundOrder.status === "preparing") {
-                    badgeClass = "badge-preparing";
-                    statusText = "Kitchen is Preparing your Order 🔥";
-                } else if (foundOrder.status === "ready") {
-                    badgeClass = "badge-ready";
-                    statusText = "Ready for Counter Pickup! 🎉";
-                } else if (foundOrder.status === "declined") {
-                    badgeClass = "badge-declined";
-                    statusText = "Order Declined by Admin";
-                }
-
-                if (foundOrder.status === "declined") {
-                    trackerContainer.innerHTML = `
-                        <div class="live-order-card" style="border-color: #fecaca; background: #fff5f5;">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px; font-weight:700;">
-                                <span>Order #${foundOrder.orderNumber}</span>
-                                <span class="badge ${badgeClass}">Declined</span>
-                            </div>
-                            <div style="font-size:0.85rem; color:var(--text-light); margin-bottom: 8px;">
-                                <strong>Item:</strong> ${foundOrder.productName} (₹${foundOrder.price})
-                            </div>
-                            <div style="font-size:0.9rem; font-weight:700; color:var(--danger); margin-bottom: 6px;">❌ Unfortunately, your order could not be processed at this time.</div>
-                            <p style="font-size:0.8rem; color:var(--text-light); line-height: 1.4;">Please contact the associate or counter staff for assistance regarding your order.</p>
-                        </div>
-                    `;
-                    return;
-                }
-
-                trackerContainer.innerHTML = `
-                    <div class="live-order-card">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px; font-weight:700;">
-                            <span>Order #${foundOrder.orderNumber}</span>
-                            <span class="badge ${badgeClass}">${foundOrder.status}</span>
-                        </div>
-                        <div style="font-size:0.85rem; color:var(--text-light); margin-bottom: 6px;">
-                            <strong>Item:</strong> ${foundOrder.productName} (₹${foundOrder.price})
-                        </div>
-                        <div style="font-size:0.9rem; font-weight:700; color:var(--kfc-red);">${statusText}</div>
-                    </div>
-                `;
-            });
-        }
-
         initStoreListener();
-        
-        const savedOrderNum = localStorage.getItem("lastActiveOrderNum");
-        if (savedOrderNum) {
-            initLiveTracker(savedOrderNum);
-        }
     </script>
 </body>
 </html>
