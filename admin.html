@@ -59,6 +59,7 @@
         .product-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; background: #fafafa; }
         .product-info h4 { font-size: 0.95rem; color: var(--text); }
         .product-info p { font-size: 0.8rem; color: var(--text-light); margin-top: 2px; }
+        .category-tag { display: inline-block; background: #e0e7ff; color: var(--primary); font-size: 0.7rem; font-weight: 600; padding: 2px 6px; border-radius: 4px; margin-bottom: 4px; text-transform: uppercase; }
         .product-actions { display: flex; gap: 6px; }
         .product-actions button { padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; }
 
@@ -66,7 +67,7 @@
         .order-card { background: #f8fafc; border: 1px solid var(--border); padding: 14px; border-radius: 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px; }
         .order-header { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 1rem; }
         .order-details { font-size: 0.85rem; color: var(--text-light); }
-        .badge { padding: 4px 8px; border-radius: 6px; font-size: 0.75srem; font-weight: 600; text-transform: uppercase; }
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
         .badge-pending { background: #fef3c7; color: #d97706; }
         .badge-preparing { background: #e0e7ff; color: #4f46e5; }
         .badge-ready { background: #d1fae5; color: #059669; }
@@ -98,8 +99,9 @@
             <h2>📦 Product Control</h2>
             <input type="hidden" id="editProductId">
             <input type="text" id="productName" placeholder="Product Name">
+            <input type="text" id="productCategory" placeholder="Category (e.g. Snacks, Drinks)">
             <textarea id="productDesc" placeholder="Product Description"></textarea>
-            <input type="number" id="productPrice" placeholder="Price ($)">
+            <input type="number" id="productPrice" placeholder="Price (₹)">
             <input type="text" id="productImage" placeholder="Google Drive Image Link">
             
             <div class="form-row">
@@ -189,6 +191,7 @@
         window.saveProduct = async function() {
             const id = document.getElementById('editProductId').value;
             const name = document.getElementById('productName').value;
+            const category = document.getElementById('productCategory').value || 'General';
             const description = document.getElementById('productDesc').value;
             const price = document.getElementById('productPrice').value;
             const image = document.getElementById('productImage').value;
@@ -200,10 +203,10 @@
 
             try {
                 if (id) {
-                    await updateDoc(doc(db, "products", id), { name, description, price, image });
+                    await updateDoc(doc(db, "products", id), { name, category, description, price, image });
                     alert("Product updated successfully!");
                 } else {
-                    await addDoc(collection(db, "products"), { name, description, price, image });
+                    await addDoc(collection(db, "products"), { name, category, description, price, image });
                     alert("Product added successfully!");
                 }
                 clearProductForm();
@@ -228,11 +231,12 @@
                 container.innerHTML += `
                     <div class="product-item">
                         <div class="product-info">
-                            <h4>${p.name} ($${p.price})</h4>
+                            <span class="category-tag">${p.category || 'General'}</span>
+                            <h4>${p.name} (₹${p.price})</h4>
                             <p>${p.description ? p.description.substring(0, 40) + '...' : 'No description'}</p>
                         </div>
                         <div class="product-actions">
-                            <button style="background:#e0e7ff; color:#4f46e5;" onclick="editProduct('${docSnap.id}', '${encodeURIComponent(p.name)}', '${encodeURIComponent(p.description || '')}', '${p.price}', '${encodeURIComponent(p.image || '')}')">Edit</button>
+                            <button style="background:#e0e7ff; color:#4f46e5;" onclick="editProduct('${docSnap.id}', '${encodeURIComponent(p.name)}', '${encodeURIComponent(p.category || '')}', '${encodeURIComponent(p.description || '')}', '${p.price}', '${encodeURIComponent(p.image || '')}')">Edit</button>
                             <button style="background:#fee2e2; color:#ef4444;" onclick="deleteProduct('${docSnap.id}')">Delete</button>
                         </div>
                     </div>
@@ -240,9 +244,10 @@
             });
         }
 
-        window.editProduct = function(id, name, desc, price, image) {
+        window.editProduct = function(id, name, category, desc, price, image) {
             document.getElementById('editProductId').value = id;
             document.getElementById('productName').value = decodeURIComponent(name);
+            document.getElementById('productCategory').value = decodeURIComponent(category);
             document.getElementById('productDesc').value = decodeURIComponent(desc);
             document.getElementById('productPrice').value = price;
             document.getElementById('productImage').value = decodeURIComponent(image !== "undefined" ? image : "");
@@ -255,6 +260,7 @@
         window.clearProductForm = function() {
             document.getElementById('editProductId').value = "";
             document.getElementById('productName').value = "";
+            document.getElementById('productCategory').value = "";
             document.getElementById('productDesc').value = "";
             document.getElementById('productPrice').value = "";
             document.getElementById('productImage').value = "";
@@ -312,7 +318,7 @@
                                 <span class="badge ${badgeClass}">${order.status}</span>
                             </div>
                             <div class="order-details">
-                                <strong>Item:</strong> ${order.productName || 'Custom Item'} (${order.price ? '$' + order.price : ''})
+                                <strong>Item:</strong> ${order.productName || 'Custom Item'} (${order.price ? '₹' + order.price : ''})
                             </div>
                             <div>${actionButton}</div>
                         </div>
