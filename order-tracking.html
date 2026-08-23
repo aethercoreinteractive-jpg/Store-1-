@@ -7,11 +7,9 @@
     <style>
         :root {
             --kfc-red: #e4002b;
-            --kfc-red-hover: #c50024;
             --kfc-dark: #202124;
             --success: #10b981;
             --danger: #ef4444;
-            --warning: #f59e0b;
             --bg: #f4f4f5;
             --card-bg: #ffffff;
             --text: #18181b;
@@ -20,30 +18,37 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
-        body { background: var(--bg); color: var(--text); padding: 12px; padding-bottom: 80px; }
-
-        .container { max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
         
-        header { background: var(--kfc-dark); color: white; padding: 16px 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-        header h1 { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.5px; }
+        /* Lock body size to viewport to prevent outer scrolling */
+        html, body { height: 100vh; overflow: hidden; background: var(--bg); color: var(--text); }
+
+        .container { max-width: 600px; height: 100vh; margin: 0 auto; display: flex; flex-direction: column; justify-content: space-between; padding: 10px; gap: 8px; }
+        
+        header { background: var(--kfc-dark); color: white; padding: 10px 16px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        header h1 { font-size: 1.1rem; font-weight: 800; letter-spacing: -0.5px; }
         header h1 span { color: var(--kfc-red); }
 
-        .nav-btn { background: rgba(255,255,255,0.1); border: none; color: white; padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; transition: background 0.2s; }
+        .nav-btn { background: rgba(255,255,255,0.1); border: none; color: white; padding: 6px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; transition: background 0.2s; }
         .nav-btn:hover { background: rgba(255,255,255,0.2); }
 
-        .card { background: var(--card-bg); padding: 16px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border); }
-        .card h2 { font-size: 1.1rem; margin-bottom: 12px; font-weight: 800; display: flex; justify-content: space-between; align-items: center; }
-
-        .live-order-card { background: #fafafa; border: 1px solid var(--border); padding: 14px; border-radius: 12px; margin-bottom: 10px; }
-        .declined-order-card { background: #fff5f5; border: 1px solid #fecaca; padding: 14px; border-radius: 12px; margin-bottom: 10px; }
+        /* Split sections evenly to fit screen */
+        .section-wrapper { flex: 1; display: flex; flex-direction: column; min-height: 0; }
         
-        .badge { padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+        .card { background: var(--card-bg); padding: 10px 14px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.03); border: 1px solid var(--border); display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+        .card h2 { font-size: 0.95rem; margin-bottom: 6px; font-weight: 800; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+
+        .list-container { overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 2px; }
+        
+        .live-order-card { background: #fafafa; border: 1px solid var(--border); padding: 8px 10px; border-radius: 8px; flex-shrink: 0; }
+        .declined-order-card { background: #fff5f5; border: 1px solid #fecaca; padding: 8px 10px; border-radius: 8px; flex-shrink: 0; }
+        
+        .badge { padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; }
         .badge-pending { background: #fef3c7; color: #d97706; }
         .badge-preparing { background: #e0e7ff; color: #4f46e5; }
         .badge-ready { background: #d1fae5; color: #059669; }
         .badge-declined { background: #fee2e2; color: var(--danger); }
         
-        .limit-label { font-size: 0.75rem; font-weight: normal; color: var(--text-light); background: #f4f4f5; padding: 2px 8px; border-radius: 6px; }
+        .limit-label { font-size: 0.7rem; font-weight: normal; color: var(--text-light); background: #f4f4f5; padding: 2px 6px; border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -51,28 +56,32 @@
     <div class="container">
         <header>
             <h1>📦 Order <span>Tracker</span></h1>
-            <a href="index.html" class="nav-btn">← Back to Menu</a>
+            <a href="index.html" class="nav-btn">← Back</a>
         </header>
 
         <!-- ACCEPTED ORDERS SECTION -->
-        <div class="card">
-            <h2>
-                <span>🔔 Accepted Orders</span>
-                <span class="limit-label">Max 3 Shown</span>
-            </h2>
-            <div id="acceptedContainer">
-                <p style="color:var(--text-light); font-size:0.85rem;">No active orders found.</p>
+        <div class="section-wrapper">
+            <div class="card">
+                <h2>
+                    <span>🔔 Accepted Orders</span>
+                    <span class="limit-label">Max 3</span>
+                </h2>
+                <div class="list-container" id="acceptedContainer">
+                    <p style="color:var(--text-light); font-size:0.8rem;">No active orders found.</p>
+                </div>
             </div>
         </div>
 
         <!-- DECLINED ORDERS SECTION -->
-        <div class="card">
-            <h2 style="color: var(--danger);">
-                <span>⚠️ Declined Orders</span>
-                <span class="limit-label">Max 3 Shown</span>
-            </h2>
-            <div id="declinedContainer">
-                <p style="color:var(--text-light); font-size:0.85rem;">No declined orders found.</p>
+        <div class="section-wrapper">
+            <div class="card">
+                <h2 style="color: var(--danger);">
+                    <span>⚠️ Declined Orders</span>
+                    <span class="limit-label">Max 3</span>
+                </h2>
+                <div class="list-container" id="declinedContainer">
+                    <p style="color:var(--text-light); font-size:0.8rem;">No declined orders found.</p>
+                </div>
             </div>
         </div>
     </div>
@@ -112,43 +121,42 @@
                     }
                 });
 
-                // Sort orders by sequence or creation date
                 acceptedOrders.sort((a, b) => (a.orderNumber || 0) - (b.orderNumber || 0));
                 declinedOrders.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
                 
-                // Keep only the latest 3 declined orders (FIFO rotation rule)
+                // FIFO Rule: keep only the latest 3 declined orders
                 if (declinedOrders.length > 3) {
                     declinedOrders = declinedOrders.slice(declinedOrders.length - 3);
                 }
 
                 // --- RENDER ACCEPTED ORDERS (Max 3) ---
                 if (acceptedOrders.length === 0) {
-                    acceptedContainer.innerHTML = `<p style="color:var(--text-light); font-size:0.85rem;">No active orders found.</p>`;
+                    acceptedContainer.innerHTML = `<p style="color:var(--text-light); font-size:0.8rem;">No active orders found.</p>`;
                 } else {
                     acceptedContainer.innerHTML = "";
                     const displayAccepted = acceptedOrders.slice(0, 3);
                     displayAccepted.forEach(order => {
                         let badgeClass = "badge-pending";
-                        let statusText = "Pending Confirmation from Kitchen";
+                        let statusText = "Pending Confirmation";
                         
                         if (order.status === "preparing") {
                             badgeClass = "badge-preparing";
-                            statusText = "Kitchen is Preparing your Order 🔥";
+                            statusText = "Preparing Order 🔥";
                         } else if (order.status === "ready") {
                             badgeClass = "badge-ready";
-                            statusText = "Ready for Counter Pickup! 🎉";
+                            statusText = "Ready for Pickup! 🎉";
                         }
 
                         acceptedContainer.innerHTML += `
                             <div class="live-order-card">
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px; font-weight:700;">
-                                    <span>Order #${order.orderNumber}</span>
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2px; font-weight:700; font-size: 0.85rem;">
+                                    <span>#${order.orderNumber} - ${order.productName}</span>
                                     <span class="badge ${badgeClass}">${order.status}</span>
                                 </div>
-                                <div style="font-size:0.85rem; color:var(--text-light); margin-bottom: 6px;">
-                                    <strong>Item:</strong> ${order.productName} (₹${order.price})
+                                <div style="font-size:0.75rem; color:var(--text-light); display: flex; justify-content: space-between;">
+                                    <span>₹${order.price}</span>
+                                    <span style="color:var(--kfc-dark); font-weight:600;">${statusText}</span>
                                 </div>
-                                <div style="font-size:0.9rem; font-weight:700; color:var(--kfc-red);">${statusText}</div>
                             </div>
                         `;
                     });
@@ -156,21 +164,20 @@
 
                 // --- RENDER DECLINED ORDERS (Max 3, FIFO) ---
                 if (declinedOrders.length === 0) {
-                    declinedContainer.innerHTML = `<p style="color:var(--text-light); font-size:0.85rem;">No declined orders found.</p>`;
+                    declinedContainer.innerHTML = `<p style="color:var(--text-light); font-size:0.8rem;">No declined orders found.</p>`;
                 } else {
                     declinedContainer.innerHTML = "";
                     declinedOrders.forEach(order => {
                         declinedContainer.innerHTML += `
                             <div class="declined-order-card">
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px; font-weight:700;">
-                                    <span>Order #${order.orderNumber}</span>
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2px; font-weight:700; font-size: 0.85rem;">
+                                    <span>#${order.orderNumber} - ${order.productName}</span>
                                     <span class="badge badge-declined">Declined</span>
                                 </div>
-                                <div style="font-size:0.85rem; color:var(--text-light); margin-bottom: 8px;">
-                                    <strong>Item:</strong> ${order.productName} (₹${order.price})
+                                <div style="font-size:0.75rem; color:var(--text-light); display: flex; justify-content: space-between;">
+                                    <span>₹${order.price}</span>
+                                    <span style="color:var(--danger); font-weight:600;">Declined by Admin</span>
                                 </div>
-                                <div style="font-size:0.9rem; font-weight:700; color:var(--danger); margin-bottom: 6px;">❌ Declined by Admin</div>
-                                <p style="font-size:0.8rem; color:var(--text-light); line-height: 1.4;">Unfortunately, your order could not be processed. Please contact counter staff.</p>
                             </div>
                         `;
                     });
