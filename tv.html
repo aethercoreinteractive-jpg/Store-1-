@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Order Status - TV Display</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 40px; background: #121212; color: #ffffff; }
+        h1 { text-align: center; font-size: 3rem; margin-bottom: 40px; color: #f8f9fa; text-transform: uppercase; letter-spacing: 2px; }
+        .container { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; }
+        .column { flex: 1; min-width: 350px; background: #1e1e1e; padding: 30px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.5); }
+        h2 { text-align: center; font-size: 2rem; margin-top: 0; padding-bottom: 15px; border-bottom: 2px solid #333; }
+        .preparing-header { color: #ffc107; }
+        .ready-header { color: #28a745; }
+        .order-list { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
+        .order-badge { background: #2c2c2c; padding: 20px; border-radius: 8px; font-size: 2.5rem; font-weight: bold; text-align: center; letter-spacing: 1px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .preparing-badge { border-left: 8px solid #ffc107; color: #ffc107; }
+        .ready-badge { border-left: 8px solid #28a745; color: #28a745; animation: pulse 1.5s infinite; }
+        .empty-msg { text-align: center; color: #777; font-size: 1.2rem; margin-top: 30px; }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1.01); }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Order Status Display</h1>
+
+    <div class="container">
+        <!-- PREPARING QUEUE (MAX 3) -->
+        <div class="column">
+            <h2 class="preparing-header">Preparing (Max 3)</h2>
+            <div id="preparingQueue" class="order-list">
+                <div class="empty-msg">No orders in queue</div>
+            </div>
+        </div>
+
+        <!-- READY FOR PICKUP -->
+        <div class="column">
+            <h2 class="ready-header">Ready For Pickup</h2>
+            <div id="readyQueue" class="order-list">
+                <div class="empty-msg">No orders ready</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK Scripts CDN -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCevmUKn9jsh3VrttK8MAyXEO5JjaFOTyM",
+            authDomain: "store-1-4fbf7.firebaseapp.com",
+            projectId: "store-1-4fbf7",
+            storageBucket: "store-1-4fbf7.firebasestorage.app",
+            messagingSenderId: "183172029649",
+            appId: "1:183172029649:web:cc403927d797b3e53279f0",
+            measurementId: "G-W34ETBHTPB"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Real-time listener for the TV display
+        onSnapshot(collection(db, "orders"), (snapshot) => {
+            const preparingContainer = document.getElementById('preparingQueue');
+            const readyContainer = document.getElementById('readyQueue');
+
+            preparingContainer.innerHTML = "";
+            readyContainer.innerHTML = "";
+
+            let preparingOrders = [];
+            let readyOrders = [];
+
+            snapshot.forEach(docSnap => {
+                const data = docSnap.data();
+                if (data.status === "preparing") {
+                    preparingOrders.push(data);
+                } else if (data.status === "ready") {
+                    readyOrders.push(data);
+                }
+            });
+
+            // Populate Preparing Queue (enforces visual representation matching max 3 rule)
+            if (preparingOrders.length === 0) {
+                preparingContainer.innerHTML = `<div class="empty-msg">No orders in queue</div>`;
+            } else {
+                preparingOrders.slice(0, 3).forEach(order => {
+                    preparingContainer.innerHTML += `
+                        <div class="order-badge preparing-badge">
+                            #${order.orderNumber}
+                        </div>
+                    `;
+                });
+            }
+
+            // Populate Ready Board
+            if (readyOrders.length === 0) {
+                readyContainer.innerHTML = `<div class="empty-msg">No orders ready</div>`;
+            } else {
+                readyOrders.forEach(order => {
+                    readyContainer.innerHTML += `
+                        <div class="order-badge ready-badge">
+                            #${order.orderNumber}
+                        </div>
+                    `;
+                });
+            }
+        });
+    </script>
+</body>
+</html>
