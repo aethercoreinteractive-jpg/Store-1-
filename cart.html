@@ -123,7 +123,7 @@
         </div>
     </div>
 
-    <!-- PROCESSING ANIMATION MODAL (Shows only if network is slow) -->
+    <!-- PROCESSING ANIMATION MODAL -->
     <div id="processingModal">
         <div class="processing-card">
             <div class="spinner"></div>
@@ -212,6 +212,11 @@
             renderCart();
         }
 
+        function finalizeOrderAndRedirect() {
+            localStorage.removeItem("quickbites_cart");
+            window.location.href = "index.html";
+        }
+
         document.getElementById('checkoutBtn').addEventListener('click', async () => {
             let cart = JSON.parse(localStorage.getItem("quickbites_cart")) || [];
             if (cart.length === 0) return;
@@ -236,7 +241,6 @@
                     currentOrderNum = storeSnap.data().nextOrderNumber;
                 }
 
-                // Structured data format for easy admin identification
                 let totalPrice = cart.reduce((sum, i) => sum + (i.price * (i.quantity || 1)), 0);
                 
                 let formattedItems = cart.map(i => ({
@@ -266,8 +270,12 @@
                 clearTimeout(statusInterval);
                 processingModal.style.display = 'none';
 
+                // Display success modal
                 document.getElementById('modalOrderNum').innerText = `#${currentOrderNum}`;
                 document.getElementById('successModal').style.display = 'flex';
+
+                // Push state history so pressing phone/browser back button triggers back action redirection cleanly
+                history.pushState({ orderPlaced: true }, "", window.location.href);
 
             } catch (e) {
                 clearTimeout(showAnimationTimer);
@@ -278,9 +286,14 @@
             }
         });
 
+        // Listen for phone back-button trigger
+        window.addEventListener('popstate', () => {
+            finalizeOrderAndRedirect();
+        });
+
+        // Thanks button also utilizes the same clean function
         document.getElementById('thanksBtn').addEventListener('click', () => {
-            localStorage.removeItem("quickbites_cart");
-            window.location.href = "index.html";
+            finalizeOrderAndRedirect();
         });
 
         renderCart();
