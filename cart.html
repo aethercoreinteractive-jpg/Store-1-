@@ -250,8 +250,9 @@
                     subtotal: i.price * (i.quantity || 1)
                 }));
 
-                // Formatted with HTML break tags so every product is strictly line by line
-                let readableSummary = formattedItems.map(i => `${i.quantity}x ${i.name} (₹${i.subtotal})`).join('<br>');
+                // Format with Order Number on top, items below with right-aligned prices using CSS flex/spacing or HTML table formatting for admin view
+                let readableSummary = `Order Number: #${currentOrderNum}<br>` + 
+                    formattedItems.map(i => `<span style="display:inline-block; width:65%;">${i.quantity}x ${i.name}</span><span style="display:inline-block; width:30%; text-align:right;">₹${i.subtotal}</span>`).join('<br>');
 
                 await addDoc(collection(db, "orders"), {
                     orderNumber: currentOrderNum,
