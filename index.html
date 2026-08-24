@@ -83,7 +83,7 @@
         function checkCartAndRedirect() {
             let cart = JSON.parse(localStorage.getItem("quickbites_cart")) || [];
             if (cart.length > 0) {
-                window.location.href = "menu.html";
+                window.location.href = "afterswipe.html";
             }
         }
         checkCartAndRedirect();
