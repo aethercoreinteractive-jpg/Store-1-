@@ -79,8 +79,8 @@
         const welcomeScreen = document.getElementById('welcomeScreen');
         const swipeTrigger = document.getElementById('swipeTrigger');
 
-        // Trigger full screen on page entry (via user gesture fallback or direct call if permitted)
-        function requestFullScreen() {
+        // Automatically trigger fullscreen on page load
+        function triggerAutoFullScreen() {
             let elem = document.documentElement;
             if (elem.requestFullscreen) {
                 elem.requestFullscreen().catch(() => {});
@@ -92,7 +92,7 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            requestFullScreen();
+            triggerAutoFullScreen();
         });
 
         // If items already exist in cart, skip index welcome screen and go straight to menu.html
@@ -105,7 +105,7 @@
         checkCartAndRedirect();
 
         function dismissWelcome() {
-            requestFullScreen();
+            triggerAutoFullScreen();
             welcomeScreen.classList.add('slide-up');
             setTimeout(() => {
                 window.location.href = "afterswipe.html";
