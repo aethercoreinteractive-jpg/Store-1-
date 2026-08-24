@@ -185,7 +185,7 @@
                         <img src="${item.image}" alt="${item.name}" onerror="this.src='https://via.placeholder.com/60?text=Food'">
                         <div class="cart-details">
                             <h3>${item.name}</h3>
-                            <p>₹${item.price} × ${item.quantity || 1} = ₹${itemTotal}</p>
+                            <p>₹${itemTotal}</p>
                             <div class="qty-controls">
                                 <button class="qty-btn" onclick="changeQty(${index}, -1)">-</button>
                                 <span style="font-size: 0.9rem; font-weight: 700;">${item.quantity || 1}</span>
