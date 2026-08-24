@@ -26,16 +26,6 @@
         }
         body { background: var(--bg); color: white; height: 100vh; overflow: hidden; display: flex; justify-content: center; align-items: center; position: relative; }
 
-        /* Ultra-small, hidden-in-plain-sight Fullscreen Button */
-        .fullscreen-btn {
-            position: fixed; top: 0; right: 0; z-index: 3000;
-            background: transparent; border: none;
-            color: #27272a; width: 14px; height: 14px;
-            font-size: 8px; display: flex; justify-content: center; align-items: center;
-            cursor: default; opacity: 0.3;
-        }
-        .fullscreen-btn:hover { opacity: 1; color: #71717a; }
-
         /* Welcome Kiosk Overlay Screen */
         .kiosk-welcome {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -74,9 +64,6 @@
 </head>
 <body>
 
-    <!-- Extremely Small & Faint Fullscreen Toggle Button -->
-    <button class="fullscreen-btn" id="fsBtn" title="">•</button>
-
     <!-- KIOSK WELCOME SCREEN -->
     <div id="welcomeScreen" class="kiosk-welcome">
         <div class="kiosk-brand">
@@ -98,7 +85,6 @@
 
         const welcomeScreen = document.getElementById('welcomeScreen');
         const swipeTrigger = document.getElementById('swipeTrigger');
-        const fsBtn = document.getElementById('fsBtn');
         
         let deferredPrompt;
 
@@ -107,27 +93,10 @@
             deferredPrompt = e;
         });
 
-        // Check if fullscreen was previously locked/enabled on other pages, and re-apply it
-        function applyPersistentFullscreen() {
-            if (localStorage.getItem("quickbites_fullscreen_locked") === "true") {
-                let elem = document.documentElement;
-                if (!document.fullscreenElement) {
-                    if (elem.requestFullscreen) {
-                        elem.requestFullscreen().catch(() => {});
-                    } else if (elem.webkitRequestFullscreen) {
-                        elem.webkitRequestFullscreen();
-                    } else if (elem.msRequestFullscreen) {
-                        elem.msRequestFullscreen();
-                    }
-                }
-            }
-        }
-        applyPersistentFullscreen();
-
-        // Fullscreen toggle button logic & lock storage
-        fsBtn.addEventListener('click', () => {
+        // Function to enforce fullscreen mode
+        function enforceFullscreen() {
             let elem = document.documentElement;
-            if (!document.fullscreenElement) {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
                 if (elem.requestFullscreen) {
                     elem.requestFullscreen().catch(() => {});
                 } else if (elem.webkitRequestFullscreen) {
@@ -136,13 +105,17 @@
                     elem.msRequestFullscreen();
                 }
                 localStorage.setItem("quickbites_fullscreen_locked", "true");
-            } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen().catch(() => {});
-                }
-                localStorage.setItem("quickbites_fullscreen_locked", "false");
             }
-        });
+        }
+
+        // Check every second (1000ms) to ensure it stays in fullscreen
+        setInterval(() => {
+            enforceFullscreen();
+        }, 1000);
+
+        // Try automatically on load & first user touch
+        window.addEventListener('load', enforceFullscreen);
+        window.addEventListener('pointerdown', enforceFullscreen, { once: true });
 
         // If items already exist in cart, skip index welcome screen and go straight to menu.html
         function checkCartAndRedirect() {
@@ -154,7 +127,7 @@
         checkCartAndRedirect();
 
         function dismissWelcome() {
-            applyPersistentFullscreen(); // Maintain lock state on navigation
+            enforceFullscreen();
 
             if (deferredPrompt) {
                 deferredPrompt.prompt();
