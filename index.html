@@ -26,15 +26,15 @@
         }
         body { background: var(--bg); color: white; height: 100vh; overflow: hidden; display: flex; justify-content: center; align-items: center; position: relative; }
 
-        /* Very Small Fullscreen Button on Upper Right Corner */
+        /* Ultra-small, hidden-in-plain-sight Fullscreen Button */
         .fullscreen-btn {
-            position: fixed; top: 10px; right: 10px; z-index: 3000;
-            background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #a1a1aa; width: 28px; height: 28px; border-radius: 4px;
-            font-size: 0.8rem; display: flex; justify-content: center; align-items: center;
-            cursor: pointer; transition: background 0.2s, color 0.2s;
+            position: fixed; top: 0; right: 0; z-index: 3000;
+            background: transparent; border: none;
+            color: #27272a; width: 14px; height: 14px;
+            font-size: 8px; display: flex; justify-content: center; align-items: center;
+            cursor: default; opacity: 0.3;
         }
-        .fullscreen-btn:hover { background: rgba(255, 255, 255, 0.2); color: white; }
+        .fullscreen-btn:hover { opacity: 1; color: #71717a; }
 
         /* Welcome Kiosk Overlay Screen */
         .kiosk-welcome {
@@ -74,8 +74,8 @@
 </head>
 <body>
 
-    <!-- Small Fullscreen Toggle Button -->
-    <button class="fullscreen-btn" id="fsBtn" title="Toggle Fullscreen">⛶</button>
+    <!-- Extremely Small & Faint Fullscreen Toggle Button -->
+    <button class="fullscreen-btn" id="fsBtn" title="">•</button>
 
     <!-- KIOSK WELCOME SCREEN -->
     <div id="welcomeScreen" class="kiosk-welcome">
@@ -107,7 +107,24 @@
             deferredPrompt = e;
         });
 
-        // Fullscreen toggle button logic
+        // Check if fullscreen was previously locked/enabled on other pages, and re-apply it
+        function applyPersistentFullscreen() {
+            if (localStorage.getItem("quickbites_fullscreen_locked") === "true") {
+                let elem = document.documentElement;
+                if (!document.fullscreenElement) {
+                    if (elem.requestFullscreen) {
+                        elem.requestFullscreen().catch(() => {});
+                    } else if (elem.webkitRequestFullscreen) {
+                        elem.webkitRequestFullscreen();
+                    } else if (elem.msRequestFullscreen) {
+                        elem.msRequestFullscreen();
+                    }
+                }
+            }
+        }
+        applyPersistentFullscreen();
+
+        // Fullscreen toggle button logic & lock storage
         fsBtn.addEventListener('click', () => {
             let elem = document.documentElement;
             if (!document.fullscreenElement) {
@@ -118,10 +135,12 @@
                 } else if (elem.msRequestFullscreen) {
                     elem.msRequestFullscreen();
                 }
+                localStorage.setItem("quickbites_fullscreen_locked", "true");
             } else {
                 if (document.exitFullscreen) {
                     document.exitFullscreen().catch(() => {});
                 }
+                localStorage.setItem("quickbites_fullscreen_locked", "false");
             }
         });
 
@@ -135,6 +154,8 @@
         checkCartAndRedirect();
 
         function dismissWelcome() {
+            applyPersistentFullscreen(); // Maintain lock state on navigation
+
             if (deferredPrompt) {
                 deferredPrompt.prompt();
                 deferredPrompt.userChoice.then(() => {
