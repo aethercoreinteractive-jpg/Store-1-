@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickBites - Admin Settings</title>
+    <style>
+        :root {
+            --kfc-red: #e4002b;
+            --kfc-red-hover: #c50024;
+            --kfc-dark: #202124;
+            --success: #10b981;
+            --danger: #ef4444;
+            --bg: #f4f4f5;
+            --card-bg: #ffffff;
+            --text: #18181b;
+            --text-light: #71717a;
+            --border: #e4e4e7;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        body { background: var(--bg); color: var(--text); padding: 12px; padding-bottom: 50px; }
+
+        .container { max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+        header { display: flex; justify-content: space-between; align-items: center; background: var(--kfc-dark); color: white; padding: 16px 20px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        header h1 { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.5px; }
+        header h1 span { color: var(--kfc-red); }
+
+        .nav-btn { background: rgba(255,255,255,0.1); border: none; color: white; padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; transition: background 0.2s; }
+        .nav-btn:hover { background: rgba(255,255,255,0.2); }
+
+        .card { background: var(--card-bg); padding: 20px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border); }
+        .card h2 { font-size: 1.1rem; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; color: var(--text); font-weight: 800; }
+
+        /* Form Controls */
+        input { width: 100%; padding: 12px 14px; margin-bottom: 0; border: 1px solid var(--border); border-radius: 10px; font-size: 0.95rem; background: #fff; }
+        
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 700; cursor: pointer; display: inline-flex; justify-content: center; align-items: center; gap: 8px; transition: opacity 0.2s; }
+        .btn-secondary { background: #e4e4e7; color: var(--text); }
+        .btn-secondary:hover { background: #d4d4d8; }
+
+        .input-with-eye { position: relative; width: 100%; margin-bottom: 12px; }
+        .input-with-eye input { padding-right: 42px; }
+        .toggle-password { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.1rem; color: var(--text-light); z-index: 10; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>⚙️ Admin <span>Settings</span></h1>
+            <a href="admin.html" class="nav-btn">← Back</a>
+        </header>
+
+        <!-- PASSWORD MANAGEMENT PANEL -->
+        <div class="card">
+            <h2>🔒 Change Admin Password</h2>
+            
+            <div class="input-with-eye">
+                <input type="password" id="currentPass" placeholder="Current Password">
+                <button type="button" class="toggle-password" data-target="currentPass">👁️</button>
+            </div>
+            
+            <div class="input-with-eye">
+                <input type="password" id="newPass" placeholder="New Password (Min 4 chars)">
+                <button type="button" class="toggle-password" data-target="newPass">👁️</button>
+            </div>
+            
+            <button class="btn btn-secondary" id="updatePassBtn">Update Password</button>
+        </div>
+    </div>
+
+    <!-- SCRIPT LOGIC -->
+    <script>
+        // Ensure default password exists if none set
+        if (!localStorage.getItem("adminPassword")) {
+            localStorage.setItem("adminPassword", "Admin@123");
+        }
+
+        // Eye Toggle Handler
+        document.addEventListener('click', (e) => {
+            const toggleBtn = e.target.closest('.toggle-password');
+            if (!toggleBtn) return;
+
+            const targetId = toggleBtn.getAttribute('data-target');
+            if (targetId) {
+                const inputField = document.getElementById(targetId);
+                if (inputField) {
+                    if (inputField.type === "password") {
+                        inputField.type = "text";
+                        toggleBtn.textContent = "🙈";
+                    } else {
+                        inputField.type = "password";
+                        toggleBtn.textContent = "👁️";
+                    }
+                }
+            }
+        });
+
+        // Update Password Handler
+        document.getElementById('updatePassBtn').addEventListener('click', function() {
+            const currentInput = document.getElementById('currentPass').value;
+            const newInput = document.getElementById('newPass').value;
+            
+            if (currentInput !== localStorage.getItem("adminPassword")) {
+                alert("Incorrect current password!");
+                return;
+            }
+            if (!newInput || newInput.length < 4) {
+                alert("New password must be at least 4 characters long.");
+                return;
+            }
+            
+            localStorage.setItem("adminPassword", newInput);
+            alert("Password updated successfully!");
+            document.getElementById('currentPass').value = "";
+            document.getElementById('newPass').value = "";
+        });
+    </script>
+</body>
+</html>
