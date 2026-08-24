@@ -79,6 +79,22 @@
         const welcomeScreen = document.getElementById('welcomeScreen');
         const swipeTrigger = document.getElementById('swipeTrigger');
 
+        // Trigger full screen on page entry (via user gesture fallback or direct call if permitted)
+        function requestFullScreen() {
+            let elem = document.documentElement;
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen().catch(() => {});
+            } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) {
+                elem.msRequestFullscreen();
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            requestFullScreen();
+        });
+
         // If items already exist in cart, skip index welcome screen and go straight to menu.html
         function checkCartAndRedirect() {
             let cart = JSON.parse(localStorage.getItem("quickbites_cart")) || [];
@@ -89,6 +105,7 @@
         checkCartAndRedirect();
 
         function dismissWelcome() {
+            requestFullScreen();
             welcomeScreen.classList.add('slide-up');
             setTimeout(() => {
                 window.location.href = "afterswipe.html";
