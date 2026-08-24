@@ -19,7 +19,7 @@
             --border: #e4e4e7;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); padding: 12px; padding-bottom: 50px; }
 
         /* Login Screen */
@@ -73,14 +73,27 @@
         .btn-primary:hover { background: var(--kfc-red-hover); }
         .btn-success { background: var(--success); color: white; }
         .btn-danger { background: var(--danger); color: white; }
-        .btn-danger:hover { background: #dc2626; }
-        .btn-outline-danger { background: #fff5f5; color: var(--danger); border: 1px solid #fecaca; }
-        .btn-outline-danger:hover { background: #fee2e2; }
 
         /* Orders Mobile Cards */
-        .order-card { background: #fafafa; border: 1px solid var(--border); padding: 14px; border-radius: 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px; }
-        .order-header { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 1rem; }
+        .order-card { 
+            background: #fafafa; border: 1px solid var(--border); padding: 14px; border-radius: 12px; margin-bottom: 12px; 
+            display: flex; flex-direction: column; gap: 8px; position: relative; 
+            user-select: none; -webkit-user-select: none; -ms-user-select: none; 
+        }
+        .order-header { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 1rem; padding-right: 28px; }
         .order-details { font-size: 0.85rem; color: var(--text-light); }
+        
+        /* Top Right 'X' Delete Button Styling */
+        .order-close-btn {
+            position: absolute; top: 12px; right: 12px;
+            background: none; border: none; font-size: 1.1rem; font-weight: 800;
+            color: var(--text-light); cursor: pointer; width: 24px; height: 24px;
+            display: flex; align-items: center; justify-content: center; border-radius: 50%;
+            transition: background 0.2s, color 0.2s;
+            user-select: none; -webkit-user-select: none;
+        }
+        .order-close-btn:hover { background: #fee2e2; color: var(--danger); }
+
         .badge { padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
         .badge-pending { background: #fef3c7; color: #d97706; }
         .badge-preparing { background: #e0e7ff; color: #4f46e5; }
@@ -111,7 +124,7 @@
             <button id="logoutBtn" class="btn btn-danger" style="width: auto; padding: 8px 14px; font-size: 0.85rem;">Logout</button>
         </header>
 
-        <!-- TOP NAVIGATION BAR (PRODUCT CONTROL TAB & SETTINGS GEAR) -->
+        <!-- TOP NAVIGATION BAR (PRODUCT CONTROL TAB & GEAR ICON) -->
         <div class="admin-nav-bar">
             <a href="productcontrol.html" class="tab-link">📦 Product Control</a>
             <a href="adminsettings.html" class="gear-btn" title="Admin Settings">⚙️</a>
@@ -341,12 +354,10 @@
                         badgeClass = "badge-declined";
                     }
 
-                    // Append clear/delete option to every order card for easy storage management
-                    actionHtml += `<button class="btn btn-outline-danger clear-order-btn" style="padding:8px; font-size:0.85rem;">🗑️ Clear / Delete Order</button>`;
-
                     const orderCard = document.createElement('div');
                     orderCard.className = "order-card";
                     orderCard.innerHTML = `
+                        <button class="order-close-btn" title="Clear Order">✕</button>
                         <div class="order-header">
                             <span>Order #${order.orderNumber}</span>
                             <span class="badge ${badgeClass}">${order.status}</span>
@@ -366,9 +377,7 @@
                             });
                         }
                         actionContainer.querySelector('.decline-btn').addEventListener('click', async () => {
-                            if (confirm(`Are you sure you want to decline Order #${order.orderNumber}?`)) {
-                                await updateDoc(doc(db, "orders", order.id), { status: "declined" });
-                            }
+                            await updateDoc(doc(db, "orders", order.id), { status: "declined" });
                         });
                     } else if (order.status === "preparing") {
                         actionContainer.querySelector('.ready-btn').addEventListener('click', async () => {
@@ -376,17 +385,13 @@
                         });
                     } else if (order.status === "ready") {
                         actionContainer.querySelector('.picked-btn').addEventListener('click', async () => {
-                            if (confirm("Has the customer picked up this order? This will clear it from the live queue.")) {
-                                await deleteDoc(doc(db, "orders", order.id));
-                            }
+                            await deleteDoc(doc(db, "orders", order.id));
                         });
                     }
 
-                    // Event listener for manual clearing/deleting of any order to save storage
-                    actionContainer.querySelector('.clear-order-btn').addEventListener('click', async () => {
-                        if (confirm(`Permanently clear Order #${order.orderNumber} to free up storage?`)) {
-                            await deleteDoc(doc(db, "orders", order.id));
-                        }
+                    // Direct silent deletion via top-right X button without any default confirmation popups
+                    orderCard.querySelector('.order-close-btn').addEventListener('click', async () => {
+                        await deleteDoc(doc(db, "orders", order.id));
                     });
 
                     container.appendChild(orderCard);
