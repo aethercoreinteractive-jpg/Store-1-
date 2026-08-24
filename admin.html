@@ -74,6 +74,8 @@
         .btn-success { background: var(--success); color: white; }
         .btn-danger { background: var(--danger); color: white; }
         .btn-danger:hover { background: #dc2626; }
+        .btn-outline-danger { background: #fff5f5; color: var(--danger); border: 1px solid #fecaca; }
+        .btn-outline-danger:hover { background: #fee2e2; }
 
         /* Orders Mobile Cards */
         .order-card { background: #fafafa; border: 1px solid var(--border); padding: 14px; border-radius: 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px; }
@@ -83,6 +85,7 @@
         .badge-pending { background: #fef3c7; color: #d97706; }
         .badge-preparing { background: #e0e7ff; color: #4f46e5; }
         .badge-ready { background: #d1fae5; color: #059669; }
+        .badge-declined { background: #fee2e2; color: var(--danger); }
         
         .action-container { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
     </style>
@@ -316,9 +319,6 @@
                     let badgeClass = "badge-pending";
                     let actionHtml = "";
 
-                    const orderCard = document.createElement('div');
-                    orderCard.className = "order-card";
-
                     if (order.status === "pending") {
                         if (preparingCount < 3) {
                             actionHtml = `
@@ -337,8 +337,15 @@
                     } else if (order.status === "ready") {
                         badgeClass = "badge-ready";
                         actionHtml = `<button class="btn btn-primary picked-btn" style="padding:8px; font-size:0.85rem; background: var(--kfc-dark);">Mark as Picked</button>`;
+                    } else if (order.status === "declined") {
+                        badgeClass = "badge-declined";
                     }
 
+                    // Append clear/delete option to every order card for easy storage management
+                    actionHtml += `<button class="btn btn-outline-danger clear-order-btn" style="padding:8px; font-size:0.85rem;">🗑️ Clear / Delete Order</button>`;
+
+                    const orderCard = document.createElement('div');
+                    orderCard.className = "order-card";
                     orderCard.innerHTML = `
                         <div class="order-header">
                             <span>Order #${order.orderNumber}</span>
@@ -347,11 +354,10 @@
                         <div class="order-details">
                             <strong>Item:</strong> ${order.productName || 'Custom Item'} (${order.price ? '₹' + order.price : ''})
                         </div>
-                        <div class="action-container"></div>
+                        <div class="action-container">${actionHtml}</div>
                     `;
 
                     const actionContainer = orderCard.querySelector('.action-container');
-                    actionContainer.innerHTML = actionHtml;
 
                     if (order.status === "pending") {
                         if (preparingCount < 3) {
@@ -374,7 +380,14 @@
                                 await deleteDoc(doc(db, "orders", order.id));
                             }
                         });
+                    }
+
+                    // Event listener for manual clearing/deleting of any order to save storage
+                    actionContainer.querySelector('.clear-order-btn').addEventListener('click', async () => {
+                        if (confirm(`Permanently clear Order #${order.orderNumber} to free up storage?`)) {
+                            await deleteDoc(doc(db, "orders", order.id));
                         }
+                    });
 
                     container.appendChild(orderCard);
                 });
@@ -383,4 +396,3 @@
     </script>
 </body>
 </html>
-              
