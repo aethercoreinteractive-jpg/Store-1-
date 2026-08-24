@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickBites - Your Cart</title>
+    <style>
+        :root {
+            --kfc-red: #e4002b;
+            --kfc-red-hover: #c50024;
+            --kfc-dark: #202124;
+            --success: #10b981;
+            --danger: #ef4444;
+            --bg: #f4f4f5;
+            --card-bg: #ffffff;
+            --text: #18181b;
+            --text-light: #71717a;
+            --border: #e4e4e7;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; user-select: none; }
+        body { background: var(--bg); color: var(--text); padding: 12px; padding-bottom: 80px; }
+
+        .container { max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+        
+        header { background: var(--kfc-dark); color: white; padding: 16px 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        header h1 { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.5px; }
+        header h1 span { color: var(--kfc-red); }
+
+        .nav-btn { background: rgba(255,255,255,0.1); border: none; color: white; padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; transition: background 0.2s; }
+        .nav-btn:hover { background: rgba(255,255,255,0.2); }
+
+        .card { background: var(--card-bg); padding: 16px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border); }
+        .card h2 { font-size: 1.1rem; margin-bottom: 12px; font-weight: 800; }
+
+        .cart-item { display: flex; gap: 12px; padding: 12px; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; background: #fafafa; align-items: center; }
+        .cart-item img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; background: #e4e4e7; flex-shrink: 0; }
+        .cart-details { flex-grow: 1; }
+        .cart-details h3 { font-size: 0.95rem; font-weight: 700; color: var(--text); }
+        .cart-details p { font-size: 0.85rem; color: var(--text-light); margin-top: 2px; font-weight: 600; }
+
+        .qty-controls { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+        .qty-btn { background: #e4e4e7; border: none; width: 26px; height: 26px; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .qty-btn:hover { background: #d4d4d8; }
+        
+        .cart-summary { border-top: 1px solid var(--border); padding-top: 14px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 1.1rem; font-weight: 800; }
+        
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 700; cursor: pointer; display: inline-flex; justify-content: center; align-items: center; gap: 8px; transition: opacity 0.2s; margin-top: 12px; }
+        .btn-primary { background: var(--kfc-red); color: white; }
+        .btn-primary:hover { background: var(--kfc-red-hover); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover { background: #059669; }
+
+        /* Order Success Modal Overlay */
+        #successModal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(32, 33, 36, 0.85); backdrop-filter: blur(6px);
+            display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px;
+        }
+        .success-card {
+            background: var(--card-bg); width: 100%; max-width: 380px; padding: 30px;
+            border-radius: 20px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3); text-align: center;
+        }
+        .success-card h2 { font-size: 1.5rem; color: var(--success); margin-bottom: 8px; font-weight: 900; }
+        .success-card p { color: var(--text-light); font-size: 0.95rem; margin-bottom: 20px; }
+        .order-number-badge {
+            font-size: 3rem; font-weight: 900; color: var(--kfc-dark); background: var(--bg);
+            padding: 16px; border-radius: 14px; border: 2px dashed var(--border); margin-bottom: 24px;
+            letter-spacing: -1px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>🛒 Your <span>Cart</span></h1>
+            <a href="index.html" class="nav-btn">← Menu</a>
+        </header>
+
+        <div class="card">
+            <h2>Review Order</h2>
+            <div id="cartItemsContainer">Loading cart...</div>
+            
+            <div id="cartSummarySection" style="display:none;">
+                <div class="cart-summary">
+                    <span>Total Amount:</span>
+                    <span id="cartTotalPrice">₹0</span>
+                </div>
+                <button class="btn btn-primary" id="checkoutBtn">Proceed to Checkout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ORDER SUCCESS MODAL OVERLAY -->
+    <div id="successModal">
+        <div class="success-card">
+            <h2>Order Placed!</h2>
+            <p>Sent to kitchen. Your Order Number is:</p>
+            <div class="order-number-badge" id="modalOrderNum">#---</div>
+            <button class="btn btn-success" id="thanksBtn">Thanks</button>
+        </div>
+    </div>
+
+    <!-- Firebase Checkout Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCevmUKn9jsh3VrttK8MAyXEO5JjaFOTyM",
+            authDomain: "store-1-4fbf7.firebaseapp.com",
+            projectId: "store-1-4fbf7",
+            storageBucket: "store-1-4fbf7.firebasestorage.app",
+            messagingSenderId: "183172029649",
+            appId: "1:183172029649:web:cc403927d797b3e53279f0",
+            measurementId: "G-W34ETBHTPB"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        function renderCart() {
+            const container = document.getElementById('cartItemsContainer');
+            const summarySection = document.getElementById('cartSummarySection');
+            let cart = JSON.parse(localStorage.getItem("quickbites_cart")) || [];
+
+            if (cart.length === 0) {
+                container.innerHTML = "<p style='color:var(--text-light); font-size:0.85rem; text-align:center; padding: 20px 0;'>Your cart is empty.</p>";
+                summarySection.style.display = 'none';
+                return;
+            }
+
+            container.innerHTML = "";
+            let total = 0;
+
+            cart.forEach((item, index) => {
+                let itemTotal = item.price * (item.quantity || 1);
+                total += itemTotal;
+
+                container.innerHTML += `
+                    <div class="cart-item">
+                        <img src="${item.image}" alt="${item.name}" onerror="this.src='https://via.placeholder.com/60?text=Food'">
+                        <div class="cart-details">
+                            <h3>${item.name}</h3>
+                            <p>₹${item.price} × ${item.quantity || 1} = ₹${itemTotal}</p>
+                            <div class="qty-controls">
+                                <button class="qty-btn" onclick="changeQty(${index}, -1)">-</button>
+                                <span style="font-size: 0.9rem; font-weight: 700;">${item.quantity || 1}</span>
+                                <button class="qty-btn" onclick="changeQty(${index}, 1)">+</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('cartTotalPrice').innerText = `₹${total}`;
+            summarySection.style.display = 'block';
+        }
+
+        window.changeQty = function(index, delta) {
+            let cart = JSON.parse(localStorage.getItem("quickbites_cart")) || [];
+            cart[index].quantity = (cart[index].quantity || 1) + delta;
+            
+            if (cart[index].quantity <= 0) {
+                cart.splice(index, 1);
+            }
+
+            localStorage.setItem("quickbites_cart", JSON.stringify(cart));
+            renderCart();
+        }
+
+        document.getElementById('checkoutBtn').addEventListener('click', async () => {
+            let cart = JSON.parse(localStorage.getItem("quickbites_cart")) || [];
+            if (cart.length === 0) return;
+
+            try {
+                const storeRef = doc(db, "settings", "storeStatus");
+                const storeSnap = await getDoc(storeRef);
+                
+                let currentOrderNum = 200;
+                if (storeSnap.exists() && storeSnap.data().nextOrderNumber) {
+                    currentOrderNum = storeSnap.data().nextOrderNumber;
+                }
+
+                let summaryText = cart.map(i => `${i.name} (x${i.quantity})`).join(', ');
+                let totalPrice = cart.reduce((sum, i) => sum + (i.price * (i.quantity || 1)), 0);
+
+                // This instantly saves the order to Firestore, triggering the Admin live panel feed
+                await addDoc(collection(db, "orders"), {
+                    orderNumber: currentOrderNum,
+                    productName: summaryText,
+                    price: totalPrice,
+                    status: "pending",
+                    createdAt: new Date().toISOString()
+                });
+
+                // Increment counter for the next order
+                await updateDoc(storeRef, { nextOrderNumber: currentOrderNum + 1 });
+
+                localStorage.setItem("lastActiveOrderNum", currentOrderNum);
+
+                // Show professional success pop-up modal with assigned order number
+                document.getElementById('modalOrderNum').innerText = `#${currentOrderNum}`;
+                document.getElementById('successModal').style.display = 'flex';
+
+            } catch (e) {
+                console.error("Checkout error: ", e);
+                alert("Failed to place order. Please try again.");
+            }
+        });
+
+        // Thanks button clears local cart and redirects back to index.html
+        document.getElementById('thanksBtn').addEventListener('click', () => {
+            localStorage.removeItem("quickbites_cart");
+            window.location.href = "index.html";
+        });
+
+        renderCart();
+    </script>
+</body>
+</html>
