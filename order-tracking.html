@@ -152,14 +152,21 @@
                             statusText = "Ready for Pickup! 🎉";
                         }
 
+                        // Clean productName to ensure order number text strings inside it aren't duplicated at the top
+                        let cleanProductContent = order.productName || "";
+                        cleanProductContent = cleanProductContent.replace(/Order Number:\s*#?\d+<br\s*\/?>/gi, '');
+
                         acceptedContainer.innerHTML += `
                             <div class="live-order-card">
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2px; font-weight:700; font-size: 0.85rem;">
-                                    <span>#${order.orderNumber} - ${order.productName}</span>
+                                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 4px;">
+                                    <span style="font-weight:700; font-size: 0.85rem;">Order #${order.orderNumber}</span>
                                     <span class="badge ${badgeClass}">${order.status}</span>
                                 </div>
-                                <div style="font-size:0.75rem; color:var(--text-light); display: flex; justify-content: space-between;">
-                                    <span>₹${order.price}</span>
+                                <div style="font-size: 0.8rem; margin: 4px 0; color: var(--text);">
+                                    ${cleanProductContent}
+                                </div>
+                                <div style="font-size:0.75rem; color:var(--text-light); display: flex; justify-content: space-between; border-top: 1px dashed var(--border); padding-top: 4px; margin-top: 4px;">
+                                    <span>Total: ₹${order.price}</span>
                                     <span style="color:var(--kfc-dark); font-weight:600;">${statusText}</span>
                                 </div>
                             </div>
@@ -175,14 +182,20 @@
                     declinedNoticeContainer.innerHTML = `<div class="common-notice">Sorry your order can't be processed at this moment please contact our associate</div>`;
                     declinedContainer.innerHTML = "";
                     declinedOrders.forEach(order => {
+                        let cleanDeclinedContent = order.productName || "";
+                        cleanDeclinedContent = cleanDeclinedContent.replace(/Order Number:\s*#?\d+<br\s*\/?>/gi, '');
+
                         declinedContainer.innerHTML += `
                             <div class="declined-order-card">
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2px; font-weight:700; font-size: 0.85rem;">
-                                    <span>#${order.orderNumber} - ${order.productName}</span>
+                                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 4px;">
+                                    <span style="font-weight:700; font-size: 0.85rem;">Order #${order.orderNumber}</span>
                                     <span class="badge badge-declined">Cancelled</span>
                                 </div>
-                                <div style="font-size:0.75rem; color:var(--text-light);">
-                                    <span>₹${order.price}</span>
+                                <div style="font-size: 0.8rem; margin: 4px 0; color: var(--text);">
+                                    ${cleanDeclinedContent}
+                                </div>
+                                <div style="font-size:0.75rem; color:var(--text-light); border-top: 1px dashed #fecaca; padding-top: 4px; margin-top: 4px;">
+                                    <span>Total: ₹${order.price}</span>
                                 </div>
                             </div>
                         `;
