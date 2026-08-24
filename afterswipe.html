@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickBites - Order Management</title>
+    <style>
+        :root {
+            --kfc-red: #e4002b;
+            --kfc-red-hover: #c50024;
+            --kfc-dark: #202124;
+            --success: #10b981;
+            --bg: #f4f4f5;
+            --card-bg: #ffffff;
+            --text: #18181b;
+            --text-light: #71717a;
+            --border: #e4e4e7;
+        }
+
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+            user-select: none; 
+            -webkit-user-select: none; 
+            -webkit-touch-callout: none; 
+            -webkit-tap-highlight-color: transparent;
+        }
+        body { background: var(--bg); color: var(--text); padding: 20px 12px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+
+        .container { width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 20px; }
+        
+        .hero-card { background: var(--card-bg); padding: 32px 20px; border-radius: 24px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); border: 1px solid var(--border); text-align: center; }
+        .hero-icon { font-size: 3rem; margin-bottom: 12px; }
+        .hero-card h1 { font-size: 1.5rem; font-weight: 900; letter-spacing: -0.5px; color: var(--text); margin-bottom: 6px; }
+        .hero-card h1 span { color: var(--kfc-red); }
+        .hero-card p { font-size: 0.9rem; color: var(--text-light); font-weight: 500; }
+
+        .options-grid { display: flex; flex-direction: column; gap: 12px; }
+
+        .action-card {
+            background: var(--card-bg); border: 2px solid var(--border); border-radius: 16px; padding: 20px;
+            display: flex; align-items: center; justify-content: space-between; text-decoration: none;
+            color: var(--text); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); transition: all 0.2s ease;
+        }
+        .action-card:hover { border-color: var(--kfc-red); transform: translateY(-2px); box-shadow: 0 8px 15px -3px rgba(228,0,43,0.1); }
+        .action-card:active { transform: scale(0.98); }
+
+        .action-content { display: flex; align-items: center; gap: 16px; }
+        .action-icon {
+            width: 48px; height: 48px; border-radius: 12px; background: #fef2f2; color: var(--kfc-red);
+            display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: bold; flex-shrink: 0;
+        }
+        .action-text h3 { font-size: 1.05rem; font-weight: 800; color: var(--text); margin-bottom: 2px; }
+        .action-text p { font-size: 0.85rem; color: var(--text-light); font-weight: 500; }
+        .action-arrow { font-size: 1.2rem; color: var(--text-light); font-weight: bold; transition: transform 0.2s; }
+        .action-card:hover .action-arrow { transform: translateX(4px); color: var(--kfc-red); }
+
+        /* Highlight style for track order if active */
+        .action-card.primary { background: var(--kfc-dark); color: white; border-color: var(--kfc-dark); }
+        .action-card.primary .action-icon { background: rgba(255,255,255,0.1); color: white; }
+        .action-card.primary .action-text h3 { color: white; }
+        .action-card.primary .action-text p { color: #a1a1aa; }
+        .action-card.primary .action-arrow { color: white; }
+        .action-card.primary:hover { border-color: var(--kfc-red); }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Header Banner -->
+        <div class="hero-card">
+            <div class="hero-icon">⚡</div>
+            <h1>Quick<span>Bites</span> Hub</h1>
+            <p>What would you like to do next?</p>
+        </div>
+
+        <!-- Options Container -->
+        <div class="options-grid">
+            <!-- Track Order Option (Professional Name) -->
+            <a href="order-tracking.html" class="action-card primary">
+                <div class="action-content">
+                    <div class="action-icon">📍</div>
+                    <div class="action-text">
+                        <h3>Live Order Status</h3>
+                        <p>Track your ongoing kitchen order in real-time</p>
+                    </div>
+                </div>
+                <div class="action-arrow">→</div>
+            </a>
+
+            <!-- Menu Option (Professional Name) -->
+            <a href="menu.html" class="action-card">
+                <div class="action-content">
+                    <div class="action-icon">🍔</div>
+                    <div class="action-text">
+                        <h3>Browse Full Menu</h3>
+                        <p>Explore delicious items and add more to your cart</p>
+                    </div>
+                </div>
+                <div class="action-arrow">→</div>
+            </a>
+        </div>
+    </div>
+
+</body>
+</html>
