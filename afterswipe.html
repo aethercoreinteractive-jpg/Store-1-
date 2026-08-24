@@ -104,5 +104,33 @@
         </div>
     </div>
 
+    <script>
+        // Automatically re-apply fullscreen if locked from index.html
+        function applyPersistentFullscreen() {
+            if (localStorage.getItem("quickbites_fullscreen_locked") === "true") {
+                let elem = document.documentElement;
+                if (!document.fullscreenElement) {
+                    if (elem.requestFullscreen) {
+                        elem.requestFullscreen().catch(() => {});
+                    } else if (elem.webkitRequestFullscreen) {
+                        elem.webkitRequestFullscreen();
+                    } else if (elem.msRequestFullscreen) {
+                        elem.msRequestFullscreen();
+                    }
+                }
+            }
+        }
+        applyPersistentFullscreen();
+
+        // Fallback to trigger fullscreen on first interaction if blocked by browser policy
+        if (localStorage.getItem("quickbites_fullscreen_locked") === "true") {
+            document.addEventListener('click', () => {
+                let elem = document.documentElement;
+                if (!document.fullscreenElement && elem.requestFullscreen) {
+                    elem.requestFullscreen().catch(() => {});
+                }
+            }, { once: true });
+        }
+    </script>
 </body>
 </html>
