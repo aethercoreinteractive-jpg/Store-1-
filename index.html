@@ -93,10 +93,21 @@
             deferredPrompt = e;
         });
 
-        // Function to enforce fullscreen mode
-        function enforceFullscreen() {
+        // Robotic Touch & Fullscreen Enforcer
+        function roboticFullscreenTrigger() {
             let elem = document.documentElement;
             if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                // Simulate a synthetic programmatic user gesture event
+                let clickEvent = new MouseEvent('click', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true,
+                    clientX: 10,
+                    clientY: 10
+                });
+                document.body.dispatchEvent(clickEvent);
+
+                // Request fullscreen
                 if (elem.requestFullscreen) {
                     elem.requestFullscreen().catch(() => {});
                 } else if (elem.webkitRequestFullscreen) {
@@ -108,14 +119,14 @@
             }
         }
 
-        // Check every second (1000ms) to ensure it stays in fullscreen
+        // Check and force every second (1000ms)
         setInterval(() => {
-            enforceFullscreen();
+            roboticFullscreenTrigger();
         }, 1000);
 
-        // Try automatically on load & first user touch
-        window.addEventListener('load', enforceFullscreen);
-        window.addEventListener('pointerdown', enforceFullscreen, { once: true });
+        // Run instantly on load and first touch
+        window.addEventListener('load', roboticFullscreenTrigger);
+        window.addEventListener('pointerdown', roboticFullscreenTrigger, { once: true });
 
         // If items already exist in cart, skip index welcome screen and go straight to menu.html
         function checkCartAndRedirect() {
@@ -127,7 +138,7 @@
         checkCartAndRedirect();
 
         function dismissWelcome() {
-            enforceFullscreen();
+            roboticFullscreenTrigger();
 
             if (deferredPrompt) {
                 deferredPrompt.prompt();
