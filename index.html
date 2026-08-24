@@ -80,6 +80,17 @@
     <script>
         const welcomeScreen = document.getElementById('welcomeScreen');
         const swipeTrigger = document.getElementById('swipeTrigger');
+        
+        let deferredPrompt;
+
+        // Capture the native PWA install prompt event
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Optionally, you can trigger the install prompt automatically right away if desired:
+            // deferredPrompt.prompt();
+        });
 
         // Automatically trigger fullscreen on page load
         function triggerAutoFullScreen() {
@@ -108,6 +119,15 @@
 
         function dismissWelcome() {
             triggerAutoFullScreen();
+            
+            // If the browser captured an install prompt, trigger the native App Install dialog on swipe/click
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    deferredPrompt = null;
+                });
+            }
+
             welcomeScreen.classList.add('slide-up');
             setTimeout(() => {
                 window.location.href = "afterswipe.html";
