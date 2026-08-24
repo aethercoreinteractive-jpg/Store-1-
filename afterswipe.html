@@ -57,7 +57,7 @@
         .action-arrow { font-size: 1.2rem; color: var(--text-light); font-weight: bold; transition: transform 0.2s; }
         .action-card:hover .action-arrow { transform: translateX(4px); color: var(--kfc-red); }
 
-        /* Highlight style for track order if active */
+        /* Highlight style for primary action card (Menu first) */
         .action-card.primary { background: var(--kfc-dark); color: white; border-color: var(--kfc-dark); }
         .action-card.primary .action-icon { background: rgba(255,255,255,0.1); color: white; }
         .action-card.primary .action-text h3 { color: white; }
@@ -76,27 +76,27 @@
             <p>What would you like to do next?</p>
         </div>
 
-        <!-- Options Container -->
+        <!-- Options Container (Menu First, Track Order Second) -->
         <div class="options-grid">
-            <!-- Track Order Option (Professional Name) -->
-            <a href="order-tracking.html" class="action-card primary">
-                <div class="action-content">
-                    <div class="action-icon">📍</div>
-                    <div class="action-text">
-                        <h3>Live Order Status</h3>
-                        <p>Track your ongoing kitchen order in real-time</p>
-                    </div>
-                </div>
-                <div class="action-arrow">→</div>
-            </a>
-
-            <!-- Menu Option (Professional Name) -->
-            <a href="menu.html" class="action-card">
+            <!-- Menu Option (Primary Professional Highlight) -->
+            <a href="menu.html" class="action-card primary">
                 <div class="action-content">
                     <div class="action-icon">🍔</div>
                     <div class="action-text">
                         <h3>Browse Full Menu</h3>
                         <p>Explore delicious items and add more to your cart</p>
+                    </div>
+                </div>
+                <div class="action-arrow">→</div>
+            </a>
+
+            <!-- Track Order Option -->
+            <a href="order-tracking.html" class="action-card">
+                <div class="action-content">
+                    <div class="action-icon">📍</div>
+                    <div class="action-text">
+                        <h3>Live Order Status</h3>
+                        <p>Track your ongoing kitchen order in real-time</p>
                     </div>
                 </div>
                 <div class="action-arrow">→</div>
