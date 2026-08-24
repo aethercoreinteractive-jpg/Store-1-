@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QuickBites - Welcome</title>
-    <!-- Link to the Web App Manifest for automatic fullscreen app mode -->
+    <!-- Link to Web App Manifest -->
     <link rel="manifest" href="manifest.json">
     <style>
         :root {
@@ -78,18 +78,19 @@
     </div>
 
     <script>
+        // Register Service Worker for App Installation support
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(() => {});
+        }
+
         const welcomeScreen = document.getElementById('welcomeScreen');
         const swipeTrigger = document.getElementById('swipeTrigger');
         
         let deferredPrompt;
 
-        // Capture the native PWA install prompt event
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            
-            // Optionally, you can trigger the install prompt automatically right away if desired:
-            // deferredPrompt.prompt();
         });
 
         // Automatically trigger fullscreen on page load
@@ -120,10 +121,10 @@
         function dismissWelcome() {
             triggerAutoFullScreen();
             
-            // If the browser captured an install prompt, trigger the native App Install dialog on swipe/click
+            // Triggers the native browser Install App popup when interacting
             if (deferredPrompt) {
                 deferredPrompt.prompt();
-                deferredPrompt.userChoice.then((choiceResult) => {
+                deferredPrompt.userChoice.then(() => {
                     deferredPrompt = null;
                 });
             }
