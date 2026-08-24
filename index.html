@@ -24,7 +24,17 @@
             -webkit-touch-callout: none; 
             -webkit-tap-highlight-color: transparent;
         }
-        body { background: var(--bg); color: white; height: 100vh; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+        body { background: var(--bg); color: white; height: 100vh; overflow: hidden; display: flex; justify-content: center; align-items: center; position: relative; }
+
+        /* Very Small Fullscreen Button on Upper Right Corner */
+        .fullscreen-btn {
+            position: fixed; top: 10px; right: 10px; z-index: 3000;
+            background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #a1a1aa; width: 28px; height: 28px; border-radius: 4px;
+            font-size: 0.8rem; display: flex; justify-content: center; align-items: center;
+            cursor: pointer; transition: background 0.2s, color 0.2s;
+        }
+        .fullscreen-btn:hover { background: rgba(255, 255, 255, 0.2); color: white; }
 
         /* Welcome Kiosk Overlay Screen */
         .kiosk-welcome {
@@ -64,6 +74,9 @@
 </head>
 <body>
 
+    <!-- Small Fullscreen Toggle Button -->
+    <button class="fullscreen-btn" id="fsBtn" title="Toggle Fullscreen">⛶</button>
+
     <!-- KIOSK WELCOME SCREEN -->
     <div id="welcomeScreen" class="kiosk-welcome">
         <div class="kiosk-brand">
@@ -85,12 +98,31 @@
 
         const welcomeScreen = document.getElementById('welcomeScreen');
         const swipeTrigger = document.getElementById('swipeTrigger');
+        const fsBtn = document.getElementById('fsBtn');
         
         let deferredPrompt;
 
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
+        });
+
+        // Fullscreen toggle button logic
+        fsBtn.addEventListener('click', () => {
+            let elem = document.documentElement;
+            if (!document.fullscreenElement) {
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen().catch(() => {});
+                } else if (elem.webkitRequestFullscreen) {
+                    elem.webkitRequestFullscreen();
+                } else if (elem.msRequestFullscreen) {
+                    elem.msRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen().catch(() => {});
+                }
+            }
         });
 
         // If items already exist in cart, skip index welcome screen and go straight to menu.html
@@ -125,40 +157,6 @@
             if (touchStartY - touchEndY > 50) {
                 dismissWelcome();
             }
-        });
-
-        // Touch and hold for 10 seconds to trigger Fullscreen Mode
-        let holdTimer = null;
-        
-        window.addEventListener('touchstart', (e) => {
-            // Clear any existing timer
-            clearTimeout(holdTimer);
-            
-            // Start 10-second (10000ms) timer
-            holdTimer = setTimeout(() => {
-                let elem = document.documentElement;
-                if (!document.fullscreenElement) {
-                    if (elem.requestFullscreen) {
-                        elem.requestFullscreen().catch(() => {});
-                    } else if (elem.webkitRequestFullscreen) {
-                        elem.webkitRequestFullscreen();
-                    } else if (elem.msRequestFullscreen) {
-                        elem.msRequestFullscreen();
-                    }
-                } else {
-                    if (document.exitFullscreen) {
-                        document.exitFullscreen().catch(() => {});
-                    }
-                }
-            }, 10000);
-        });
-
-        window.addEventListener('touchend', () => {
-            clearTimeout(holdTimer);
-        });
-
-        window.addEventListener('touchmove', () => {
-            clearTimeout(holdTimer);
         });
     </script>
 </body>
