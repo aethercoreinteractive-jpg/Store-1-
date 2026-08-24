@@ -115,8 +115,10 @@
         /* Inline Item Quantity Action Container */
         .item-action-area { display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .inline-qty-box { display: flex; align-items: center; background: #f4f4f5; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-        .qty-action-btn { background: var(--kfc-dark); color: white; border: none; width: 30px; height: 32px; font-size: 0.9rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
-        .qty-action-btn:hover { background: var(--kfc-red); }
+        
+        /* Red Quantity Control Buttons */
+        .qty-action-btn { background: var(--kfc-red); color: white; border: none; width: 30px; height: 32px; font-size: 0.9rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+        .qty-action-btn:hover { background: var(--kfc-red-hover); }
         .qty-display-num { padding: 0 10px; font-size: 0.85rem; font-weight: 800; color: var(--text); min-width: 24px; text-align: center; }
     </style>
 </head>
@@ -189,6 +191,7 @@
         const db = getFirestore(app);
 
         let isStoreOpen = false;
+        let menuCache = [];
 
         // --- SWIPE / TAP TO START KIOSK SCREEN ---
         const welcomeScreen = document.getElementById('welcomeScreen');
@@ -254,7 +257,11 @@
                     } else {
                         alertContainer.innerHTML = `<div class="store-alert closed">🔴 Store is currently CLOSED. Ordering is disabled.</div>`;
                     }
-                    loadMenu();
+                    if (menuCache.length === 0) {
+                        loadMenu();
+                    } else {
+                        updateAllActionButtons();
+                    }
                 } else {
                     alertContainer.innerHTML = `<div class="store-alert closed">🔴 Store status unavailable.</div>`;
                 }
@@ -271,7 +278,7 @@
             return url;
         }
 
-        // --- LOAD MENU ITEMS WITH DYNAMIC ACTION BUTTON/QUANTITY CONTROLS ---
+        // --- LOAD MENU ITEMS ONCE ---
         async function loadMenu() {
             const menuContainer = document.getElementById('menuContainer');
             menuContainer.innerHTML = "";
@@ -283,52 +290,78 @@
                     return;
                 }
 
-                let cart = JSON.parse(localStorage.getItem("quickbites_cart")) || [];
-
+                menuCache = [];
                 querySnapshot.forEach((docSnap) => {
                     const p = docSnap.data();
-                    const directImg = getDirectImageUrl(p.image);
-                    
-                    let cartItem = cart.find(item => item.name === p.name);
-                    let qty = cartItem ? cartItem.quantity : 0;
-
-                    let actionHtml = "";
-                    if (!isStoreOpen) {
-                        actionHtml = `<button class="btn btn-primary" disabled>Closed</button>`;
-                    } else if (qty === 0) {
-                        actionHtml = `<button class="btn btn-primary" onclick="updateItemQty('${p.name}', '${p.price}', '${directImg}', 1)">Add to Cart</button>`;
-                    } else {
-                        actionHtml = `
-                            <div class="inline-qty-box">
-                                <button class="qty-action-btn" onclick="updateItemQty('${p.name}', '${p.price}', '${directImg}', -1)">-</button>
-                                <span class="qty-display-num">${qty}</span>
-                                <button class="qty-action-btn" onclick="updateItemQty('${p.name}', '${p.price}', '${directImg}', 1)">+</button>
-                            </div>
-                        `;
-                    }
-                    
-                    menuContainer.innerHTML += `
-                        <div class="menu-item" id="menu-item-${CSS.escape(p.name)}">
-                            <img src="${directImg}" alt="${p.name}" onerror="this.src='https://via.placeholder.com/70?text=Food'">
-                            <div class="menu-details">
-                                <span class="category-tag">${p.category || 'General'}</span>
-                                <h3>${p.name}</h3>
-                                <p>${p.description || 'Delicious meal item prepared fresh.'}</p>
-                                <div class="price">₹${p.price}</div>
-                            </div>
-                            <div class="item-action-area" data-product="${p.name}">
-                                ${actionHtml}
-                            </div>
-                        </div>
-                    `;
+                    p.directImg = getDirectImageUrl(p.image);
+                    menuCache.push(p);
                 });
+
+                renderMenuList();
             } catch (e) {
                 console.error("Error loading menu: ", e);
                 menuContainer.innerHTML = "<p style='color:var(--danger); font-size:0.85rem;'>Failed to load menu items.</p>";
             }
         }
 
-        // --- UPDATE ITEM QUANTITY DIRECTLY IN LOCALSTORAGE & RE-RENDER UI PIECES ---
+        function renderMenuList() {
+            const menuContainer = document.getElementById('menuContainer');
+            menuContainer.innerHTML = "";
+
+            let cart = JSON.parse(localStorage.getItem("quickbites_cart")) || [];
+
+            menuCache.forEach((p) => {
+                let cartItem = cart.find(item => item.name === p.name);
+                let qty = cartItem ? cartItem.quantity : 0;
+
+                let actionHtml = getActionHtml(p, qty);
+                
+                menuContainer.innerHTML += `
+                    <div class="menu-item" data-product-name="${p.name}">
+                        <img src="${p.directImg}" alt="${p.name}" onerror="this.src='https://via.placeholder.com/70?text=Food'">
+                        <div class="menu-details">
+                            <span class="category-tag">${p.category || 'General'}</span>
+                            <h3>${p.name}</h3>
+                            <p>${p.description || 'Delicious meal item prepared fresh.'}</p>
+                            <div class="price">₹${p.price}</div>
+                        </div>
+                        <div class="item-action-area" id="action-area-${CSS.escape(p.name)}">
+                            ${actionHtml}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function getActionHtml(p, qty) {
+            if (!isStoreOpen) {
+                return `<button class="btn btn-primary" disabled>Closed</button>`;
+            } else if (qty === 0) {
+                return `<button class="btn btn-primary" onclick="updateItemQty('${p.name.replace(/'/g, "\\'")}', '${p.price}', '${p.directImg}', 1)">Add to Cart</button>`;
+            } else {
+                return `
+                    <div class="inline-qty-box">
+                        <button class="qty-action-btn" onclick="updateItemQty('${p.name.replace(/'/g, "\\'")}', '${p.price}', '${p.directImg}', -1)">-</button>
+                        <span class="qty-display-num">${qty}</span>
+                        <button class="qty-action-btn" onclick="updateItemQty('${p.name.replace(/'/g, "\\'")}', '${p.price}', '${p.directImg}', 1)">+</button>
+                    </div>
+                `;
+            }
+        }
+
+        function updateAllActionButtons() {
+            let cart = JSON.parse(localStorage.getItem("quickbites_cart")) || [];
+            menuCache.forEach((p) => {
+                let cartItem = cart.find(item => item.name === p.name);
+                let qty = cartItem ? cartItem.quantity : 0;
+                const actionArea = document.getElementById(`action-area-${CSS.escape(p.name)}`);
+                if (actionArea) {
+                    actionArea.innerHTML = getActionHtml(p, qty);
+                }
+            });
+        }
+
+        // --- UPDATE ITEM QUANTITY WITHOUT RE-RENDERING WHOLE PAGE (NO FLICKER) ---
         window.updateItemQty = function(name, price, image, delta) {
             if (!isStoreOpen) return;
 
@@ -346,7 +379,7 @@
 
             localStorage.setItem("quickbites_cart", JSON.stringify(cart));
             updateCartBadge();
-            loadMenu();
+            updateAllActionButtons();
         }
 
         initStoreListener();
