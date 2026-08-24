@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QuickBites - Menu & Ordering</title>
+    <title>QuickBites - Welcome</title>
     <style>
         :root {
             --kfc-red: #e4002b;
@@ -11,7 +11,6 @@
             --kfc-dark: #202124;
             --success: #10b981;
             --danger: #ef4444;
-            --warning: #f59e0b;
             --bg: #f4f4f5;
             --card-bg: #ffffff;
             --text: #18181b;
@@ -19,10 +18,46 @@
             --border: #e4e4e7;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
-        body { background: var(--bg); color: var(--text); padding: 12px; padding-bottom: 80px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; user-select: none; -webkit-user-select: none; }
+        body { background: var(--kfc-dark); color: white; height: 100vh; overflow: hidden; display: flex; justify-content: center; align-items: center; }
 
-        .container { max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+        /* Welcome Kiosk Overlay Screen */
+        .kiosk-welcome {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #18181b 0%, var(--kfc-dark) 100%);
+            display: flex; flex-direction: column; justify-content: space-between; align-items: center;
+            padding: 50px 20px; z-index: 2000; transition: transform 0.6s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+        .kiosk-welcome.slide-up { transform: translateY(-100%); }
+
+        .kiosk-brand { text-align: center; margin-top: 40px; }
+        .kiosk-brand h1 { font-size: 3rem; font-weight: 900; letter-spacing: -1px; }
+        .kiosk-brand h1 span { color: var(--kfc-red); }
+        .kiosk-brand p { color: var(--text-light); font-size: 1.1rem; margin-top: 10px; font-weight: 500; }
+
+        .kiosk-graphic {
+            width: 160px; height: 160px; background: rgba(228, 0, 43, 0.1); border: 2px solid rgba(228, 0, 43, 0.3);
+            border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 4rem;
+            box-shadow: 0 0 40px rgba(228, 0, 43, 0.2); animation: pulse 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(228, 0, 43, 0.4); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(228, 0, 43, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(228, 0, 43, 0); }
+        }
+
+        .swipe-instruction { text-align: center; margin-bottom: 30px; cursor: pointer; }
+        .swipe-arrow { font-size: 1.8rem; color: var(--kfc-red); animation: bounce 1.5s infinite; margin-bottom: 8px; }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        .swipe-instruction p { font-size: 1.1rem; font-weight: 700; letter-spacing: 0.5px; color: #e4e4e7; text-transform: uppercase; }
+
+        /* Main Menu Content Behind Welcome Screen */
+        .main-app-container { width: 100%; max-width: 600px; height: 100vh; background: var(--bg); color: var(--text); display: flex; flex-direction: column; padding: 12px; padding-bottom: 80px; overflow-y: auto; }
         
         header { background: var(--kfc-dark); color: white; padding: 16px 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
         header h1 { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.5px; }
@@ -31,6 +66,11 @@
         .header-nav { display: flex; gap: 8px; align-items: center; }
         .nav-btn { background: rgba(255,255,255,0.1); border: none; color: white; padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; transition: background 0.2s; }
         .nav-btn:hover { background: rgba(255,255,255,0.2); }
+
+        /* Cart Icon with Red Notification Badge */
+        .cart-icon-btn { position: relative; background: rgba(255,255,255,0.1); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; text-decoration: none; transition: background 0.2s; }
+        .cart-icon-btn:hover { background: rgba(255,255,255,0.2); }
+        .cart-badge { position: absolute; top: -4px; right: -4px; background: var(--kfc-red); color: white; font-size: 0.7rem; font-weight: 800; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid var(--kfc-dark); }
 
         /* Gear Icon & Menu Dropdown */
         .settings-menu-container { position: relative; }
@@ -42,11 +82,11 @@
         .dropdown-content a:hover { background: #f4f4f5; color: var(--kfc-red); }
         .dropdown-content.show { display: block; }
 
-        .store-alert { padding: 12px 16px; border-radius: 12px; font-weight: 700; font-size: 0.9rem; text-align: center; }
+        .store-alert { padding: 12px 16px; border-radius: 12px; font-weight: 700; font-size: 0.9rem; text-align: center; margin-top: 12px; }
         .store-alert.closed { background: #fee2e2; color: var(--danger); border: 1px solid #fecaca; }
         .store-alert.open { background: #d1fae5; color: var(--success); border: 1px solid #a7f3d0; }
 
-        .card { background: var(--card-bg); padding: 16px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border); }
+        .card { background: var(--card-bg); padding: 16px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border); margin-top: 12px; }
         .card h2 { font-size: 1.1rem; margin-bottom: 12px; font-weight: 800; }
 
         /* Menu Item Layout */
@@ -66,12 +106,32 @@
 </head>
 <body>
 
-    <div class="container">
+    <!-- KIOSK WELCOME SCREEN -->
+    <div id="welcomeScreen" class="kiosk-welcome">
+        <div class="kiosk-brand">
+            <h1>Quick<span>Bites</span></h1>
+            <p>Welcome to Self-Service Ordering</p>
+        </div>
+        <div class="kiosk-graphic">🍗</div>
+        <div class="swipe-instruction" id="swipeTrigger">
+            <div class="swipe-arrow">▲</div>
+            <p>Swipe up to start order</p>
+        </div>
+    </div>
+
+    <!-- MAIN ORDERING APP CONTAINER -->
+    <div class="main-app-container">
         <header>
             <h1>🍗 Quick<span>Bites</span></h1>
             <div class="header-nav">
-                <a href="order-tracking.html" class="nav-btn">📦 Track Orders</a>
+                <a href="order-tracking.html" class="nav-btn">📦 Track</a>
                 
+                <!-- CART ICON WITH BADGE -->
+                <a href="cart.html" class="cart-icon-btn" title="View Cart">
+                    🛒
+                    <span id="cartBadge" class="cart-badge" style="display:none;">0</span>
+                </a>
+
                 <!-- GEAR ICON WITH ADMIN DROPDOWN -->
                 <div class="settings-menu-container">
                     <button type="button" class="gear-btn" id="gearBtn" title="Settings">⚙️</button>
@@ -97,7 +157,7 @@
     <!-- Firebase Script Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCevmUKn9jsh3VrttK8MAyXEO5JjaFOTyM",
@@ -113,6 +173,42 @@
         const db = getFirestore(app);
 
         let isStoreOpen = false;
+
+        // --- SWIPE / TAP TO START KIOSK SCREEN ---
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const swipeTrigger = document.getElementById('swipeTrigger');
+
+        function dismissWelcome() {
+            welcomeScreen.classList.add('slide-up');
+            setTimeout(() => {
+                welcomeScreen.style.display = 'none';
+            }, 600);
+        }
+
+        swipeTrigger.addEventListener('click', dismissWelcome);
+        
+        let touchStartY = 0;
+        window.addEventListener('touchstart', (e) => { touchStartY = e.touches[0].clientY; });
+        window.addEventListener('touchend', (e) => {
+            let touchEndY = e.changedTouches[0].clientY;
+            if (touchStartY - touchEndY > 50) {
+                dismissWelcome();
+            }
+        });
+
+        // --- UPDATE CART BADGE COUNT ---
+        window.updateCartBadge = function() {
+            let cart = JSON.parse(localStorage.getItem("quickbites_cart")) || [];
+            let totalItems = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+            const badge = document.getElementById('cartBadge');
+            if (totalItems > 0) {
+                badge.innerText = totalItems;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+        updateCartBadge();
 
         // --- GEAR DROPDOWN TOGGLE INTERACTION ---
         const gearBtn = document.getElementById('gearBtn');
@@ -138,9 +234,9 @@
                     isStoreOpen = data.isOpen || false;
 
                     if (isStoreOpen) {
-                        alertContainer.innerHTML = `<div class="store-alert open">🟢 Store is OPEN! Place your orders below.</div>`;
+                        alertContainer.innerHTML = `<div class="store-alert open">🟢 Store is OPEN! Add items to cart.</div>`;
                     } else {
-                        alertContainer.innerHTML = `<div class="store-alert closed">🔴 Store is currently CLOSED. We are not accepting orders right now.</div>`;
+                        alertContainer.innerHTML = `<div class="store-alert closed">🔴 Store is currently CLOSED. Ordering is disabled.</div>`;
                     }
                     loadMenu();
                 } else {
@@ -159,7 +255,7 @@
             return url;
         }
 
-        // --- LOAD MENU ITEMS ---
+        // --- LOAD MENU ITEMS WITH 'ADD TO CART' ---
         async function loadMenu() {
             const menuContainer = document.getElementById('menuContainer');
             menuContainer.innerHTML = "";
@@ -184,10 +280,10 @@
                                 <p>${p.description || 'Delicious meal item prepared fresh.'}</p>
                                 <div class="price">₹${p.price}</div>
                             </div>
-                            <button class="btn btn-primary" style="width: auto; padding: 8px 14px; font-size: 0.85rem;" 
+                            <button class="btn btn-primary" style="width: auto; padding: 8px 12px; font-size: 0.8rem;" 
                                 ${!isStoreOpen ? 'disabled' : ''} 
-                                onclick="placeOrder('${p.name}', '${p.price}')">
-                                ${isStoreOpen ? 'Order' : 'Closed'}
+                                onclick="addToCart('${p.name}', '${p.price}', '${directImg}')">
+                                ${isStoreOpen ? 'Add to Cart' : 'Closed'}
                             </button>
                         </div>
                     `;
@@ -198,45 +294,27 @@
             }
         }
 
-        // --- PLACE ORDER WITH AUTO-INCREMENTING ORDER NUMBER ---
-        window.placeOrder = async function(productName, price) {
+        // --- ADD TO CART FUNCTIONALITY ---
+        window.addToCart = function(name, price, image) {
             if (!isStoreOpen) {
-                alert("Sorry, the store is closed and cannot accept orders.");
+                alert("Store is currently closed.");
                 return;
             }
 
-            if (!confirm(`Confirm order for ${productName} (₹${price})?`)) return;
+            let cart = JSON.parse(localStorage.getItem("quickbites_cart")) || [];
+            let existingItem = cart.find(item => item.name === name);
 
-            try {
-                const storeRef = doc(db, "settings", "storeStatus");
-                const storeSnap = await getDoc(storeRef);
-                
-                let currentOrderNum = 200;
-                if (storeSnap.exists() && storeSnap.data().nextOrderNumber) {
-                    currentOrderNum = storeSnap.data().nextOrderNumber;
-                }
-
-                await addDoc(collection(db, "orders"), {
-                    orderNumber: currentOrderNum,
-                    productName: productName,
-                    price: price,
-                    status: "pending",
-                    createdAt: new Date().toISOString()
-                });
-
-                await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js").then(async ({ updateDoc }) => {
-                    await updateDoc(storeRef, { nextOrderNumber: currentOrderNum + 1 });
-                });
-
-                localStorage.setItem("lastActiveOrderNum", currentOrderNum);
-                alert(`Order placed successfully! Your Order Number is #${currentOrderNum}\n\nRedirecting to Order Tracking...`);
-                
-                window.location.href = "order-tracking.html";
-
-            } catch (e) {
-                console.error("Error placing order: ", e);
-                alert("Failed to place order. Please try again.");
+            if (existingItem) {
+                existingItem.quantity = (existingItem.quantity || 1) + 1;
+            } else {
+                cart.push({ name, price: parseFloat(price), image, quantity: 1 });
             }
+
+            localStorage.setItem("quickbites_cart", JSON.stringify(cart));
+            updateCartBadge();
+            
+            // Brief visual notification feedback
+            alert(`${name} added to cart!`);
         }
 
         initStoreListener();
