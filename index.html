@@ -93,22 +93,6 @@
             deferredPrompt = e;
         });
 
-        // Automatically trigger fullscreen on page load
-        function triggerAutoFullScreen() {
-            let elem = document.documentElement;
-            if (elem.requestFullscreen) {
-                elem.requestFullscreen().catch(() => {});
-            } else if (elem.webkitRequestFullscreen) {
-                elem.webkitRequestFullscreen();
-            } else if (elem.msRequestFullscreen) {
-                elem.msRequestFullscreen();
-            }
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            triggerAutoFullScreen();
-        });
-
         // If items already exist in cart, skip index welcome screen and go straight to menu.html
         function checkCartAndRedirect() {
             let cart = JSON.parse(localStorage.getItem("quickbites_cart")) || [];
@@ -119,9 +103,6 @@
         checkCartAndRedirect();
 
         function dismissWelcome() {
-            triggerAutoFullScreen();
-            
-            // Triggers the native browser Install App popup when interacting
             if (deferredPrompt) {
                 deferredPrompt.prompt();
                 deferredPrompt.userChoice.then(() => {
@@ -144,6 +125,40 @@
             if (touchStartY - touchEndY > 50) {
                 dismissWelcome();
             }
+        });
+
+        // Touch and hold for 10 seconds to trigger Fullscreen Mode
+        let holdTimer = null;
+        
+        window.addEventListener('touchstart', (e) => {
+            // Clear any existing timer
+            clearTimeout(holdTimer);
+            
+            // Start 10-second (10000ms) timer
+            holdTimer = setTimeout(() => {
+                let elem = document.documentElement;
+                if (!document.fullscreenElement) {
+                    if (elem.requestFullscreen) {
+                        elem.requestFullscreen().catch(() => {});
+                    } else if (elem.webkitRequestFullscreen) {
+                        elem.webkitRequestFullscreen();
+                    } else if (elem.msRequestFullscreen) {
+                        elem.msRequestFullscreen();
+                    }
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen().catch(() => {});
+                    }
+                }
+            }, 10000);
+        });
+
+        window.addEventListener('touchend', () => {
+            clearTimeout(holdTimer);
+        });
+
+        window.addEventListener('touchmove', () => {
+            clearTimeout(holdTimer);
         });
     </script>
 </body>
