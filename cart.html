@@ -219,12 +219,10 @@
             const processingModal = document.getElementById('processingModal');
             const processingSubtitle = document.getElementById('processingSubtitle');
 
-            // Timer check: Only reveal the high-end animation if the server request takes longer than 250ms
             let showAnimationTimer = setTimeout(() => {
                 processingModal.style.display = 'flex';
             }, 250);
 
-            // Dynamic status text update loop for premium experience if it takes a bit longer
             let statusInterval = setTimeout(() => {
                 processingSubtitle.innerText = "Assigning your order token...";
             }, 1200);
@@ -238,13 +236,23 @@
                     currentOrderNum = storeSnap.data().nextOrderNumber;
                 }
 
-                let summaryText = cart.map(i => `${i.name} (Qty: ${i.quantity || 1})`).join(', ');
+                // Structured data format for easy admin identification
                 let totalPrice = cart.reduce((sum, i) => sum + (i.price * (i.quantity || 1)), 0);
+                
+                let formattedItems = cart.map(i => ({
+                    name: i.name,
+                    price: i.price,
+                    quantity: i.quantity || 1,
+                    subtotal: i.price * (i.quantity || 1)
+                }));
+
+                let readableSummary = formattedItems.map(i => `${i.quantity}x ${i.name}`).join(' | ');
 
                 await addDoc(collection(db, "orders"), {
                     orderNumber: currentOrderNum,
-                    productName: summaryText,
-                    items: cart,
+                    productName: readableSummary,
+                    items: formattedItems,
+                    totalPrice: totalPrice,
                     price: totalPrice,
                     status: "pending",
                     createdAt: new Date().toISOString()
@@ -254,12 +262,10 @@
 
                 localStorage.setItem("lastActiveOrderNum", currentOrderNum);
 
-                // Clear animation timers immediately
                 clearTimeout(showAnimationTimer);
                 clearTimeout(statusInterval);
                 processingModal.style.display = 'none';
 
-                // Instantly display success modal
                 document.getElementById('modalOrderNum').innerText = `#${currentOrderNum}`;
                 document.getElementById('successModal').style.display = 'flex';
 
