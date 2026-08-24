@@ -250,9 +250,16 @@
                     subtotal: i.price * (i.quantity || 1)
                 }));
 
-                // Format with Order Number on top, items below with right-aligned prices using CSS flex/spacing or HTML table formatting for admin view
-                let readableSummary = `Order Number: #${currentOrderNum}<br>` + 
-                    formattedItems.map(i => `<span style="display:inline-block; width:65%;">${i.quantity}x ${i.name}</span><span style="display:inline-block; width:30%; text-align:right;">₹${i.subtotal}</span>`).join('<br>');
+                // Professional format with Order Number on top, items listed below with right-aligned prices, and a distinct Total Amount line at the bottom
+                let itemsListHtml = formattedItems.map(i => 
+                    `<div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>${i.quantity}x ${i.name}</span><span style="text-align:right;">₹${i.subtotal}</span></div>`
+                ).join('');
+
+                let readableSummary = `<div style="font-family:monospace; font-size:0.95rem;">` +
+                    `<div style="font-weight:bold; margin-bottom:8px;">Order Number: #${currentOrderNum}</div>` +
+                    itemsListHtml +
+                    `<div style="border-top:1px dashed #ccc; margin-top:8px; padding-top:6px; display:flex; justify-content:space-between; font-weight:bold;"><span>Total Amount:</span><span>₹${totalPrice}</span></div>` +
+                    `</div>`;
 
                 await addDoc(collection(db, "orders"), {
                     orderNumber: currentOrderNum,
@@ -301,4 +308,5 @@
         renderCart();
     </script>
 </body>
-</html>
+    </html>
+    
