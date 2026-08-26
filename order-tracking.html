@@ -126,7 +126,26 @@
                     }
                 });
 
-                acceptedOrders.sort((a, b) => (a.orderNumber || 0) - (b.orderNumber || 0));
+                // --- CUSTOM SORTING LOGIC ---
+                // Priority ranking: ready (1) -> preparing (2) -> pending (3)
+                const statusPriority = {
+                    "ready": 1,
+                    "preparing": 2,
+                    "pending": 3
+                };
+
+                acceptedOrders.sort((a, b) => {
+                    let priorityA = statusPriority[a.status] || 99;
+                    let priorityB = statusPriority[b.status] || 99;
+
+                    if (priorityA !== priorityB) {
+                        return priorityA - priorityB;
+                    }
+
+                    // Fallback to order number ascending if statuses match
+                    return (a.orderNumber || 0) - (b.orderNumber || 0);
+                });
+
                 declinedOrders.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
                 
                 // FIFO Rule: keep only the latest 3 declined orders
@@ -152,7 +171,6 @@
                             statusText = "Ready for Pickup! 🎉";
                         }
 
-                        // Clean productName to ensure order number text strings inside it aren't duplicated at the top
                         let cleanProductContent = order.productName || "";
                         cleanProductContent = cleanProductContent.replace(/Order Number:\s*#?\d+<br\s*\/?>/gi, '');
 
