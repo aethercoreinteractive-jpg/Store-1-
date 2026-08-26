@@ -321,6 +321,16 @@
                     orders.push({ id: docSnap.id, ...docSnap.data() });
                 });
 
+                // Sort orders so newest (highest orderNumber or latest timestamp) appear at the top
+                orders.sort((a, b) => {
+                    const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+                    const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+                    if (timeB !== timeA) {
+                        return timeB - timeA; // Descending timestamp order
+                    }
+                    return (b.orderNumber || 0) - (a.orderNumber || 0); // Fallback to descending order number
+                });
+
                 const preparingCount = orders.filter(o => o.status === "preparing").length;
 
                 if (orders.length === 0) {
@@ -362,7 +372,7 @@
                             <span>Order #${order.orderNumber}</span>
                             <span class="badge ${badgeClass}">${order.status}</span>
                         </div>
-                        <div class="order-details">
+                          <div class="order-details">
                             <strong>Item:</strong> ${order.productName || 'Custom Item'} (${order.price ? '₹' + order.price : ''})
                         </div>
                         <div class="action-container">${actionHtml}</div>
