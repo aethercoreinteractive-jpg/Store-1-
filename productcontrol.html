@@ -19,7 +19,24 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
-        body { background: var(--bg); color: var(--text); padding: 12px; padding-bottom: 50px; }
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            padding: 12px; 
+            padding-bottom: 50px; 
+            -webkit-user-select: none; /* Prevent text highlight on Safari */
+            -moz-user-select: none;    /* Prevent text highlight on Firefox */
+            -ms-user-select: none;     /* Prevent text highlight on IE/Edge */
+            user-select: none;         /* Prevent text highlight on standard browsers */
+        }
+
+        /* Allow typing inside input fields and textareas */
+        input, textarea, select {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
 
         .container { max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
         header { display: flex; justify-content: space-between; align-items: center; background: var(--kfc-dark); color: white; padding: 16px 20px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
@@ -33,7 +50,8 @@
         .card h2 { font-size: 1.1rem; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; color: var(--text); font-weight: 800; }
 
         /* Form Controls */
-        input, textarea, select { width: 100%; padding: 12px 14px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 0.95rem; background: #fff; }
+        input, textarea, select { width: 100%; padding: 12px 14px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 0.95rem; background: #fff; outline: none; }
+        input:focus, textarea:focus, select:focus { border-color: var(--kfc-red); }
         textarea { resize: vertical; min-height: 80px; }
         
         .btn { width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 700; cursor: pointer; display: inline-flex; justify-content: center; align-items: center; gap: 8px; transition: all 0.25s ease-in-out; }
@@ -62,6 +80,11 @@
         }
 
         .form-row { display: flex; gap: 8px; margin-bottom: 12px; }
+
+        /* Status Toast Banner */
+        #statusMessage { font-size: 0.85rem; font-weight: 600; padding: 8px 12px; border-radius: 8px; margin-bottom: 12px; display: none; text-align: center; }
+        .toast-success { background: #d1fae5; color: #065f46; }
+        .toast-error { background: #fee2e2; color: #991b1b; }
 
         /* Category List Manager Rows */
         .category-list-container { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
@@ -92,6 +115,7 @@
         <!-- CATEGORY MANAGEMENT PANEL -->
         <div class="card">
             <h2>🏷️ Manage Categories & Sort Order</h2>
+            <div id="statusMessage"></div>
             <div class="form-row" style="margin-bottom:0;">
                 <input type="text" id="categoryNameInput" placeholder="New Category Name (e.g. Snacks)" style="margin-bottom:0;">
                 <button class="btn btn-primary" id="addCategoryBtn" style="width: auto; padding: 0 20px;">Add Category</button>
@@ -147,6 +171,16 @@
 
         let categoryOrderMap = {}; 
 
+        function showStatus(text, isError = false) {
+            const statusBox = document.getElementById('statusMessage');
+            statusBox.innerText = text;
+            statusBox.className = isError ? "toast-error" : "toast-success";
+            statusBox.style.display = "block";
+            setTimeout(() => {
+                statusBox.style.display = "none";
+            }, 3000);
+        }
+
         async function init() {
             await loadCategories();
             await loadProducts();
@@ -157,17 +191,19 @@
             const catName = document.getElementById('categoryNameInput').value.trim();
 
             if (!catName) {
-                alert("Please enter a category name.");
+                showStatus("Please enter a category name.", true);
                 return;
             }
 
             try {
                 await addDoc(collection(db, "categories"), { name: catName, sortOrder: 1 });
                 document.getElementById('categoryNameInput').value = "";
+                showStatus("Category added successfully!");
                 await loadCategories();
                 await loadProducts();
             } catch (e) {
                 console.error("Error adding category:", e);
+                showStatus("Failed to add category.", true);
             }
         });
 
@@ -213,10 +249,14 @@
                     `;
 
                     row.querySelector('.del-cat-btn').addEventListener('click', async () => {
-                        if (confirm(`Delete category "${cat.name}"?`)) {
+                        try {
                             await deleteDoc(doc(db, "categories", cat.id));
+                            showStatus(`Category "${cat.name}" deleted.`);
                             await loadCategories();
                             await loadProducts();
+                        } catch (err) {
+                            console.error("Error deleting category:", err);
+                            showStatus("Failed to delete category.", true);
                         }
                     });
 
@@ -248,12 +288,12 @@
                 });
 
                 await Promise.all(updatePromises);
-                alert("All category sort orders updated successfully!");
+                showStatus("All category sort orders updated successfully!");
                 await loadCategories();
                 await loadProducts();
             } catch (e) {
                 console.error("Error saving sort orders:", e);
-                alert("Failed to save sort orders.");
+                showStatus("Failed to save sort orders.", true);
             } finally {
                 saveBtn.innerText = "Save";
                 saveBtn.disabled = false;
@@ -269,22 +309,23 @@
             const image = document.getElementById('productImage').value;
 
             if (!name || !price) {
-                alert("Please provide at least a Product Name and Price.");
+                showStatus("Please provide at least a Product Name and Price.", true);
                 return;
             }
 
             try {
                 if (id) {
                     await updateDoc(doc(db, "products", id), { name, category, description, price, image });
-                    alert("Product updated successfully!");
+                    showStatus("Product updated successfully!");
                 } else {
                     await addDoc(collection(db, "products"), { name, category, description, price, image });
-                    alert("Product added successfully!");
+                    showStatus("Product added successfully!");
                 }
                 clearProductForm();
                 loadProducts();
             } catch (e) {
                 console.error("Error saving product: ", e);
+                showStatus("Failed to save product.", true);
             }
         });
 
@@ -355,9 +396,13 @@
                         });
 
                         itemDiv.querySelector('.del-btn').addEventListener('click', async () => {
-                            if (confirm("Are you sure you want to delete this product?")) {
+                            try {
                                 await deleteDoc(doc(db, "products", p.id));
+                                showStatus("Product deleted successfully.");
                                 loadProducts();
+                            } catch (err) {
+                                console.error("Error deleting product:", err);
+                                showStatus("Failed to delete product.", true);
                             }
                         });
 
@@ -386,4 +431,3 @@
     </script>
 </body>
 </html>
-                
