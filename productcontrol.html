@@ -42,7 +42,7 @@
         .btn-secondary { background: #e4e4e7; color: var(--text); }
         .btn-secondary:hover { background: #d4d4d8; }
 
-        .form-row { display: flex; gap: 8px; }
+        .form-row { display: flex; gap: 8px; margin-bottom: 12px; }
 
         /* Category List Pills / Rows */
         .category-list-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
@@ -72,9 +72,10 @@
         <div class="card">
             <h2>🏷️ Manage Categories</h2>
             <div class="form-row">
-                <input type="text" id="categoryNameInput" placeholder="New Category Name (e.g. Snacks, Drinks)" style="margin-bottom:0;">
-                <button class="btn btn-primary" id="addCategoryBtn" style="width: auto; padding: 0 20px;">Add Category</button>
+                <input type="text" id="categoryNameInput" placeholder="Category Name (e.g. Snacks)" style="margin-bottom:0;">
+                <input type="number" id="categorySortInput" placeholder="Sort # (1, 2...)" style="margin-bottom:0; width: 110px;" value="1">
             </div>
+            <button class="btn btn-primary" id="addCategoryBtn">Add Category</button>
             <div id="categoryContainer" class="category-list-container" style="margin-top: 12px;">Loading categories...</div>
         </div>
 
@@ -92,7 +93,7 @@
             <input type="number" id="productPrice" placeholder="Price (₹)">
             <input type="text" id="productImage" placeholder="Google Drive Image Link">
             
-            <div class="form-row">
+            <div class="form-row" style="margin-bottom:0;">
                 <button class="btn btn-primary" id="saveBtn">Add Product</button>
                 <button class="btn btn-secondary" id="cancelEditBtn" style="display:none;">Cancel</button>
             </div>
@@ -120,22 +121,31 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        let categoryOrderMap = {}; // Maps category name to its sort number
+
         // Load data on startup
-        loadCategories();
-        loadProducts();
+        async function init() {
+            await loadCategories();
+            await loadProducts();
+        }
+        init();
 
         // --- CATEGORY CRUD ---
         document.getElementById('addCategoryBtn').addEventListener('click', async function() {
             const catName = document.getElementById('categoryNameInput').value.trim();
+            const sortNum = parseInt(document.getElementById('categorySortInput').value) || 1;
+
             if (!catName) {
                 alert("Please enter a category name.");
                 return;
             }
 
             try {
-                await addDoc(collection(db, "categories"), { name: catName });
+                await addDoc(collection(db, "categories"), { name: catName, sortOrder: sortNum });
                 document.getElementById('categoryNameInput').value = "";
-                loadCategories();
+                document.getElementById('categorySortInput').value = "1";
+                await loadCategories();
+                await loadProducts();
             } catch (e) {
                 console.error("Error adding category:", e);
             }
@@ -144,6 +154,7 @@
         async function loadCategories() {
             const container = document.getElementById('categoryContainer');
             const selectDropdown = document.getElementById('productCategorySelect');
+            categoryOrderMap = {};
             
             try {
                 const querySnapshot = await getDocs(collection(db, "categories"));
@@ -155,18 +166,27 @@
                     return;
                 }
 
+                let categories = [];
                 querySnapshot.forEach((docSnap) => {
-                    const cat = docSnap.data();
-                    
-                    // Render Category Pill
+                    categories.push({ id: docSnap.id, ...docSnap.data() });
+                });
+
+                // Sort categories based on sortOrder (lowest number first, e.g., 1, 2, 3...)
+                categories.sort((a, b) => (a.sortOrder || 99) - (b.sortOrder || 99));
+
+                categories.forEach((cat) => {
+                    categoryOrderMap[cat.name] = cat.sortOrder || 99;
+
+                    // Render Category Pill with its sort number tag
                     const pill = document.createElement('div');
                     pill.className = "category-pill";
-                    pill.innerHTML = `<span>${cat.name}</span> <button title="Delete Category">×</button>`;
+                    pill.innerHTML = `<span>[${cat.sortOrder || 1}] ${cat.name}</span> <button title="Delete Category">×</button>`;
                     
                     pill.querySelector('button').addEventListener('click', async () => {
                         if (confirm(`Delete category "${cat.name}"?`)) {
-                            await deleteDoc(doc(db, "categories", docSnap.id));
-                            loadCategories();
+                            await deleteDoc(doc(db, "categories", cat.id));
+                            await loadCategories();
+                            await loadProducts();
                         }
                     });
                     container.appendChild(pill);
@@ -174,7 +194,7 @@
                     // Add to Product Form Dropdown
                     const option = document.createElement('option');
                     option.value = cat.name;
-                    option.textContent = cat.name;
+                    option.textContent = `[${cat.sortOrder || 1}] ${cat.name}`;
                     selectDropdown.appendChild(option);
                 });
             } catch (e) {
@@ -225,27 +245,35 @@
                 }
 
                 // Group products by category
-                let categories = {};
+                let categoriesGroup = {};
                 querySnapshot.forEach((docSnap) => {
                     const p = docSnap.data();
                     p.id = docSnap.id;
                     let cat = p.category ? p.category.trim() : "General";
-                    if (!categories[cat]) {
-                        categories[cat] = [];
+                    if (!categoriesGroup[cat]) {
+                        categoriesGroup[cat] = [];
                     }
-                    categories[cat].push(p);
+                    categoriesGroup[cat].push(p);
+                });
+
+                // Sort category keys based on user-assigned sort order numbers
+                let sortedCategories = Object.keys(categoriesGroup).sort((a, b) => {
+                    let orderA = categoryOrderMap[a] !== undefined ? categoryOrderMap[a] : 99;
+                    let orderB = categoryOrderMap[b] !== undefined ? categoryOrderMap[b] : 99;
+                    return orderA - orderB;
                 });
 
                 container.innerHTML = "";
 
-                // Render categorized inventory sections
-                for (let catName in categories) {
+                // Render categorized inventory sections sequentially
+                sortedCategories.forEach(catName => {
                     const sectionTitle = document.createElement('div');
                     sectionTitle.className = "category-section-title";
-                    sectionTitle.innerText = catName;
+                    let sortBadgeNum = categoryOrderMap[catName] !== undefined ? `[${categoryOrderMap[catName]}] ` : '';
+                    sectionTitle.innerText = `${sortBadgeNum}${catName}`;
                     container.appendChild(sectionTitle);
 
-                    categories[catName].forEach((p) => {
+                    categoriesGroup[catName].forEach((p) => {
                         const itemDiv = document.createElement('div');
                         itemDiv.className = "product-item";
                         itemDiv.innerHTML = `
@@ -282,7 +310,7 @@
 
                         container.appendChild(itemDiv);
                     });
-                }
+                });
             } catch (e) {
                 console.error("Error loading products:", e);
                 container.innerHTML = "<p style='color:var(--danger); font-size:0.85rem;'>Failed to load inventory.</p>";
