@@ -143,6 +143,7 @@
 
         let isStoreOpen = false;
         let menuCache = [];
+        let categoryOrderMap = {};
 
         // --- UPDATE CART BADGE COUNT ---
         window.updateCartBadge = function() {
@@ -187,7 +188,7 @@
                         alertContainer.innerHTML = `<div class="store-alert closed">🔴 Store is currently CLOSED. Ordering is disabled.</div>`;
                     }
                     if (menuCache.length === 0) {
-                        loadMenu();
+                        loadMenuData();
                     } else {
                         updateAllActionButtons();
                     }
@@ -207,12 +208,23 @@
             return url;
         }
 
-        // --- LOAD MENU ITEMS ONCE ---
-        async function loadMenu() {
+        // --- LOAD CATEGORIES & PRODUCTS ---
+        async function loadMenuData() {
             const menuContainer = document.getElementById('menuContainer');
-            menuContainer.innerHTML = "";
+            menuContainer.innerHTML = "Loading menu...";
             
             try {
+                // Fetch categories sort order configuration
+                const catSnapshot = await getDocs(collection(db, "categories"));
+                categoryOrderMap = {};
+                catSnapshot.forEach((docSnap) => {
+                    const catData = docSnap.data();
+                    if (catData.name) {
+                        categoryOrderMap[catData.name.trim()] = catData.sortOrder !== undefined ? catData.sortOrder : 99;
+                    }
+                });
+
+                // Fetch products
                 const querySnapshot = await getDocs(collection(db, "products"));
                 if (querySnapshot.empty) {
                     menuContainer.innerHTML = "<p style='color:var(--text-light); font-size:0.85rem;'>No menu items available at the moment.</p>";
@@ -240,23 +252,30 @@
             let cart = JSON.parse(localStorage.getItem("quickbites_cart")) || [];
 
             // Group products by category
-            let categories = {};
+            let categoriesGroup = {};
             menuCache.forEach((p) => {
                 let cat = p.category ? p.category.trim() : "General";
-                if (!categories[cat]) {
-                    categories[cat] = [];
+                if (!categoriesGroup[cat]) {
+                    categoriesGroup[cat] = [];
                 }
-                categories[cat].push(p);
+                categoriesGroup[cat].push(p);
             });
 
-            // Loop through each category and build sections
-            for (let catName in categories) {
+            // Sort category keys based on admin defined sort orders
+            let sortedCategoryNames = Object.keys(categoriesGroup).sort((a, b) => {
+                let orderA = categoryOrderMap[a] !== undefined ? categoryOrderMap[a] : 99;
+                let orderB = categoryOrderMap[b] !== undefined ? categoryOrderMap[b] : 99;
+                return orderA - orderB;
+            });
+
+            // Loop through sorted categories and build sections
+            sortedCategoryNames.forEach(catName => {
                 let sectionTitle = document.createElement('div');
                 sectionTitle.className = "category-section-title";
                 sectionTitle.innerText = catName;
                 menuContainer.appendChild(sectionTitle);
 
-                categories[catName].forEach((p) => {
+                categoriesGroup[catName].forEach((p) => {
                     let cartItem = cart.find(item => item.name === p.name);
                     let qty = cartItem ? cartItem.quantity : 0;
                     let actionHtml = getActionHtml(p, qty);
@@ -277,7 +296,7 @@
                     `;
                     menuContainer.appendChild(itemDiv);
                 });
-            }
+            });
         }
 
         function getActionHtml(p, qty) {
@@ -333,3 +352,4 @@
     </script>
 </body>
 </html>
+            
