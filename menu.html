@@ -61,11 +61,14 @@
         .card { background: var(--card-bg); padding: 16px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border); margin-top: 12px; }
         .card h2 { font-size: 1.1rem; margin-bottom: 12px; font-weight: 800; }
 
+        /* Category Section Header */
+        .category-section-title { font-size: 1.05rem; font-weight: 800; color: var(--kfc-red); margin: 18px 0 10px 4px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #fee2e2; padding-bottom: 4px; }
+        .category-section-title:first-child { margin-top: 4px; }
+
         /* Menu Item Layout */
         .menu-item { display: flex; gap: 12px; padding: 12px; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; background: #fafafa; align-items: center; }
         .menu-item img { width: 70px; height: 70px; object-fit: cover; border-radius: 8px; background: #e4e4e7; flex-shrink: 0; }
         .menu-details { flex-grow: 1; }
-        .category-tag { display: inline-block; background: #fee2e2; color: var(--kfc-red); font-size: 0.65rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-bottom: 4px; text-transform: uppercase; }
         .menu-details h3 { font-size: 0.95rem; font-weight: 700; color: var(--text); }
         .menu-details p { font-size: 0.75rem; color: var(--text-light); margin: 2px 0 6px 0; line-height: 1.2; }
         .price { font-weight: 800; font-size: 0.9rem; color: var(--text); }
@@ -236,17 +239,34 @@
 
             let cart = JSON.parse(localStorage.getItem("quickbites_cart")) || [];
 
+            // Group products by category
+            let categories = {};
             menuCache.forEach((p) => {
-                let cartItem = cart.find(item => item.name === p.name);
-                let qty = cartItem ? cartItem.quantity : 0;
+                let cat = p.category ? p.category.trim() : "General";
+                if (!categories[cat]) {
+                    categories[cat] = [];
+                }
+                categories[cat].push(p);
+            });
 
-                let actionHtml = getActionHtml(p, qty);
-                
-                menuContainer.innerHTML += `
-                    <div class="menu-item" data-product-name="${p.name}">
+            // Loop through each category and build sections
+            for (let catName in categories) {
+                let sectionTitle = document.createElement('div');
+                sectionTitle.className = "category-section-title";
+                sectionTitle.innerText = catName;
+                menuContainer.appendChild(sectionTitle);
+
+                categories[catName].forEach((p) => {
+                    let cartItem = cart.find(item => item.name === p.name);
+                    let qty = cartItem ? cartItem.quantity : 0;
+                    let actionHtml = getActionHtml(p, qty);
+                    
+                    let itemDiv = document.createElement('div');
+                    itemDiv.className = "menu-item";
+                    itemDiv.setAttribute("data-product-name", p.name);
+                    itemDiv.innerHTML = `
                         <img src="${p.directImg}" alt="${p.name}" onerror="this.src='https://via.placeholder.com/70?text=Food'">
                         <div class="menu-details">
-                            <span class="category-tag">${p.category || 'General'}</span>
                             <h3>${p.name}</h3>
                             <p>${p.description || 'Delicious meal item prepared fresh.'}</p>
                             <div class="price">₹${p.price}</div>
@@ -254,9 +274,10 @@
                         <div class="item-action-area" id="action-area-${CSS.escape(p.name)}">
                             ${actionHtml}
                         </div>
-                    </div>
-                `;
-            });
+                    `;
+                    menuContainer.appendChild(itemDiv);
+                });
+            }
         }
 
         function getActionHtml(p, qty) {
