@@ -44,10 +44,12 @@
 
         .form-row { display: flex; gap: 8px; margin-bottom: 12px; }
 
-        /* Category List Pills / Rows */
-        .category-list-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-        .category-pill { display: inline-flex; align-items: center; gap: 8px; background: #fee2e2; color: var(--kfc-red); padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; }
-        .category-pill button { background: none; border: none; color: var(--danger); font-weight: bold; cursor: pointer; font-size: 0.9rem; }
+        /* Category List Manager Rows */
+        .category-list-container { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+        .category-row-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px; background: #fafafa; }
+        .category-row-info { font-weight: 700; font-size: 0.9rem; color: var(--text); }
+        .category-row-controls { display: flex; align-items: center; gap: 8px; }
+        .category-sort-input { width: 65px; padding: 6px 8px; text-align: center; border: 1px solid var(--border); border-radius: 8px; font-size: 0.85rem; font-weight: bold; background: #fff; margin-bottom: 0; }
 
         /* Category Section Header inside Inventory */
         .category-section-title { font-size: 0.95rem; font-weight: 800; color: var(--kfc-red); margin: 18px 0 8px 2px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #fee2e2; padding-bottom: 4px; }
@@ -70,12 +72,11 @@
 
         <!-- CATEGORY MANAGEMENT PANEL -->
         <div class="card">
-            <h2>🏷️ Manage Categories</h2>
-            <div class="form-row">
-                <input type="text" id="categoryNameInput" placeholder="Category Name (e.g. Snacks)" style="margin-bottom:0;">
-                <input type="number" id="categorySortInput" placeholder="Sort # (1, 2...)" style="margin-bottom:0; width: 110px;" value="1">
+            <h2>🏷️ Manage Categories & Sort Order</h2>
+            <div class="form-row" style="margin-bottom:0;">
+                <input type="text" id="categoryNameInput" placeholder="New Category Name (e.g. Snacks)" style="margin-bottom:0;">
+                <button class="btn btn-primary" id="addCategoryBtn" style="width: auto; padding: 0 20px;">Add Category</button>
             </div>
-            <button class="btn btn-primary" id="addCategoryBtn">Add Category</button>
             <div id="categoryContainer" class="category-list-container" style="margin-top: 12px;">Loading categories...</div>
         </div>
 
@@ -133,7 +134,6 @@
         // --- CATEGORY CRUD ---
         document.getElementById('addCategoryBtn').addEventListener('click', async function() {
             const catName = document.getElementById('categoryNameInput').value.trim();
-            const sortNum = parseInt(document.getElementById('categorySortInput').value) || 1;
 
             if (!catName) {
                 alert("Please enter a category name.");
@@ -141,9 +141,9 @@
             }
 
             try {
-                await addDoc(collection(db, "categories"), { name: catName, sortOrder: sortNum });
+                // Default sort order can be set to 1 or next available index
+                await addDoc(collection(db, "categories"), { name: catName, sortOrder: 1 });
                 document.getElementById('categoryNameInput').value = "";
-                document.getElementById('categorySortInput').value = "1";
                 await loadCategories();
                 await loadProducts();
             } catch (e) {
@@ -172,29 +172,52 @@
                 });
 
                 // Sort categories based on sortOrder (lowest number first, e.g., 1, 2, 3...)
-                categories.sort((a, b) => (a.sortOrder || 99) - (b.sortOrder || 99));
+                categories.sort((a, b) => (a.sortOrder !== undefined ? a.sortOrder : 99) - (b.sortOrder !== undefined ? b.sortOrder : 99));
 
                 categories.forEach((cat) => {
-                    categoryOrderMap[cat.name] = cat.sortOrder || 99;
+                    let currentSort = cat.sortOrder !== undefined ? cat.sortOrder : 1;
+                    categoryOrderMap[cat.name] = currentSort;
 
-                    // Render Category Pill with its sort number tag
-                    const pill = document.createElement('div');
-                    pill.className = "category-pill";
-                    pill.innerHTML = `<span>[${cat.sortOrder || 1}] ${cat.name}</span> <button title="Delete Category">×</button>`;
-                    
-                    pill.querySelector('button').addEventListener('click', async () => {
+                    // Render Category Row Item with Number Column Input next to it
+                    const row = document.createElement('div');
+                    row.className = "category-row-item";
+                    row.innerHTML = `
+                        <span class="category-row-info">${cat.name}</span>
+                        <div class="category-row-controls">
+                            <span style="font-size:0.75rem; color:var(--text-light); font-weight:600;">Sort #</span>
+                            <input type="number" class="category-sort-input" value="${currentSort}" data-cat-id="${cat.id}">
+                            <button class="del-cat-btn" style="background:#fee2e2; color:#ef4444; border:none; width:30px; height:30px; border-radius:8px; font-weight:bold; cursor:pointer;" title="Delete Category">×</button>
+                        </div>
+                    `;
+
+                    // Update sort order instantly when input value changes
+                    const sortInput = row.querySelector('.category-sort-input');
+                    sortInput.addEventListener('change', async (e) => {
+                        let newOrder = parseInt(e.target.value) || 1;
+                        try {
+                            await updateDoc(doc(db, "categories", cat.id), { sortOrder: newOrder });
+                            await loadCategories();
+                            await loadProducts();
+                        } catch (err) {
+                            console.error("Error updating category sort order:", err);
+                        }
+                    });
+
+                    // Delete category action
+                    row.querySelector('.del-cat-btn').addEventListener('click', async () => {
                         if (confirm(`Delete category "${cat.name}"?`)) {
                             await deleteDoc(doc(db, "categories", cat.id));
                             await loadCategories();
                             await loadProducts();
                         }
                     });
-                    container.appendChild(pill);
+
+                    container.appendChild(row);
 
                     // Add to Product Form Dropdown
                     const option = document.createElement('option');
                     option.value = cat.name;
-                    option.textContent = `[${cat.sortOrder || 1}] ${cat.name}`;
+                    option.textContent = cat.name;
                     selectDropdown.appendChild(option);
                 });
             } catch (e) {
@@ -269,7 +292,7 @@
                 sortedCategories.forEach(catName => {
                     const sectionTitle = document.createElement('div');
                     sectionTitle.className = "category-section-title";
-                    let sortBadgeNum = categoryOrderMap[catName] !== undefined ? `[${categoryOrderMap[catName]}] ` : '';
+                    let sortBadgeNum = categoryOrderMap[catName] !== undefined ? `[#${categoryOrderMap[catName]}] ` : '';
                     sectionTitle.innerText = `${sortBadgeNum}${catName}`;
                     container.appendChild(sectionTitle);
 
