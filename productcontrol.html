@@ -33,7 +33,7 @@
         .card h2 { font-size: 1.1rem; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; color: var(--text); font-weight: 800; }
 
         /* Form Controls */
-        input, textarea { width: 100%; padding: 12px 14px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 0.95rem; background: #fff; }
+        input, textarea, select { width: 100%; padding: 12px 14px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 0.95rem; background: #fff; }
         textarea { resize: vertical; min-height: 80px; }
         
         .btn { width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 700; cursor: pointer; display: inline-flex; justify-content: center; align-items: center; gap: 8px; transition: opacity 0.2s; }
@@ -43,6 +43,11 @@
         .btn-secondary:hover { background: #d4d4d8; }
 
         .form-row { display: flex; gap: 8px; }
+
+        /* Category List Pills / Rows */
+        .category-list-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .category-pill { display: inline-flex; align-items: center; gap: 8px; background: #fee2e2; color: var(--kfc-red); padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; }
+        .category-pill button { background: none; border: none; color: var(--danger); font-weight: bold; cursor: pointer; font-size: 0.9rem; }
 
         /* Product Mobile List Cards */
         .product-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; background: #fafafa; }
@@ -60,12 +65,26 @@
             <a href="admin.html" class="nav-btn">← Back</a>
         </header>
 
+        <!-- CATEGORY MANAGEMENT PANEL -->
+        <div class="card">
+            <h2>🏷️ Manage Categories</h2>
+            <div class="form-row">
+                <input type="text" id="categoryNameInput" placeholder="New Category Name (e.g. Snacks, Drinks)" style="margin-bottom:0;">
+                <button class="btn btn-primary" id="addCategoryBtn" style="width: auto; padding: 0 20px;">Add Category</button>
+            </div>
+            <div id="categoryContainer" class="category-list-container" style="margin-top: 12px;">Loading categories...</div>
+        </div>
+
         <!-- PRODUCT MANAGEMENT PANEL -->
         <div class="card">
             <h2 id="formTitle">Add New Product</h2>
             <input type="hidden" id="editProductId">
             <input type="text" id="productName" placeholder="Product Name">
-            <input type="text" id="productCategory" placeholder="Category (e.g. Burgers, Chicken, Drinks)">
+            
+            <select id="productCategorySelect">
+                <option value="">Select Category</option>
+            </select>
+
             <textarea id="productDesc" placeholder="Product Description"></textarea>
             <input type="number" id="productPrice" placeholder="Price (₹)">
             <input type="text" id="productImage" placeholder="Google Drive Image Link">
@@ -98,14 +117,74 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Load inventory list on startup
+        // Load data on startup
+        loadCategories();
         loadProducts();
+
+        // --- CATEGORY CRUD ---
+        document.getElementById('addCategoryBtn').addEventListener('click', async function() {
+            const catName = document.getElementById('categoryNameInput').value.trim();
+            if (!catName) {
+                alert("Please enter a category name.");
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, "categories"), { name: catName });
+                document.getElementById('categoryNameInput').value = "";
+                loadCategories();
+            } catch (e) {
+                console.error("Error adding category:", e);
+            }
+        });
+
+        async function loadCategories() {
+            const container = document.getElementById('categoryContainer');
+            const selectDropdown = document.getElementById('productCategorySelect');
+            
+            try {
+                const querySnapshot = await getDocs(collection(db, "categories"));
+                container.innerHTML = "";
+                selectDropdown.innerHTML = '<option value="">Select Category</option>';
+
+                if (querySnapshot.empty) {
+                    container.innerHTML = "<span style='font-size:0.8rem; color:var(--text-light);'>No categories created yet.</span>";
+                    return;
+                }
+
+                querySnapshot.forEach((docSnap) => {
+                    const cat = docSnap.data();
+                    
+                    // Render Category Pill
+                    const pill = document.createElement('div');
+                    pill.className = "category-pill";
+                    pill.innerHTML = `<span>${cat.name}</span> <button title="Delete Category">×</button>`;
+                    
+                    pill.querySelector('button').addEventListener('click', async () => {
+                        if (confirm(`Delete category "${cat.name}"?`)) {
+                            await deleteDoc(doc(db, "categories", docSnap.id));
+                            loadCategories();
+                        }
+                    });
+                    container.appendChild(pill);
+
+                    // Add to Product Form Dropdown
+                    const option = document.createElement('option');
+                    option.value = cat.name;
+                    option.textContent = cat.name;
+                    selectDropdown.appendChild(option);
+                });
+            } catch (e) {
+                console.error("Error loading categories:", e);
+                container.innerHTML = "<span style='font-size:0.8rem; color:var(--danger);'>Failed to load categories.</span>";
+            }
+        }
 
         // --- PRODUCT CRUD ---
         document.getElementById('saveBtn').addEventListener('click', async function() {
             const id = document.getElementById('editProductId').value;
             const name = document.getElementById('productName').value;
-            const category = document.getElementById('productCategory').value || 'General';
+            const category = document.getElementById('productCategorySelect').value || 'General';
             const description = document.getElementById('productDesc').value;
             const price = document.getElementById('productPrice').value;
             const image = document.getElementById('productImage').value;
@@ -162,7 +241,7 @@
                     itemDiv.querySelector('.edit-btn').addEventListener('click', () => {
                         document.getElementById('editProductId').value = docSnap.id;
                         document.getElementById('productName').value = p.name;
-                        document.getElementById('productCategory').value = p.category || '';
+                        document.getElementById('productCategorySelect').value = p.category || '';
                         document.getElementById('productDesc').value = p.description || '';
                         document.getElementById('productPrice').value = p.price;
                         document.getElementById('productImage').value = p.image || '';
@@ -193,7 +272,7 @@
         function clearProductForm() {
             document.getElementById('editProductId').value = "";
             document.getElementById('productName').value = "";
-            document.getElementById('productCategory').value = "";
+            document.getElementById('productCategorySelect').value = "";
             document.getElementById('productDesc').value = "";
             document.getElementById('productPrice').value = "";
             document.getElementById('productImage').value = "";
