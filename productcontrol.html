@@ -77,7 +77,11 @@
                 <input type="text" id="categoryNameInput" placeholder="New Category Name (e.g. Snacks)" style="margin-bottom:0;">
                 <button class="btn btn-primary" id="addCategoryBtn" style="width: auto; padding: 0 20px;">Add Category</button>
             </div>
+            
             <div id="categoryContainer" class="category-list-container" style="margin-top: 12px;">Loading categories...</div>
+            
+            <!-- Save All Sort Orders Button -->
+            <button class="btn btn-secondary" id="saveAllSortsBtn" style="margin-top: 12px; display:none;">💾 Save All Sort Orders</button>
         </div>
 
         <!-- PRODUCT MANAGEMENT PANEL -->
@@ -141,7 +145,6 @@
             }
 
             try {
-                // Default sort order can be set to 1 or next available index
                 await addDoc(collection(db, "categories"), { name: catName, sortOrder: 1 });
                 document.getElementById('categoryNameInput').value = "";
                 await loadCategories();
@@ -154,6 +157,7 @@
         async function loadCategories() {
             const container = document.getElementById('categoryContainer');
             const selectDropdown = document.getElementById('productCategorySelect');
+            const saveAllBtn = document.getElementById('saveAllSortsBtn');
             categoryOrderMap = {};
             
             try {
@@ -163,8 +167,11 @@
 
                 if (querySnapshot.empty) {
                     container.innerHTML = "<span style='font-size:0.8rem; color:var(--text-light);'>No categories created yet.</span>";
+                    saveAllBtn.style.display = "none";
                     return;
                 }
+
+                saveAllBtn.style.display = "block";
 
                 let categories = [];
                 querySnapshot.forEach((docSnap) => {
@@ -190,19 +197,6 @@
                         </div>
                     `;
 
-                    // Update sort order instantly when input value changes
-                    const sortInput = row.querySelector('.category-sort-input');
-                    sortInput.addEventListener('change', async (e) => {
-                        let newOrder = parseInt(e.target.value) || 1;
-                        try {
-                            await updateDoc(doc(db, "categories", cat.id), { sortOrder: newOrder });
-                            await loadCategories();
-                            await loadProducts();
-                        } catch (err) {
-                            console.error("Error updating category sort order:", err);
-                        }
-                    });
-
                     // Delete category action
                     row.querySelector('.del-cat-btn').addEventListener('click', async () => {
                         if (confirm(`Delete category "${cat.name}"?`)) {
@@ -225,6 +219,34 @@
                 container.innerHTML = "<span style='font-size:0.8rem; color:var(--danger);'>Failed to load categories.</span>";
             }
         }
+
+        // --- MASTER SAVE BUTTON FOR ALL SORTS ---
+        document.getElementById('saveAllSortsBtn').addEventListener('click', async function() {
+            const inputs = document.querySelectorAll('.category-sort-input');
+            const saveBtn = this;
+            saveBtn.innerText = "Saving...";
+            saveBtn.disabled = true;
+
+            try {
+                let updatePromises = [];
+                inputs.forEach(input => {
+                    let catId = input.getAttribute('data-cat-id');
+                    let newSortOrder = parseInt(input.value) || 1;
+                    updatePromises.push(updateDoc(doc(db, "categories", catId), { sortOrder: newSortOrder }));
+                });
+
+                await Promise.all(updatePromises);
+                alert("All category sort orders updated successfully!");
+                await loadCategories();
+                await loadProducts();
+            } catch (e) {
+                console.error("Error saving sort orders:", e);
+                alert("Failed to save sort orders.");
+            } finally {
+                saveBtn.innerText = "💾 Save All Sort Orders";
+                saveBtn.disabled = false;
+            }
+        });
 
         // --- PRODUCT CRUD ---
         document.getElementById('saveBtn').addEventListener('click', async function() {
