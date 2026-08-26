@@ -49,11 +49,14 @@
         .category-pill { display: inline-flex; align-items: center; gap: 8px; background: #fee2e2; color: var(--kfc-red); padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; }
         .category-pill button { background: none; border: none; color: var(--danger); font-weight: bold; cursor: pointer; font-size: 0.9rem; }
 
+        /* Category Section Header inside Inventory */
+        .category-section-title { font-size: 0.95rem; font-weight: 800; color: var(--kfc-red); margin: 18px 0 8px 2px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #fee2e2; padding-bottom: 4px; }
+        .category-section-title:first-of-type { margin-top: 6px; }
+
         /* Product Mobile List Cards */
         .product-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; background: #fafafa; }
         .product-info h4 { font-size: 0.95rem; color: var(--text); }
         .product-info p { font-size: 0.8rem; color: var(--text-light); margin-top: 2px; }
-        .category-tag { display: inline-block; background: #fee2e2; color: var(--kfc-red); font-size: 0.7rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-bottom: 4px; text-transform: uppercase; }
         .product-actions { display: flex; gap: 6px; }
     </style>
 </head>
@@ -221,46 +224,65 @@
                     return;
                 }
 
-                container.innerHTML = "";
+                // Group products by category
+                let categories = {};
                 querySnapshot.forEach((docSnap) => {
                     const p = docSnap.data();
-                    const itemDiv = document.createElement('div');
-                    itemDiv.className = "product-item";
-                    itemDiv.innerHTML = `
-                        <div class="product-info">
-                            <span class="category-tag">${p.category || 'General'}</span>
-                            <h4>${p.name} (₹${p.price})</h4>
-                            <p>${p.description ? p.description.substring(0, 40) + '...' : 'No description'}</p>
-                        </div>
-                        <div class="product-actions">
-                            <button class="edit-btn" style="background:#e0e7ff; color:#4f46e5; padding:6px 12px; font-size:0.8rem; border-radius:6px; border:none; cursor:pointer; font-weight:600;">Edit</button>
-                            <button class="del-btn" style="background:#fee2e2; color:#ef4444; padding:6px 12px; font-size:0.8rem; border-radius:6px; border:none; cursor:pointer; font-weight:600;">Delete</button>
-                        </div>
-                    `;
-
-                    itemDiv.querySelector('.edit-btn').addEventListener('click', () => {
-                        document.getElementById('editProductId').value = docSnap.id;
-                        document.getElementById('productName').value = p.name;
-                        document.getElementById('productCategorySelect').value = p.category || '';
-                        document.getElementById('productDesc').value = p.description || '';
-                        document.getElementById('productPrice').value = p.price;
-                        document.getElementById('productImage').value = p.image || '';
-                        
-                        document.getElementById('formTitle').innerText = "Edit Product";
-                        document.getElementById('saveBtn').innerText = "Update Product";
-                        document.getElementById('cancelEditBtn').style.display = "block";
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                    });
-
-                    itemDiv.querySelector('.del-btn').addEventListener('click', async () => {
-                        if (confirm("Are you sure you want to delete this product?")) {
-                            await deleteDoc(doc(db, "products", docSnap.id));
-                            loadProducts();
-                        }
-                    });
-
-                    container.appendChild(itemDiv);
+                    p.id = docSnap.id;
+                    let cat = p.category ? p.category.trim() : "General";
+                    if (!categories[cat]) {
+                        categories[cat] = [];
+                    }
+                    categories[cat].push(p);
                 });
+
+                container.innerHTML = "";
+
+                // Render categorized inventory sections
+                for (let catName in categories) {
+                    const sectionTitle = document.createElement('div');
+                    sectionTitle.className = "category-section-title";
+                    sectionTitle.innerText = catName;
+                    container.appendChild(sectionTitle);
+
+                    categories[catName].forEach((p) => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = "product-item";
+                        itemDiv.innerHTML = `
+                            <div class="product-info">
+                                <h4>${p.name} (₹${p.price})</h4>
+                                <p>${p.description ? p.description.substring(0, 40) + '...' : 'No description'}</p>
+                            </div>
+                            <div class="product-actions">
+                                <button class="edit-btn" style="background:#e0e7ff; color:#4f46e5; padding:6px 12px; font-size:0.8rem; border-radius:6px; border:none; cursor:pointer; font-weight:600;">Edit</button>
+                                <button class="del-btn" style="background:#fee2e2; color:#ef4444; padding:6px 12px; font-size:0.8rem; border-radius:6px; border:none; cursor:pointer; font-weight:600;">Delete</button>
+                            </div>
+                        `;
+
+                        itemDiv.querySelector('.edit-btn').addEventListener('click', () => {
+                            document.getElementById('editProductId').value = p.id;
+                            document.getElementById('productName').value = p.name;
+                            document.getElementById('productCategorySelect').value = p.category || '';
+                            document.getElementById('productDesc').value = p.description || '';
+                            document.getElementById('productPrice').value = p.price;
+                            document.getElementById('productImage').value = p.image || '';
+                            
+                            document.getElementById('formTitle').innerText = "Edit Product";
+                            document.getElementById('saveBtn').innerText = "Update Product";
+                            document.getElementById('cancelEditBtn').style.display = "block";
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        });
+
+                        itemDiv.querySelector('.del-btn').addEventListener('click', async () => {
+                            if (confirm("Are you sure you want to delete this product?")) {
+                                await deleteDoc(doc(db, "products", p.id));
+                                loadProducts();
+                            }
+                        });
+
+                        container.appendChild(itemDiv);
+                    });
+                }
             } catch (e) {
                 console.error("Error loading products:", e);
                 container.innerHTML = "<p style='color:var(--danger); font-size:0.85rem;'>Failed to load inventory.</p>";
