@@ -33,8 +33,11 @@
         /* Main Menu Content Container */
         .main-app-container { width: 100%; max-width: 600px; min-height: 100vh; background: var(--bg); color: var(--text); display: flex; flex-direction: column; padding: 12px; padding-bottom: 80px; overflow-y: auto; }
         
+        /* Sticky Top Wrapper for Header and Status Banner */
+        .sticky-top-wrapper { position: sticky; top: 0; z-index: 1000; background: var(--bg); padding-bottom: 4px; }
+
         /* Pinned Sticky Header */
-        header { position: sticky; top: 0; z-index: 1000; background: var(--kfc-dark); color: white; padding: 16px 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 4px; }
+        header { background: var(--kfc-dark); color: white; padding: 16px 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
         header h1 { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.5px; }
         header h1 span { color: var(--kfc-red); }
 
@@ -55,7 +58,7 @@
         .dropdown-content a:hover { background: #f4f4f5; color: var(--kfc-red); }
         .dropdown-content.show { display: block; }
 
-        .store-alert { padding: 12px 16px; border-radius: 12px; font-weight: 700; font-size: 0.9rem; text-align: center; margin-top: 12px; }
+        .store-alert { padding: 12px 16px; border-radius: 12px; font-weight: 700; font-size: 0.9rem; text-align: center; margin-top: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .store-alert.closed { background: #fee2e2; color: var(--danger); border: 1px solid #fecaca; }
         .store-alert.open { background: #d1fae5; color: var(--success); border: 1px solid #a7f3d0; }
 
@@ -93,28 +96,31 @@
 
     <!-- MAIN ORDERING APP CONTAINER -->
     <div class="main-app-container">
-        <header>
-            <h1>🍗 Quick<span>Bites</span></h1>
-            <div class="header-nav">
-                <!-- CART ICON WITH BADGE -->
-                <a href="cart.html" class="cart-icon-btn" title="View Cart">
-                    🛒
-                    <span id="cartBadge" class="cart-badge" style="display:none;">0</span>
-                </a>
+        <!-- STICKY TOP WRAPPER (Keeps header and status banner pinned on scroll) -->
+        <div class="sticky-top-wrapper">
+            <header>
+                <h1>🍗 Quick<span>Bites</span></h1>
+                <div class="header-nav">
+                    <!-- CART ICON WITH BADGE -->
+                    <a href="cart.html" class="cart-icon-btn" title="View Cart">
+                        🛒
+                        <span id="cartBadge" class="cart-badge" style="display:none;">0</span>
+                    </a>
 
-                <!-- GEAR ICON WITH ADMIN DROPDOWN -->
-                <div class="settings-menu-container">
-                    <button type="button" class="gear-btn" id="gearBtn" title="Settings">⚙️</button>
-                    <div id="adminDropdown" class="dropdown-content">
-                        <a href="admin.html">🔐 Admin Login</a>
+                    <!-- GEAR ICON WITH ADMIN DROPDOWN -->
+                    <div class="settings-menu-container">
+                        <button type="button" class="gear-btn" id="gearBtn" title="Settings">⚙️</button>
+                        <div id="adminDropdown" class="dropdown-content">
+                            <a href="admin.html">🔐 Admin Login</a>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </header>
+            </header>
 
-        <!-- STORE STATUS BANNER -->
-        <div id="storeAlertContainer">
-            <div class="store-alert closed">Checking store status...</div>
+            <!-- STORE STATUS BANNER -->
+            <div id="storeAlertContainer">
+                <div class="store-alert closed">Checking store status...</div>
+            </div>
         </div>
 
         <!-- MENU LIST -->
