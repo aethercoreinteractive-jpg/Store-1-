@@ -44,7 +44,9 @@
             width: 160px; height: 160px; background: rgba(228, 0, 43, 0.1); border: 2px solid rgba(228, 0, 43, 0.3);
             border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 4rem;
             box-shadow: 0 0 40px rgba(228, 0, 43, 0.2); animation: pulse 2s infinite ease-in-out;
+            overflow: hidden;
         }
+        .kiosk-graphic img { width: 100%; height: 100%; object-fit: cover; }
 
         @keyframes pulse {
             0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(228, 0, 43, 0.4); }
@@ -67,15 +69,84 @@
     <!-- KIOSK WELCOME SCREEN -->
     <div id="welcomeScreen" class="kiosk-welcome">
         <div class="kiosk-brand">
-            <h1>Quick<span>Bites</span></h1>
-            <p>Welcome to Self-Service Ordering</p>
+            <h1 id="brandTitleElement">Quick<span>Bites</span></h1>
+            <p id="brandDescElement">Welcome to Self-Service Ordering</p>
         </div>
-        <div class="kiosk-graphic">🍗</div>
+        <div class="kiosk-graphic" id="graphicContainer">
+            🍗
+        </div>
         <div class="swipe-instruction" id="swipeTrigger">
             <div class="swipe-arrow">▲</div>
             <p>Swipe up to start order</p>
         </div>
     </div>
+
+    <!-- Firebase Script Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCevmUKn9jsh3VrttK8MAyXEO5JjaFOTyM",
+            authDomain: "store-1-4fbf7.firebaseapp.com",
+            projectId: "store-1-4fbf7",
+            storageBucket: "store-1-4fbf7.firebasestorage.app",
+            messagingSenderId: "183172029649",
+            appId: "1:183172029649:web:cc403927d797b3e53279f0",
+            measurementId: "G-W34ETBHTPB"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Convert Google Drive sharing link to direct embedded image URL
+        function getDirectImageUrl(url) {
+            if (!url) return null;
+            const match = url.match(/\/d\/(.*?)\/view/) || url.match(/id=([^&]+)/);
+            if (match && match[1]) {
+                return `https://lh3.googleusercontent.com/d/${match[1]}`;
+            }
+            return url;
+        }
+
+        // Fetch dynamic welcome page configuration from Firebase
+        async function fetchWelcomeSettings() {
+            try {
+                const docSnap = await getDoc(doc(db, "settings", "welcomeConfig"));
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    
+                    // Update Title (Split by space or treat last word as red if desired, default handles standard name)
+                    if (data.title) {
+                        const titleParts = data.title.split(/(?=[A-Z])/); // Splits CamelCase or keeps full text
+                        if (titleParts.length > 1) {
+                            const firstPart = titleParts.slice(0, -1).join('');
+                            const lastPart = titleParts[titleParts.length - 1];
+                            document.getElementById('brandTitleElement').innerHTML = `${firstPart}<span>${lastPart}</span>`;
+                        } else {
+                            document.getElementById('brandTitleElement').innerHTML = data.title;
+                        }
+                    }
+
+                    // Update Description
+                    if (data.description) {
+                        document.getElementById('brandDescElement').textContent = data.description;
+                    }
+
+                    // Update Image Graphic
+                    if (data.imageLink) {
+                        const directUrl = getDirectImageUrl(data.imageLink);
+                        const graphicContainer = document.getElementById('graphicContainer');
+                        graphicContainer.innerHTML = `<img src="${directUrl}" alt="Welcome Graphic" onerror="this.parentElement.innerHTML='🍗'">`;
+                    }
+                }
+            } catch (e) {
+                console.error("Error loading welcome settings:", e);
+            }
+        }
+
+        fetchWelcomeSettings();
+    </script>
 
     <script>
         // Register Service Worker for App Installation support
@@ -97,7 +168,6 @@
         function roboticFullscreenTrigger() {
             let elem = document.documentElement;
             if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-                // Simulate a synthetic programmatic user gesture event
                 let clickEvent = new MouseEvent('click', {
                     view: window,
                     bubbles: true,
@@ -107,7 +177,6 @@
                 });
                 document.body.dispatchEvent(clickEvent);
 
-                // Request fullscreen
                 if (elem.requestFullscreen) {
                     elem.requestFullscreen().catch(() => {});
                 } else if (elem.webkitRequestFullscreen) {
@@ -119,16 +188,13 @@
             }
         }
 
-        // Check and force every second (1000ms)
         setInterval(() => {
             roboticFullscreenTrigger();
         }, 1000);
 
-        // Run instantly on load and first touch
         window.addEventListener('load', roboticFullscreenTrigger);
         window.addEventListener('pointerdown', roboticFullscreenTrigger, { once: true });
 
-        // If items already exist in cart, skip index welcome screen and go straight to menu.html
         function checkCartAndRedirect() {
             let cart = JSON.parse(localStorage.getItem("quickbites_cart")) || [];
             if (cart.length > 0) {
