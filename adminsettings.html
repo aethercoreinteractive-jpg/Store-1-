@@ -140,6 +140,7 @@
                     </div>
                 </div>
 
+                <!-- SPACE TOGGLE WITH AUTO-SAVE -->
                 <div class="space-slide-container">
                     <span class="space-slide-label">Space Between Titles</span>
                     <label class="switch">
@@ -292,6 +293,20 @@
         }
         loadWelcomeSettings();
 
+        // AUTO-SAVE LISTENER FOR THE SPACE TOGGLE SWITCH
+        document.getElementById('spaceSlideToggle').addEventListener('change', async (e) => {
+            const hasSpace = e.target.checked;
+            try {
+                await setDoc(doc(db, "settings", "welcomeConfig"), {
+                    hasSpace: hasSpace
+                }, { merge: true });
+                showToast(hasSpace ? "Space enabled" : "Space disabled");
+            } catch (err) {
+                console.error("Error auto-saving space toggle:", err);
+                showToast("Failed to update space setting.", "error");
+            }
+        });
+
         document.getElementById('saveWelcomeBtn').addEventListener('click', async () => {
             const title1 = document.getElementById('titlePart1').value.trim();
             const color1 = colorWheel1.color.hexString;
@@ -352,13 +367,4 @@
             if (!newInput || newInput.length < 4) {
                 showToast("New password must be at least 4 characters.", "error");
                 return;
-            }
             
-            localStorage.setItem("adminPassword", newInput);
-            showToast("Password updated successfully!");
-            document.getElementById('currentPass').value = "";
-            document.getElementById('newPass').value = "";
-        });
-    </script>
-</body>
-</html>
