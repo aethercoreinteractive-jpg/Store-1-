@@ -109,7 +109,7 @@
         </header>
 
         <div class="card">
-            <h2>📜 Complete Archive</h2>
+            <h2>📜 Permanent Archive</h2>
             
             <!-- Dynamic Filter Tabs -->
             <div id="filterTabsContainer" class="filter-tabs">
@@ -118,7 +118,7 @@
                 <button class="filter-tab" data-filter="Yesterday">Yesterday</button>
             </div>
 
-            <div id="historyContainer">Loading order history...</div>
+            <div id="historyContainer">Loading permanent order history...</div>
         </div>
     </div>
 
@@ -227,7 +227,6 @@
         function updateFilterTabsDynamic(orders) {
             const tabsContainer = document.getElementById('filterTabsContainer');
             
-            // Collect unique dates present in records
             let uniqueDatesMap = new Set();
             orders.forEach(o => {
                 const cat = getDateCategory(o.timestamp);
@@ -236,8 +235,14 @@
                 }
             });
 
-            // Keep 'All Time', 'Today', 'Yesterday', then append past dates
             let tabsHtml = `
+                <button class="filter-tab ${currentFilter === 'all' ? 'active' : ''}" data-filter="all">All Time</button>
+                <button class="filter-tab ${currentFileter === 'Today' ? 'active' : ''}" data-filter="Today">Today</button>
+                <button class="filter-tab ${currentFilter === 'Yesterday' ? 'active' : ''}" data-filter="Yesterday">Yesterday</button>
+            `;
+
+            // Fix variable typo in code template
+            tabsHtml = `
                 <button class="filter-tab ${currentFilter === 'all' ? 'active' : ''}" data-filter="all">All Time</button>
                 <button class="filter-tab ${currentFilter === 'Today' ? 'active' : ''}" data-filter="Today">Today</button>
                 <button class="filter-tab ${currentFilter === 'Yesterday' ? 'active' : ''}" data-filter="Yesterday">Yesterday</button>
@@ -249,7 +254,6 @@
 
             tabsContainer.innerHTML = tabsHtml;
 
-            // Re-bind click events
             document.querySelectorAll('.filter-tab').forEach(tab => {
                 tab.addEventListener('click', (e) => {
                     document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
@@ -260,7 +264,8 @@
             });
         }
 
-        onSnapshot(collection(db, "orders"), (snapshot) => {
+        // Now pulling from a dedicated permanent archive collection called "orderHistory"
+        onSnapshot(collection(db, "orderHistory"), (snapshot) => {
             globalOrdersCache = [];
             snapshot.forEach(docSnap => {
                 globalOrdersCache.push({ id: docSnap.id, ...docSnap.data() });
