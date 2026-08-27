@@ -25,12 +25,16 @@
             padding: 0; 
             font-family: 'Inter', system-ui, -apple-system, sans-serif; 
             -webkit-user-select: none !important;
+            -moz-user-select: none !important;
+            -ms-user-select: none !important;
             user-select: none !important;
             -webkit-tap-highlight-color: transparent !important;
         }
 
         input {
             -webkit-user-select: text !important;
+            -moz-user-select: text !important;
+            -ms-user-select: text !important;
             user-select: text !important;
         }
 
@@ -137,6 +141,7 @@
         .order-header { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 1rem; padding-right: 28px; }
         .order-details { font-size: 0.85rem; color: var(--text-light); }
         
+        /* Top Right 'X' Delete Button Styling */
         .order-close-btn {
             position: absolute; top: 12px; right: 12px;
             background: none; border: none; font-size: 1.1rem; font-weight: 800;
@@ -154,6 +159,7 @@
         
         .action-container { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
 
+        /* Fast fading toast notification */
         .toast-notification {
             position: fixed; bottom: -60px; left: 50%; transform: translateX(-50%);
             background: var(--kfc-dark); color: white; padding: 12px 24px; border-radius: 30px;
@@ -187,6 +193,7 @@
             <button id="logoutBtn" class="btn btn-danger" style="width: auto; padding: 8px 14px; font-size: 0.85rem;">Logout</button>
         </header>
 
+        <!-- CORPORATE STANDARD TOP NAVIGATION BAR -->
         <div class="admin-nav-bar">
             <div class="nav-links-group">
                 <a href="productcontrol.html" class="tab-link highlight">📦 Product Control</a>
@@ -195,11 +202,13 @@
             <a href="adminsettings.html" class="gear-btn" title="Admin Settings">⚙️</a>
         </div>
 
+        <!-- LIVE ORDERS & QUEUE WORKFLOW (DEFAULT VIEW) -->
         <div class="card">
             <h2>🔥 Live Orders <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-light);">(Max 3 Preparing)</span></h2>
             <div id="ordersContainer">Loading live orders...</div>
         </div>
 
+        <!-- STORE STATUS & STARTING ORDER NUMBER CONTROL -->
         <div class="card" style="padding-bottom: 16px;">
             <h2>🏪 Store Operations</h2>
             <label style="font-size: 0.85rem; color: var(--text-light); display: block; margin-bottom: 6px;">Starting Order Number (Resets when store opens):</label>
@@ -217,6 +226,7 @@
 
     <div id="toast" class="toast-notification"></div>
 
+    <!-- NON-MODULE GLOBAL SCRIPTS FOR IMMEDIATE UI INTERACTION -->
     <script>
         let toastTimeout = null;
 
@@ -239,6 +249,7 @@
             localStorage.setItem("adminPassword", "Admin@123");
         }
 
+        // Global Eye Toggle Handler for Login
         document.addEventListener('click', (e) => {
             const toggleBtn = e.target.closest('.toggle-password');
             if (!toggleBtn) return;
@@ -257,6 +268,7 @@
             }
         });
 
+        // Global Login Handler
         function handleLoginAction() {
             const passwordInput = document.getElementById('adminPasswordInput');
             const inputVal = passwordInput.value;
@@ -315,6 +327,7 @@
         });
     </script>
 
+    <!-- Firebase Script Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, doc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -337,6 +350,7 @@
             initOrderListener();
         }
 
+        // --- STORE OPEN/CLOSED & COUNTER SYNC ---
         async function initStoreStatus() {
             const storeRef = doc(db, "settings", "storeStatus");
             const snap = await getDoc(storeRef);
@@ -387,6 +401,7 @@
             }
         }
 
+        // --- ORDER QUEUE WORKFLOW WITH HISTORY SYNC ---
         function initOrderListener() {
             onSnapshot(collection(db, "orders"), (snapshot) => {
                 const container = document.getElementById('ordersContainer');
@@ -397,7 +412,7 @@
                     orders.push({ id: docSnap.id, ...docSnap.data() });
                 });
 
-                // Sync status changes to localStorage archive for orderhistory.html
+                // --- SYNC STATUS TO LOCALSTORAGE HISTORY ---
                 let localHistory = JSON.parse(localStorage.getItem("quickbites_order_history")) || [];
                 let historyUpdated = false;
 
@@ -408,16 +423,27 @@
                             localHistory[historyIndex].status = serverOrder.status;
                             historyUpdated = true;
                         }
+                    } else {
+                        // New live order discovered, add it to history log automatically
+                        localHistory.push({
+                            orderNumber: serverOrder.orderNumber,
+                            productName: serverOrder.productName || 'Custom Item',
+                            price: serverOrder.price || 0,
+                            status: serverOrder.status,
+                            timestamp: serverOrder.timestamp || new Date().toISOString()
+                        });
+                        historyUpdated = true;
                     }
                 });
 
                 if (historyUpdated) {
                     localStorage.setItem("quickbites_order_history", JSON.stringify(localHistory));
                 }
+                // ------------------------------------------
 
                 orders.sort((a, b) => {
-                    const timeA = a.timestamp ? new Date(a.timestamp).getTime() : (a.createdAt ? new Date(a.createdAt).getTime() : 0);
-                    const timeB = b.timestamp ? new Date(b.timestamp).getTime() : (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+                    const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+                    const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
                     if (timeB !== timeA) {
                         return timeB - timeA;
                     }
@@ -488,11 +514,25 @@
                         });
                     } else if (order.status === "ready") {
                         actionContainer.querySelector('.picked-btn').addEventListener('click', async () => {
+                            // Update order history status to "completed" right before clearing from live queue
+                            let history = JSON.parse(localStorage.getItem("quickbites_order_history")) || [];
+                            let target = history.find(h => h.orderNumber === order.orderNumber);
+                            if (target) {
+                                target.status = "completed";
+                                localStorage.setItem("quickbites_order_history", JSON.stringify(history));
+                            }
                             await deleteDoc(doc(db, "orders", order.id));
                         });
                     }
 
                     orderCard.querySelector('.order-close-btn').addEventListener('click', async () => {
+                        // Also update status to completed or removed if closed via 'X'
+                        let history = JSON.parse(localStorage.getItem("quickbites_order_history")) || [];
+                        let target = history.find(h => h.orderNumber === order.orderNumber);
+                        if (target && target.status === "ready") {
+                            target.status = "completed";
+                            localStorage.setItem("quickbites_order_history", JSON.stringify(history));
+                        }
                         await deleteDoc(doc(db, "orders", order.id));
                     });
 
