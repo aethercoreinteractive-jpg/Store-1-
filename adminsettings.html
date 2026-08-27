@@ -25,22 +25,20 @@
             margin: 0; 
             padding: 0; 
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            /* Strictly prohibit text highlighting and chrome touch behaviors globally */
+            /* Strictly prohibit text highlighting and tap selection colors */
             -webkit-user-select: none !important;
             -moz-user-select: none !important;
             -ms-user-select: none !important;
             user-select: none !important;
-            -webkit-touch-callout: none !important; 
             -webkit-tap-highlight-color: transparent !important;
         }
 
-        /* Allow typing and interaction strictly inside inputs and textareas */
+        /* Allow text selection strictly inside inputs and textareas */
         input, textarea {
             -webkit-user-select: text !important;
             -moz-user-select: text !important;
             -ms-user-select: text !important;
             user-select: text !important;
-            -webkit-touch-callout: default !important;
         }
 
         body { 
@@ -48,7 +46,6 @@
             color: var(--text); 
             padding: 12px; 
             padding-bottom: 50px; 
-            -webkit-touch-callout: none;
         }
 
         .container { max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
@@ -128,7 +125,7 @@
         .toast-success { background: var(--success); }
     </style>
 </head>
-<body oncontextmenu="return false;">
+<body>
 
     <div class="container">
         <header>
@@ -315,7 +312,6 @@
         });
 
         async function loadWelcomeSettings() {
-        async function loadWelcomeSettings() {
             try {
                 const docSnap = await getDoc(doc(db, "settings", "welcomeConfig"));
                 if (docSnap.exists()) {
@@ -419,7 +415,6 @@
             }
         });
 
-        // Instant reset without browser confirmation popup
         document.getElementById('resetWelcomeBtn').addEventListener('click', async () => {
             try {
                 const defaultSettings = {
