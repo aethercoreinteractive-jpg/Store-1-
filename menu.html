@@ -110,8 +110,22 @@
         .qty-action-btn { background: var(--kfc-red); color: white; border: none; width: 30px; height: 32px; font-size: 0.9rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
         .qty-action-btn:hover { background: var(--kfc-red-hover); }
         
-        /* Interactive text input box for typing quantities manually */
-        .qty-input-field { width: 36px; height: 32px; border: none; background: white; text-align: center; font-size: 0.85rem; font-weight: 800; color: var(--text); outline: none; -moz-appearance: textfield; }
+        /* Interactive text input box with touch lock removed specifically for input/focus functionality */
+        .qty-input-field { 
+            width: 36px; 
+            height: 32px; 
+            border: none; 
+            background: white; 
+            text-align: center; 
+            font-size: 0.85rem; 
+            font-weight: 800; 
+            color: var(--text); 
+            outline: none; 
+            -moz-appearance: textfield; 
+            user-select: text; 
+            -webkit-user-select: text; 
+            -webkit-touch-callout: default; 
+        }
         .qty-input-field::-webkit-outer-spin-button,
         .qty-input-field::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
@@ -343,7 +357,6 @@
             });
         }
 
-        // --- UPDATE ITEM QUANTITY VIA BUTTONS ---
         window.updateItemQty = function(name, price, image, delta) {
             if (!isStoreOpen) return;
 
@@ -364,7 +377,6 @@
             updateAllActionButtons();
         }
 
-        // --- SET EXACT QUANTITY WHEN TYPED MANUALLY ---
         window.setExactItemQty = function(name, price, image, newQtyValue) {
             if (!isStoreOpen) return;
 
@@ -373,7 +385,6 @@
             let index = cart.findIndex(item => item.name === name);
 
             if (isNaN(parsedQty) || parsedQty <= 0) {
-                // If user cleared the input or typed 0/negative numbers, remove the item
                 if (index !== -1) {
                     cart.splice(index, 1);
                 }
