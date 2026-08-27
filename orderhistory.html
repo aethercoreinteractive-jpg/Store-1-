@@ -172,23 +172,7 @@
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyCevmUKn9jsh3VrttK8MAyXEO5JjaFOTyM",
-            authDomain: "store-1-4fbf7.firebaseapp.com",
-            projectId: "store-1-4fbf7",
-            storageBucket: "store-1-4fbf7.firebasestorage.app",
-            messagingSenderId: "183172029649",
-            appId: "1:183172029649:web:cc403927d797b3e53279f0",
-            measurementId: "G-W34ETBHTPB"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
+    <script>
         let currentFilter = "Today";
         let globalOrdersCache = [];
 
@@ -219,7 +203,7 @@
             let ordersToDisplay = [...globalOrdersCache];
 
             if (currentFilter !== "all") {
-                ordersToDisplay = ordersToDisplay.filter(order => getDateCategory(order.timestamp) === currentFilter);
+                ordersToDisplay = ordersToDisplay.filter(order => getDateCategory(order.createdAt || order.timestamp) === currentFilter);
             }
 
             if (ordersToDisplay.length === 0) {
@@ -229,7 +213,7 @@
 
             let groupedOrders = {};
             ordersToDisplay.forEach(order => {
-                const category = getDateCategory(order.timestamp);
+                const category = getDateCategory(order.createdAt || order.timestamp);
                 if (!groupedOrders[category]) {
                     groupedOrders[category] = [];
                 }
@@ -248,11 +232,12 @@
                 if (currentFilter === "all") {
                     const sectionHeader = document.createElement('div');
                     sectionHeader.className = "date-section-title";
-                    sectionHeader.innerHTML = `<span>📅 ${dateKey}</span> <span style="font-size:0.75rem; font-weight:normal; color:var(--text-light);">${groupedOrders[dateKey].length} orders</span>`;
+                    sectionHeader.innerHTML = `📅 ${dateKey} <span style="font-size:0.75rem; font-weight:normal; color:var(--text-light);">${groupedOrders[dateKey].length} orders</span>`;
                     container.appendChild(sectionHeader);
                 }
 
                 groupedOrders[dateKey].forEach(order => {
+                    const itemsSummary = order.items ? order.items.map(i => `${i.quantity}x ${i.name}`).join(', ') : (order.productName || 'Custom Item');
                     const historyCard = document.createElement('div');
                     historyCard.className = "history-card";
                     historyCard.innerHTML = `
@@ -261,8 +246,8 @@
                             <span class="badge badge-${order.status || 'completed'}">${order.status || 'completed'}</span>
                         </div>
                         <div class="history-details">
-                            <span><strong>${order.productName || 'Custom Item'}</strong> (${order.price ? '₹' + order.price : ''})</span>
-                            <span style="color: var(--text-light);">${formatTime(order.timestamp)}</span>
+                            <span><strong>${itemsSummary}</strong> (${order.totalPrice ? '₹' + order.totalPrice : ''})</span>
+                            <span style="color: var(--text-light);">${formatTime(order.createdAt || order.timestamp)}</span>
                         </div>
                     `;
                     container.appendChild(historyCard);
@@ -274,7 +259,7 @@
             const tabsContainer = document.getElementById('filterTabsContainer');
             let uniqueDatesMap = new Set();
             orders.forEach(o => {
-                const cat = getDateCategory(o.timestamp);
+                const cat = getDateCategory(o.createdAt || o.timestamp);
                 if (cat !== "Today" && cat !== "Yesterday" && cat !== "Archive") {
                     uniqueDatesMap.add(cat);
                 }
@@ -328,7 +313,7 @@
             modal.style.display = "none";
         });
 
-        modalConfirmBtn.addEventListener('click', async () => {
+        modalConfirmBtn.addEventListener('click', () => {
             if (modalStep === 'password') {
                 const enteredPassword = modalPasswordInput.value;
                 const storedPassword = localStorage.getItem("adminPassword") || "admin123";
@@ -341,42 +326,33 @@
 
                 modalStep = 'confirm';
                 modalTitle.textContent = "Are you sure?";
-                modalDesc.textContent = "This will permanently delete all saved order history archive records. This action cannot be undone.";
+                modalDesc.textContent = "This will permanently delete all saved local order history archive records. This action cannot be undone.";
                 modalPasswordInput.style.display = "none";
                 modalConfirmBtn.textContent = "Yes, Clear All";
             } else if (modalStep === 'confirm') {
                 modal.style.display = "none";
-                try {
-                    const querySnapshot = await getDocs(collection(db, "orderHistory"));
-                    const deletePromises = querySnapshot.docs.map(documentSnapshot => 
-                        deleteDoc(doc(db, "orderHistory", documentSnapshot.id))
-                    );
-                    await Promise.all(deletePromises);
-                    
-                    const container = document.getElementById('historyContainer');
-                    container.innerHTML = "<p style='color:var(--success); font-size:0.85rem; padding: 10px 0; font-weight:700;'>Order history archive cleared successfully.</p>";
-                } catch (error) {
-                    console.error("Error clearing history:", error);
-                    alert("Failed to clear history. Check console for details.");
-                }
+                localStorage.removeItem("quickbites_order_history");
+                globalOrdersCache = [];
+                renderOrders();
+                const container = document.getElementById('historyContainer');
+                container.innerHTML = "<p style='color:var(--success); font-size:0.85rem; padding: 10px 0; font-weight:700;'>Order history archive cleared successfully.</p>";
             }
         });
 
-        onSnapshot(collection(db, "orderHistory"), (snapshot) => {
-            globalOrdersCache = [];
-            snapshot.forEach(docSnap => {
-                globalOrdersCache.push({ id: docSnap.id, ...docSnap.data() });
-            });
-
+        // Load local order history saved from cart page
+        function loadLocalHistory() {
+            globalOrdersCache = JSON.parse(localStorage.getItem("quickbites_order_history")) || [];
             globalOrdersCache.sort((a, b) => {
-                const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
-                const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+                const timeA = (a.createdAt || a.timestamp) ? new Date(a.createdAt || a.timestamp).getTime() : 0;
+                const timeB = (b.createdAt || b.timestamp) ? new Date(b.createdAt || b.timestamp).getTime() : 0;
                 return timeB - timeA;
             });
 
             updateFilterTabsDynamic(globalOrdersCache);
             renderOrders();
-        });
+        }
+
+        loadLocalHistory();
     </script>
 </body>
 </html>
