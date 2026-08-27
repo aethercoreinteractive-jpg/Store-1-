@@ -117,8 +117,8 @@
             <a href="admin.html" class="nav-btn">← Back</a>
         </header>
 
-        <!-- WELCOME PAGE CUSTOMIZATION ACCORDION CARD -->
-        <div class="accordion-card active" id="cardWelcome">
+        <!-- WELCOME PAGE CUSTOMIZATION ACCORDION CARD (Starts hidden/closed) -->
+        <div class="accordion-card" id="cardWelcome">
             <div class="accordion-header" onclick="toggleAccordion('cardWelcome')">
                 <span>🎨 Welcome Page Customization</span>
                 <span class="accordion-arrow">▼</span>
@@ -140,7 +140,6 @@
                     </div>
                 </div>
 
-                <!-- SPACE TOGGLE WITH AUTO-SAVE -->
                 <div class="space-slide-container">
                     <span class="space-slide-label">Space Between Titles</span>
                     <label class="switch">
@@ -175,7 +174,7 @@
             </div>
         </div>
 
-        <!-- PASSWORD MANAGEMENT ACCORDION CARD -->
+        <!-- PASSWORD MANAGEMENT ACCORDION CARD (Starts hidden/closed) -->
         <div class="accordion-card" id="cardPassword">
             <div class="accordion-header" onclick="toggleAccordion('cardPassword')">
                 <span>🔒 Change Admin Password</span>
@@ -205,7 +204,11 @@
         function toggleAccordion(cardId) {
             const card = document.getElementById(cardId);
             const wasActive = card.classList.contains('active');
+            
+            // Close all cards first so only one can open at a time
             document.querySelectorAll('.accordion-card').forEach(c => c.classList.remove('active'));
+            
+            // If it wasn't active before, open it now
             if (!wasActive) {
                 card.classList.add('active');
             }
@@ -293,7 +296,6 @@
         }
         loadWelcomeSettings();
 
-        // AUTO-SAVE LISTENER FOR THE SPACE TOGGLE SWITCH
         document.getElementById('spaceSlideToggle').addEventListener('change', async (e) => {
             const hasSpace = e.target.checked;
             try {
@@ -367,4 +369,13 @@
             if (!newInput || newInput.length < 4) {
                 showToast("New password must be at least 4 characters.", "error");
                 return;
+            }
             
+            localStorage.setItem("adminPassword", newInput);
+            showToast("Password updated successfully!");
+            document.getElementById('currentPass').value = "";
+            document.getElementById('newPass').value = "";
+        });
+    </script>
+</body>
+</html>
