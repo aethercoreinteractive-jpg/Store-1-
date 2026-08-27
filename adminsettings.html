@@ -113,14 +113,15 @@
         .input-with-eye input { padding-right: 42px; margin-bottom: 0; }
         .toggle-password { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.1rem; color: var(--text-light); z-index: 10; }
 
+        /* Quick fade-out toast notification styling */
         .toast-notification {
             position: fixed; bottom: -60px; left: 50%; transform: translateX(-50%);
             background: var(--kfc-dark); color: white; padding: 12px 24px; border-radius: 30px;
             font-size: 0.9rem; font-weight: 600; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            transition: bottom 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); z-index: 9999;
-            display: flex; align-items: center; gap: 8px;
+            opacity: 0; transition: bottom 0.25s ease-out, opacity 0.25s ease-out; z-index: 9999;
+            display: flex; align-items: center; gap: 8px; pointer-events: none;
         }
-        .toast-notification.show { bottom: 30px; }
+        .toast-notification.show { bottom: 30px; opacity: 1; }
         .toast-error { background: var(--danger); }
         .toast-success { background: var(--success); }
     </style>
@@ -266,12 +267,23 @@
 
         let currentFontSize = 2.75;
         let currentAlignment = 'center';
+        let toastTimeout = null;
 
         function showToast(message, type = "success") {
             const toast = document.getElementById('toast');
             toast.textContent = type === "success" ? `✅ ${message}` : `⚠️ ${message}`;
-            toast.className = `toast-notification show ${type === "success" ? 'toast-success' : 'toast-error'}`;
-            setTimeout(() => { toast.classList.remove('show'); }, 3000);
+            toast.className = `toast-notification ${type === "success" ? 'toast-success' : 'toast-error'}`;
+            
+            // Force reflow to restart transition smoothly
+            void toast.offsetWidth;
+            toast.classList.add('show');
+
+            if (toastTimeout) clearTimeout(toastTimeout);
+            
+            // Fade out quickly after 1.5 seconds
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 1500);
         }
 
         window.toggleAccordion = function(cardId) {
@@ -503,4 +515,4 @@
         });
     </script>
 </body>
-</html>
+</html>welcomeDesc').value = data.desc
