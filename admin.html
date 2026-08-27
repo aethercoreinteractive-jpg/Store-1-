@@ -24,7 +24,6 @@
             margin: 0; 
             padding: 0; 
             font-family: 'Inter', system-ui, -apple-system, sans-serif; 
-            /* Strictly prohibit text highlighting and tap selection colors */
             -webkit-user-select: none !important;
             -moz-user-select: none !important;
             -ms-user-select: none !important;
@@ -32,7 +31,6 @@
             -webkit-tap-highlight-color: transparent !important;
         }
 
-        /* Allow text selection strictly inside input fields */
         input {
             -webkit-user-select: text !important;
             -moz-user-select: text !important;
@@ -74,20 +72,23 @@
             border-radius: 12px; 
             border: 1px solid var(--border); 
             box-shadow: 0 2px 4px rgba(0,0,0,0.02); 
-            gap: 8px;
+            gap: 12px;
         }
         
         .nav-links-group {
             display: flex;
-            gap: 8px;
+            flex-direction: row; /* Forces side-by-side layout */
             align-items: center;
-            flex-wrap: wrap;
+            gap: 8px;
+            flex-wrap: nowrap; /* Prevents dropping below unless layout is extremely constrained */
+            overflow-x: auto; /* Allows smooth horizontal scrolling if screen is too small */
+            padding-bottom: 2px;
         }
 
         .tab-link { 
             background: #f4f4f5; 
             color: var(--text); 
-            padding: 8px 12px; 
+            padding: 8px 14px; 
             border-radius: 8px; 
             font-size: 0.8rem; 
             font-weight: 700; 
@@ -96,6 +97,7 @@
             align-items: center; 
             gap: 6px; 
             border: 1px solid var(--border);
+            white-space: nowrap; /* Keeps text on a single line */
             transition: all 0.2s; 
         }
         .tab-link:hover { background: #e4e4e7; }
@@ -401,7 +403,7 @@
             }
         }
 
-         // --- ORDER QUEUE WORKFLOW ---
+           // --- ORDER QUEUE WORKFLOW ---
         function initOrderListener() {
             onSnapshot(collection(db, "orders"), (snapshot) => {
                 const container = document.getElementById('ordersContainer');
