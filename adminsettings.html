@@ -20,7 +20,25 @@
             --border: #e4e4e7;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        /* Prevent text highlight/selection globally */
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            -webkit-user-select: none; /* Safari */
+            -ms-user-select: none; /* IE 10 and IE 11 */
+            user-select: none; /* Standard syntax */
+            -webkit-tap-highlight-color: transparent; /* Remove mobile tap highlight */
+        }
+
+        /* Allow selection ONLY inside inputs so admin can actually type and paste links */
+        input, textarea {
+            -webkit-user-select: auto;
+            -ms-user-select: auto;
+            user-select: auto;
+        }
+
         body { background: var(--bg); color: var(--text); padding: 12px; padding-bottom: 50px; }
 
         .container { max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
@@ -35,7 +53,8 @@
         .card h2 { font-size: 1.1rem; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; color: var(--text); font-weight: 800; }
 
         /* Form Controls */
-        input, textarea { width: 100%; padding: 12px 14px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 0.95rem; background: #fff; }
+        input, textarea { width: 100%; padding: 12px 14px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 0.95rem; background: #fff; outline: none; }
+        input:focus { border-color: var(--text-light); }
         label { font-size: 0.8rem; font-weight: 700; color: var(--text-light); margin-bottom: 4px; display: block; text-transform: uppercase; }
 
         .title-section-box { background: #fafafa; padding: 14px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 14px; display: flex; flex-direction: column; gap: 10px; }
@@ -48,20 +67,48 @@
         .color-preview-dot { width: 16px; height: 16px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.1); display: inline-block; }
 
         /* Color Wheel Popup Container */
-        .color-picker-container { display: none; flex-direction: column; align-items: center; background: #ffffff; padding: 14px; border-radius: 12px; border: 1px solid var(--border); margin-top: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .color-picker-container { display: none; flex-direction: column; align-items: center; background: #ffffff; padding: 16px; border-radius: 12px; border: 1px solid var(--border); margin-top: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .color-picker-container.active { display: flex; }
         .color-wheel-wrapper { margin: 10px 0; display: flex; justify-content: center; }
-        .selected-hex-display { font-size: 0.85rem; font-weight: 600; color: var(--text-light); margin-top: 4px; }
+        .selected-hex-display { font-size: 0.85rem; font-weight: 600; color: var(--text-light); margin-bottom: 12px; }
 
         .btn { width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 700; cursor: pointer; display: inline-flex; justify-content: center; align-items: center; gap: 8px; transition: opacity 0.2s; }
         .btn-primary { background: var(--kfc-red); color: white; }
         .btn-primary:hover { background: var(--kfc-red-hover); }
         .btn-secondary { background: #e4e4e7; color: var(--text); }
         .btn-secondary:hover { background: #d4d4d8; }
+        
+        /* Specific sizing for inner color save buttons */
+        .btn-close-color { padding: 10px; font-size: 0.85rem; }
 
         .input-with-eye { position: relative; width: 100%; margin-bottom: 12px; }
         .input-with-eye input { padding-right: 42px; margin-bottom: 0; }
         .toggle-password { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.1rem; color: var(--text-light); z-index: 10; }
+
+        /* Custom Toast Notification (Replaces Chrome Alert) */
+        .toast-notification {
+            position: fixed;
+            bottom: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--kfc-dark);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            transition: bottom 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .toast-notification.show {
+            bottom: 30px;
+        }
+        .toast-error { background: var(--danger); }
+        .toast-success { background: var(--success); }
     </style>
 </head>
 <body>
@@ -82,13 +129,15 @@
                 <div class="title-row-group">
                     <input type="text" id="titlePart1" placeholder="e.g. Quick">
                     <button type="button" class="color-toggle-btn" data-target="wheelContainer1">
-                        <span class="color-preview-dot" id="dot1" style="background: #ffffff;"></span> Customize Color
+                        <span class="color-preview-dot" id="dot1" style="background: #ffffff;"></span> Customize
                     </button>
                 </div>
                 <div class="color-picker-container" id="wheelContainer1">
-                    <label>Select Color Wheel</label>
+                    <label>Select Color</label>
                     <div class="color-wheel-wrapper" id="wheelPart1"></div>
                     <div class="selected-hex-display" id="hexDisplay1">Selected: #ffffff</div>
+                    <!-- Close button for color wheel 1 -->
+                    <button type="button" class="btn btn-primary btn-close-color" data-target="wheelContainer1">Save & Close Color</button>
                 </div>
             </div>
 
@@ -98,13 +147,15 @@
                 <div class="title-row-group">
                     <input type="text" id="titlePart2" placeholder="e.g. Bites">
                     <button type="button" class="color-toggle-btn" data-target="wheelContainer2">
-                        <span class="color-preview-dot" id="dot2" style="background: #e4002b;"></span> Customize Color
+                        <span class="color-preview-dot" id="dot2" style="background: #e4002b;"></span> Customize
                     </button>
                 </div>
                 <div class="color-picker-container" id="wheelContainer2">
-                    <label>Select Color Wheel</label>
+                    <label>Select Color</label>
                     <div class="color-wheel-wrapper" id="wheelPart2"></div>
                     <div class="selected-hex-display" id="hexDisplay2">Selected: #e4002b</div>
+                    <!-- Close button for color wheel 2 -->
+                    <button type="button" class="btn btn-primary btn-close-color" data-target="wheelContainer2">Save & Close Color</button>
                 </div>
             </div>
 
@@ -114,7 +165,7 @@
             <label for="welcomeImage">Welcome Graphic (Google Drive Link)</label>
             <input type="text" id="welcomeImage" placeholder="Paste Google Drive sharing URL">
 
-            <button class="btn btn-primary" id="saveWelcomeBtn">Save Welcome Settings</button>
+            <button class="btn btn-primary" id="saveWelcomeBtn">Save All Welcome Settings</button>
         </div>
 
         <!-- PASSWORD MANAGEMENT PANEL -->
@@ -135,6 +186,9 @@
         </div>
     </div>
 
+    <!-- Custom Toast Notification Container -->
+    <div id="toast" class="toast-notification"></div>
+
     <!-- Firebase Script Logic & Color Wheel Initialization -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -153,6 +207,17 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        // Custom UI Notification Function (No Chrome Alerts)
+        function showToast(message, type = "success") {
+            const toast = document.getElementById('toast');
+            toast.textContent = type === "success" ? `✅ ${message}` : `⚠️ ${message}`;
+            toast.className = `toast-notification show ${type === "success" ? 'toast-success' : 'toast-error'}`;
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
         // Initialize iro.js Color Wheels
         let colorWheel1 = new iro.ColorPicker("#wheelPart1", {
             width: 150,
@@ -164,13 +229,19 @@
             color: "#e4002b"
         });
 
-        // Toggle Color Wheel Popups
+        // Toggle Color Wheel Popups Open
         document.querySelectorAll('.color-toggle-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const targetId = btn.getAttribute('data-target');
-                const container = document.getElementById(targetId);
-                // Close other open containers if needed, or toggle current
-                container.classList.toggle('active');
+                document.getElementById(targetId).classList.toggle('active');
+            });
+        });
+
+        // Close Individual Color Wheels via their Save buttons
+        document.querySelectorAll('.btn-close-color').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetId = btn.getAttribute('data-target');
+                document.getElementById(targetId).classList.remove('active');
             });
         });
 
@@ -213,7 +284,7 @@
         }
         loadWelcomeSettings();
 
-        // Save welcome settings to Firebase
+        // Master Save: Welcome settings to Firebase
         document.getElementById('saveWelcomeBtn').addEventListener('click', async () => {
             const title1 = document.getElementById('titlePart1').value.trim();
             const color1 = colorWheel1.color.hexString;
@@ -232,10 +303,11 @@
                     imageLink: imageLink
                 }, { merge: true });
 
-                alert("Welcome page settings updated successfully!");
+                // Use custom toast instead of alert()
+                showToast("Welcome settings saved successfully!");
             } catch (e) {
                 console.error("Error saving welcome settings:", e);
-                alert("Failed to update settings.");
+                showToast("Failed to update settings.", "error");
             }
         });
 
@@ -268,16 +340,16 @@
             const newInput = document.getElementById('newPass').value;
             
             if (currentInput !== localStorage.getItem("adminPassword")) {
-                alert("Incorrect current password!");
+                showToast("Incorrect current password!", "error");
                 return;
             }
             if (!newInput || newInput.length < 4) {
-                alert("New password must be at least 4 characters long.");
+                showToast("New password must be at least 4 characters.", "error");
                 return;
             }
             
             localStorage.setItem("adminPassword", newInput);
-            alert("Password updated successfully!");
+            showToast("Password updated successfully!");
             document.getElementById('currentPass').value = "";
             document.getElementById('newPass').value = "";
         });
