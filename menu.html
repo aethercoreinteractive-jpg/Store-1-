@@ -29,7 +29,6 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* Fix body to act as the main viewport container */
         body { 
             background: var(--bg); 
             color: var(--text); 
@@ -40,7 +39,6 @@
             align-items: flex-start; 
         }
 
-        /* Main App Container takes full height and acts as a flex column */
         .main-app-container { 
             width: 100%; 
             max-width: 600px; 
@@ -52,7 +50,7 @@
             padding: 12px; 
         }
         
-        /* Non-scrolling top wrapper containing header and alert */
+        /* Only the header container stays pinned at the top now */
         .sticky-top-wrapper { 
             flex-shrink: 0; 
             background: var(--bg); 
@@ -82,11 +80,12 @@
         .dropdown-content a:hover { background: #f4f4f5; color: var(--kfc-red); }
         .dropdown-content.show { display: block; }
 
-        .store-alert { padding: 12px 16px; border-radius: 12px; font-weight: 700; font-size: 0.9rem; text-align: center; margin-top: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        /* Store alert is now inside the scrollable area */
+        .store-alert { padding: 12px 16px; border-radius: 12px; font-weight: 700; font-size: 0.9rem; text-align: center; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .store-alert.closed { background: #fee2e2; color: var(--danger); border: 1px solid #fecaca; }
         .store-alert.open { background: #d1fae5; color: var(--success); border: 1px solid #a7f3d0; }
 
-        /* Only this card container will scroll internally */
+        /* Scrollable area containing both the status banner and menu */
         .scrollable-menu-area { 
             flex-grow: 1; 
             overflow-y: auto; 
@@ -127,7 +126,7 @@
 
     <!-- MAIN ORDERING APP CONTAINER -->
     <div class="main-app-container">
-        <!-- FIXED TOP WRAPPER (Header and Status Banner stay locked here) -->
+        <!-- FIXED TOP WRAPPER (Only Header stays locked here now) -->
         <div class="sticky-top-wrapper">
             <header>
                 <h1>🍗 Quick<span>Bites</span></h1>
@@ -147,15 +146,16 @@
                     </div>
                 </div>
             </header>
+        </div>
 
+        <!-- SCROLLABLE AREA (Store Alert and Menu list scroll together) -->
+        <div class="scrollable-menu-area">
             <!-- STORE STATUS BANNER -->
             <div id="storeAlertContainer">
                 <div class="store-alert closed">Checking store status...</div>
             </div>
-        </div>
 
-        <!-- SCROLLABLE MENU AREA (Only this part scrolls) -->
-        <div class="scrollable-menu-area">
+            <!-- MENU LIST -->
             <div class="card">
                 <h2>📜 Our Menu</h2>
                 <div id="menuContainer">Loading menu...</div>
