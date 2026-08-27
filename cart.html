@@ -60,7 +60,7 @@
         .btn-success { background: var(--success); color: white; }
         .btn-success:hover { background: #059669; }
 
-        /* Multi-Billion Dollar Checkout Processing Overlay */
+        /* Checkout Processing Overlay */
         #processingModal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(32, 33, 36, 0.85); backdrop-filter: blur(8px);
@@ -272,12 +272,13 @@
 
                 await updateDoc(storeRef, { nextOrderNumber: currentOrderNum + 1 });
 
-                // 2. Save a copy locally for orderhistory.html
+                // 2. Save a copy locally for orderhistory.html (with pending status)
                 let existingHistory = JSON.parse(localStorage.getItem("quickbites_order_history")) || [];
                 existingHistory.unshift({
                     orderNumber: currentOrderNum,
                     items: formattedItems,
                     totalPrice: totalPrice,
+                    status: "pending",
                     createdAt: new Date().toISOString()
                 });
                 localStorage.setItem("quickbites_order_history", JSON.stringify(existingHistory));
@@ -314,5 +315,4 @@
         renderCart();
     </script>
 </body>
-    </html>
-    
+</html>
