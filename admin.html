@@ -19,7 +19,27 @@
             --border: #e4e4e7;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+            /* Strictly prohibit text highlighting and tap selection colors */
+            -webkit-user-select: none !important;
+            -moz-user-select: none !important;
+            -ms-user-select: none !important;
+            user-select: none !important;
+            -webkit-tap-highlight-color: transparent !important;
+        }
+
+        /* Allow text selection strictly inside input fields */
+        input {
+            -webkit-user-select: text !important;
+            -moz-user-select: text !important;
+            -ms-user-select: text !important;
+            user-select: text !important;
+        }
+
         body { background: var(--bg); color: var(--text); padding: 12px; padding-bottom: 50px; }
 
         /* Login Screen */
@@ -35,7 +55,7 @@
         .login-card h2 { margin-bottom: 20px; font-size: 1.5rem; color: var(--text); }
         
         .password-wrapper { position: relative; width: 100%; margin-bottom: 12px; }
-        .password-wrapper input { width: 100%; padding: 12px 42px 12px 16px; margin-bottom: 0; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; background: #fff; }
+        .password-wrapper input { width: 100%; padding: 12px 42px 12px 16px; margin-bottom: 0; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; background: #fff; outline: none; }
         .toggle-password { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.1rem; color: var(--text-light); z-index: 10; }
 
         /* Main Layout */
@@ -66,7 +86,7 @@
         input:checked + .slider:before { transform: translateX(24px); }
 
         /* Form Controls */
-        input { width: 100%; padding: 12px 14px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 0.95rem; background: #fff; }
+        input { width: 100%; padding: 12px 14px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 0.95rem; background: #fff; outline: none; }
         
         .btn { width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 700; cursor: pointer; display: inline-flex; justify-content: center; align-items: center; gap: 8px; transition: opacity 0.2s; }
         .btn-primary { background: var(--kfc-red); color: white; }
@@ -78,7 +98,6 @@
         .order-card { 
             background: #fafafa; border: 1px solid var(--border); padding: 14px; border-radius: 12px; margin-bottom: 12px; 
             display: flex; flex-direction: column; gap: 8px; position: relative; 
-            user-select: none; -webkit-user-select: none; -ms-user-select: none; 
         }
         .order-header { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 1rem; padding-right: 28px; }
         .order-details { font-size: 0.85rem; color: var(--text-light); }
@@ -90,7 +109,6 @@
             color: var(--text-light); cursor: pointer; width: 24px; height: 24px;
             display: flex; align-items: center; justify-content: center; border-radius: 50%;
             transition: background 0.2s, color 0.2s;
-            user-select: none; -webkit-user-select: none;
         }
         .order-close-btn:hover { background: #fee2e2; color: var(--danger); }
 
@@ -101,6 +119,18 @@
         .badge-declined { background: #fee2e2; color: var(--danger); }
         
         .action-container { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+
+        /* Fast fading toast notification */
+        .toast-notification {
+            position: fixed; bottom: -60px; left: 50%; transform: translateX(-50%);
+            background: var(--kfc-dark); color: white; padding: 12px 24px; border-radius: 30px;
+            font-size: 0.9rem; font-weight: 600; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            opacity: 0; transition: bottom 0.25s ease-out, opacity 0.25s ease-out; z-index: 9999;
+            display: flex; align-items: center; gap: 8px; pointer-events: none;
+        }
+        .toast-notification.show { bottom: 30px; opacity: 1; }
+        .toast-error { background: var(--danger); }
+        .toast-success { background: var(--success); }
     </style>
 </head>
 <body>
@@ -152,8 +182,27 @@
         </div>
     </div>
 
+    <div id="toast" class="toast-notification"></div>
+
     <!-- NON-MODULE GLOBAL SCRIPTS FOR IMMEDIATE UI INTERACTION -->
     <script>
+        let toastTimeout = null;
+
+        function showToast(message, type = "success") {
+            const toast = document.getElementById('toast');
+            toast.textContent = type === "success" ? `✅ ${message}` : `⚠️ ${message}`;
+            toast.className = `toast-notification ${type === "success" ? 'toast-success' : 'toast-error'}`;
+            
+            void toast.offsetWidth;
+            toast.classList.add('show');
+
+            if (toastTimeout) clearTimeout(toastTimeout);
+            
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 1500);
+        }
+
         if (!localStorage.getItem("adminPassword")) {
             localStorage.setItem("adminPassword", "Admin@123");
         }
@@ -191,7 +240,7 @@
                     window.initAdminDashboard();
                 }
             } else {
-                alert("Incorrect password! Please check your password (Default is Admin@123).");
+                showToast("Incorrect password! Check password (Default: Admin@123).", "error");
             }
         }
 
@@ -291,10 +340,10 @@
                     nextOrderNumber: customStart, 
                     customStartNumber: customStart 
                 });
-                alert(`Store is now OPEN. Order sequence reset to start from ${customStart}.`);
+                showToast(`Store opened! Sequence starts from ${customStart}.`);
             } else {
                 await setDoc(storeRef, { isOpen: false }, { merge: true });
-                alert("Store is now CLOSED. Customers will see a professional closed notification.");
+                showToast("Store is now CLOSED.");
             }
             updateStatusLabel(isChecked);
         });
@@ -310,7 +359,7 @@
             }
         }
 
-        // --- ORDER QUEUE WORKFLOW ---
+         // --- ORDER QUEUE WORKFLOW ---
         function initOrderListener() {
             onSnapshot(collection(db, "orders"), (snapshot) => {
                 const container = document.getElementById('ordersContainer');
@@ -321,14 +370,13 @@
                     orders.push({ id: docSnap.id, ...docSnap.data() });
                 });
 
-                // Sort orders so newest (highest orderNumber or latest timestamp) appear at the top
                 orders.sort((a, b) => {
                     const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
                     const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
                     if (timeB !== timeA) {
-                        return timeB - timeA; // Descending timestamp order
+                        return timeB - timeA;
                     }
-                    return (b.orderNumber || 0) - (a.orderNumber || 0); // Fallback to descending order number
+                    return (b.orderNumber || 0) - (a.orderNumber || 0);
                 });
 
                 const preparingCount = orders.filter(o => o.status === "preparing").length;
@@ -372,7 +420,7 @@
                             <span>Order #${order.orderNumber}</span>
                             <span class="badge ${badgeClass}">${order.status}</span>
                         </div>
-                          <div class="order-details">
+                        <div class="order-details">
                             <strong>Item:</strong> ${order.productName || 'Custom Item'} (${order.price ? '₹' + order.price : ''})
                         </div>
                         <div class="action-container">${actionHtml}</div>
@@ -399,7 +447,6 @@
                         });
                     }
 
-                    // Direct silent deletion via top-right X button without any default confirmation popups
                     orderCard.querySelector('.order-close-btn').addEventListener('click', async () => {
                         await deleteDoc(doc(db, "orders", order.id));
                     });
