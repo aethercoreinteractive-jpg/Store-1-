@@ -28,13 +28,37 @@
             -webkit-touch-callout: none; 
             -webkit-tap-highlight-color: transparent;
         }
-        body { background: var(--bg); color: var(--text); height: 100vh; overflow-x: hidden; display: flex; justify-content: center; align-items: flex-start; }
 
-        /* Main Menu Content Container */
-        .main-app-container { width: 100%; max-width: 600px; min-height: 100vh; background: var(--bg); color: var(--text); display: flex; flex-direction: column; padding: 12px; padding-bottom: 80px; overflow-y: auto; }
+        /* Fix body to act as the main viewport container */
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            height: 100vh; 
+            overflow: hidden; 
+            display: flex; 
+            justify-content: center; 
+            align-items: flex-start; 
+        }
+
+        /* Main App Container takes full height and acts as a flex column */
+        .main-app-container { 
+            width: 100%; 
+            max-width: 600px; 
+            height: 100vh; 
+            background: var(--bg); 
+            color: var(--text); 
+            display: flex; 
+            flex-direction: column; 
+            padding: 12px; 
+        }
         
-        /* Sticky Top Wrapper for Header and Status Banner */
-        .sticky-top-wrapper { position: sticky; top: 0; z-index: 1000; background: var(--bg); padding-bottom: 4px; }
+        /* Non-scrolling top wrapper containing header and alert */
+        .sticky-top-wrapper { 
+            flex-shrink: 0; 
+            background: var(--bg); 
+            padding-bottom: 8px; 
+            z-index: 1000; 
+        }
 
         /* Pinned Sticky Header */
         header { background: var(--kfc-dark); color: white; padding: 16px 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
@@ -62,7 +86,14 @@
         .store-alert.closed { background: #fee2e2; color: var(--danger); border: 1px solid #fecaca; }
         .store-alert.open { background: #d1fae5; color: var(--success); border: 1px solid #a7f3d0; }
 
-        .card { background: var(--card-bg); padding: 16px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border); margin-top: 12px; }
+        /* Only this card container will scroll internally */
+        .scrollable-menu-area { 
+            flex-grow: 1; 
+            overflow-y: auto; 
+            padding-bottom: 40px; 
+        }
+
+        .card { background: var(--card-bg); padding: 16px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border); margin-top: 0; }
         .card h2 { font-size: 1.1rem; margin-bottom: 12px; font-weight: 800; }
 
         /* Category Section Header */
@@ -96,7 +127,7 @@
 
     <!-- MAIN ORDERING APP CONTAINER -->
     <div class="main-app-container">
-        <!-- STICKY TOP WRAPPER (Keeps header and status banner pinned on scroll) -->
+        <!-- FIXED TOP WRAPPER (Header and Status Banner stay locked here) -->
         <div class="sticky-top-wrapper">
             <header>
                 <h1>🍗 Quick<span>Bites</span></h1>
@@ -123,10 +154,12 @@
             </div>
         </div>
 
-        <!-- MENU LIST -->
-        <div class="card">
-            <h2>📜 Our Menu</h2>
-            <div id="menuContainer">Loading menu...</div>
+        <!-- SCROLLABLE MENU AREA (Only this part scrolls) -->
+        <div class="scrollable-menu-area">
+            <div class="card">
+                <h2>📜 Our Menu</h2>
+                <div id="menuContainer">Loading menu...</div>
+            </div>
         </div>
     </div>
 
