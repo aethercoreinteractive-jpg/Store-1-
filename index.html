@@ -56,20 +56,19 @@
             text-align: center; 
             margin-top: 45px; 
             width: 100%; 
-            max-width: 750px; 
-            padding: 0 20px;
+            max-width: 90vw; 
+            padding: 0 10px;
             display: flex;
             flex-direction: column;
             justify-content: center;
         }
 
         .kiosk-brand h1 { 
-            font-size: 2.75rem; 
             font-weight: 800; 
             letter-spacing: -0.75px; 
             max-width: 100%;
             line-height: 1.25;
-            word-break: break-word;
+            white-space: nowrap; /* Ensures single line by default unless twoRows is active */
         }
 
         .kiosk-brand p { 
@@ -164,7 +163,7 @@
                 const hasSpace = data.hasSpace === true;
                 const twoRows = data.twoRows === true;
                 const alignment = data.alignment || 'center';
-                const customFontSize = data.fontSize ? Number(data.fontSize) : 2.75;
+                const adminFontSize = data.fontSize ? Number(data.fontSize) : 2.75;
 
                 // Handle Alignment
                 const brandWrapper = document.getElementById('brandWrapper');
@@ -175,10 +174,7 @@
                 h1Elem.style.textAlign = alignment;
                 descElem.style.textAlign = alignment;
 
-                // Handle Font Size
-                h1Elem.style.fontSize = `${customFontSize}rem`;
-
-                // Handle Row layout (Same row vs Two rows)
+                // Handle Row layout
                 const p1 = document.getElementById('part1Span');
                 const spaceSpan = document.getElementById('spaceSpan');
                 const p2 = document.getElementById('part2Span');
@@ -190,9 +186,23 @@
                 p2.style.color = data.color2 || "#e4002b";
 
                 if (twoRows) {
+                    h1Elem.style.whiteSpace = "normal"; // Allow wrapping into two lines
                     spaceSpan.innerHTML = "<br>";
+                    h1Elem.style.fontSize = `${adminFontSize}rem`; // Use admin configured font size directly
                 } else {
+                    h1Elem.style.whiteSpace = "nowrap"; // Force everything onto a single line
                     spaceSpan.textContent = hasSpace ? " " : "";
+                    
+                    // Auto-shrink font size dynamically to fit container width if text is long
+                    let testSize = adminFontSize;
+                    h1Elem.style.fontSize = `${testSize}rem`;
+                    
+                    // Reduce font size iteratively if it overflows the maximum screen container width
+                    const maxWidth = brandWrapper.clientWidth;
+                    while (h1Elem.scrollWidth > maxWidth && testSize > 1.0) {
+                        testSize -= 0.1;
+                        h1Elem.style.fontSize = `${testSize}rem`;
+                    }
                 }
 
                 descElem.textContent = data.description || "Welcome to Self-Service Ordering";
