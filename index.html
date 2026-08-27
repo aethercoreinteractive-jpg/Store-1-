@@ -169,7 +169,6 @@
             }
         }
 
-        // onSnapshot listens continuously and updates instantly with zero delay
         onSnapshot(doc(db, "settings", "welcomeConfig"), (docSnap) => {
             if (docSnap.exists()) {
                 const data = docSnap.data();
@@ -182,7 +181,6 @@
                 p1.textContent = t1;
                 p1.style.color = data.color1 || "#ffffff";
 
-                // Immediately applies or removes the space based on the toggle state
                 const spaceSpan = document.getElementById('spaceSpan');
                 spaceSpan.textContent = hasSpace ? " " : "";
 
