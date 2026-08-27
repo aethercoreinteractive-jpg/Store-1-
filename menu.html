@@ -33,7 +33,8 @@
         /* Main Menu Content Container */
         .main-app-container { width: 100%; max-width: 600px; min-height: 100vh; background: var(--bg); color: var(--text); display: flex; flex-direction: column; padding: 12px; padding-bottom: 80px; overflow-y: auto; }
         
-        header { background: var(--kfc-dark); color: white; padding: 16px 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        /* Pinned Sticky Header */
+        header { position: sticky; top: 0; z-index: 1000; background: var(--kfc-dark); color: white; padding: 16px 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 4px; }
         header h1 { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.5px; }
         header h1 span { color: var(--kfc-red); }
 
@@ -49,7 +50,7 @@
         .gear-btn { background: rgba(255,255,255,0.1); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
         .gear-btn:hover { background: rgba(255,255,255,0.2); }
         
-        .dropdown-content { display: none; position: absolute; right: 0; top: 45px; background: white; min-width: 140px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-radius: 10px; border: 1px solid var(--border); overflow: hidden; z-index: 100; }
+        .dropdown-content { display: none; position: absolute; right: 0; top: 45px; background: white; min-width: 140px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-radius: 10px; border: 1px solid var(--border); overflow: hidden; z-index: 1100; }
         .dropdown-content a { color: var(--text); padding: 10px 14px; text-decoration: none; display: block; font-size: 0.85rem; font-weight: 600; }
         .dropdown-content a:hover { background: #f4f4f5; color: var(--kfc-red); }
         .dropdown-content.show { display: block; }
@@ -352,4 +353,3 @@
     </script>
 </body>
 </html>
-            
