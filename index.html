@@ -35,9 +35,8 @@
         }
         .kiosk-welcome.slide-up { transform: translateY(-100%); }
 
-        .kiosk-brand { text-align: center; margin-top: 40px; }
-        .kiosk-brand h1 { font-size: 3rem; font-weight: 900; letter-spacing: -1px; }
-        .kiosk-brand h1 span { color: var(--kfc-red); }
+        .kiosk-brand { text-align: center; margin-top: 40px; white-space: nowrap; }
+        .kiosk-brand h1 { font-size: 3rem; font-weight: 900; letter-spacing: -1px; display: inline-block; }
         .kiosk-brand p { color: var(--text-light); font-size: 1.1rem; margin-top: 10px; font-weight: 500; }
 
         .kiosk-graphic {
@@ -69,7 +68,9 @@
     <!-- KIOSK WELCOME SCREEN -->
     <div id="welcomeScreen" class="kiosk-welcome">
         <div class="kiosk-brand">
-            <h1 id="brandTitleElement">Quick<span>Bites</span></h1>
+            <h1 id="brandTitleElement">
+                <span id="part1Span" style="color: #ffffff;">Quick</span><span id="part2Span" style="color: var(--kfc-red);">Bites</span>
+            </h1>
             <p id="brandDescElement">Welcome to Self-Service Ordering</p>
         </div>
         <div class="kiosk-graphic" id="graphicContainer">
@@ -116,17 +117,15 @@
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     
-                    // Update Title (Split by space or treat last word as red if desired, default handles standard name)
-                    if (data.title) {
-                        const titleParts = data.title.split(/(?=[A-Z])/); // Splits CamelCase or keeps full text
-                        if (titleParts.length > 1) {
-                            const firstPart = titleParts.slice(0, -1).join('');
-                            const lastPart = titleParts[titleParts.length - 1];
-                            document.getElementById('brandTitleElement').innerHTML = `${firstPart}<span>${lastPart}</span>`;
-                        } else {
-                            document.getElementById('brandTitleElement').innerHTML = data.title;
-                        }
-                    }
+                    // Title Part 1 and Color
+                    const p1 = document.getElementById('part1Span');
+                    p1.textContent = data.title1 || "Quick";
+                    p1.style.color = data.color1 || "#ffffff";
+
+                    // Title Part 2 and Color
+                    const p2 = document.getElementById('part2Span');
+                    p2.textContent = data.title2 || "Bites";
+                    p2.style.color = data.color2 || "#e4002b";
 
                     // Update Description
                     if (data.description) {
