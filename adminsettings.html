@@ -25,19 +25,32 @@
             margin: 0; 
             padding: 0; 
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            -webkit-user-select: none; 
-            -ms-user-select: none; 
-            user-select: none; 
-            -webkit-tap-highlight-color: transparent;
+            /* Strictly prohibit text highlighting and chrome touch behaviors globally */
+            -webkit-user-select: none !important;
+            -moz-user-select: none !important;
+            -ms-user-select: none !important;
+            user-select: none !important;
+            -webkit-touch-callout: none !important; 
+            -webkit-tap-highlight-color: transparent !important;
         }
 
+        /* Allow typing and interaction strictly inside inputs and textareas */
         input, textarea {
-            -webkit-user-select: auto;
-            -ms-user-select: auto;
-            user-select: auto;
+            -webkit-user-select: text !important;
+            -moz-user-select: text !important;
+            -ms-user-select: text !important;
+            user-select: text !important;
+            -webkit-touch-callout: default !important;
         }
 
-        body { background: var(--bg); color: var(--text); padding: 12px; padding-bottom: 50px; }
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            padding: 12px; 
+            padding-bottom: 50px; 
+            /* Prevent unwanted context menus/popups on long press across the body */
+            -webkit-touch-callout: none;
+        }
 
         .container { max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
         
@@ -116,7 +129,7 @@
         .toast-success { background: var(--success); }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;"> <!-- Block right-click browser context menus globally -->
 
     <div class="container">
         <header>
@@ -132,7 +145,7 @@
             </div>
             <div class="accordion-content">
                 <div class="title-section-box">
-                    <label>Title Part 1</label>
+                    <label>Title Part 1 (First Word/Part)</label>
                     <div class="title-row-group">
                         <input type="text" id="titlePart1" placeholder="e.g. Quick">
                         <button type="button" class="color-toggle-btn" data-target="wheelContainer1">
@@ -166,7 +179,7 @@
                 </div>
 
                 <div class="title-section-box">
-                    <label>Title Part 2</label>
+                    <label>Title Part 2 (Second Word/Part)</label>
                     <div class="title-row-group">
                         <input type="text" id="titlePart2" placeholder="e.g. Bites">
                         <button type="button" class="color-toggle-btn" data-target="wheelContainer2">
@@ -406,7 +419,6 @@
             }
         });
 
-        // RESET TO DEFAULT BUTTON EVENT
         document.getElementById('resetWelcomeBtn').addEventListener('click', async () => {
             if (!confirm("Are you sure you want to reset all welcome settings to default?")) return;
 
@@ -426,7 +438,6 @@
 
                 await setDoc(doc(db, "settings", "welcomeConfig"), defaultSettings);
 
-                // Update Local UI elements
                 document.getElementById('titlePart1').value = defaultSettings.title1;
                 colorWheel1.color.set(defaultSettings.color1);
                 document.getElementById('hexDisplay1').textContent = `Selected: ${defaultSettings.color1}`;
