@@ -36,7 +36,6 @@
         header h1 { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.5px; }
         header h1 span { color: var(--kfc-red); }
 
-        /* Back Button Styling */
         .back-btn {
             background: #f4f4f5; color: var(--text); border: 1px solid var(--border);
             padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 700;
@@ -45,10 +44,36 @@
         }
         .back-btn:hover { background: #e4e4e7; }
 
+        /* Filter Tab Bar */
+        .filter-tabs {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            margin-bottom: 12px;
+        }
+        .filter-tab {
+            background: #f4f4f5;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .filter-tab:hover { background: #e4e4e7; }
+        .filter-tab.active {
+            background: var(--kfc-red);
+            color: white;
+            border-color: var(--kfc-red);
+        }
+
         .card { background: var(--card-bg); padding: 20px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border); }
         .card h2 { font-size: 1.1rem; margin-bottom: 16px; color: var(--text); font-weight: 800; display: flex; justify-content: space-between; align-items: center; }
 
-        /* Date Section Headers */
         .date-section-title {
             font-size: 0.95rem;
             font-weight: 800;
@@ -62,7 +87,6 @@
             align-items: center;
         }
 
-        /* Order History Cards */
         .history-card { 
             background: #fafafa; border: 1px solid var(--border); padding: 12px 14px; border-radius: 10px; margin-bottom: 8px; 
             display: flex; flex-direction: column; gap: 4px; 
@@ -84,14 +108,20 @@
             <a href="testmerchandise.html" class="back-btn">⬅ Back to Admin</a>
         </header>
 
-        <!-- ORDER HISTORY CONTAINER -->
         <div class="card">
             <h2>📜 Complete Archive</h2>
+            
+            <!-- Dynamic Filter Tabs -->
+            <div id="filterTabsContainer" class="filter-tabs">
+                <button class="filter-tab active" data-filter="all">All Time</button>
+                <button class="filter-tab" data-filter="Today">Today</button>
+                <button class="filter-tab" data-filter="Yesterday">Yesterday</button>
+            </div>
+
             <div id="historyContainer">Loading order history...</div>
         </div>
     </div>
 
-    <!-- Firebase Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -108,6 +138,9 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+
+        let currentFilter = "all";
+        let globalOrdersCache = [];
 
         function getDateCategory(dateString) {
             if (!dateString) return "Archive";
@@ -133,28 +166,23 @@
             return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
         }
 
-        onSnapshot(collection(db, "orders"), (snapshot) => {
+        function renderOrders() {
             const container = document.getElementById('historyContainer');
             container.innerHTML = "";
 
-            let orders = [];
-            snapshot.forEach(docSnap => {
-                orders.push({ id: docSnap.id, ...docSnap.data() });
-            });
+            let ordersToDisplay = [...globalOrdersCache];
 
-            if (orders.length === 0) {
-                container.innerHTML = "<p style='color:var(--text-light); font-size:0.85rem;'>No past order history available.</p>";
+            if (currentFilter !== "all") {
+                ordersToDisplay = ordersToDisplay.filter(order => getDateCategory(order.timestamp) === currentFilter);
+            }
+
+            if (ordersToDisplay.length === 0) {
+                container.innerHTML = "<p style='color:var(--text-light); font-size:0.85rem; padding: 10px 0;'>No orders found for this selection.</p>";
                 return;
             }
 
-            orders.sort((a, b) => {
-                const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
-                const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
-                return timeB - timeA;
-            });
-
             let groupedOrders = {};
-            orders.forEach(order => {
+            ordersToDisplay.forEach(order => {
                 const category = getDateCategory(order.timestamp);
                 if (!groupedOrders[category]) {
                     groupedOrders[category] = [];
@@ -171,10 +199,12 @@
             });
 
             sortedKeys.forEach(dateKey => {
-                const sectionHeader = document.createElement('div');
-                sectionHeader.className = "date-section-title";
-                sectionHeader.innerHTML = `<span>📅 ${dateKey}</span> <span style="font-size:0.75rem; font-weight:normal; color:var(--text-light);">${groupedOrders[dateKey].length} orders</span>`;
-                container.appendChild(sectionHeader);
+                if (currentFilter === "all") {
+                    const sectionHeader = document.createElement('div');
+                    sectionHeader.className = "date-section-title";
+                    sectionHeader.innerHTML = `<span>📅 ${dateKey}</span> <span style="font-size:0.75rem; font-weight:normal; color:var(--text-light);">${groupedOrders[dateKey].length} orders</span>`;
+                    container.appendChild(sectionHeader);
+                }
 
                 groupedOrders[dateKey].forEach(order => {
                     const historyCard = document.createElement('div');
@@ -192,6 +222,58 @@
                     container.appendChild(historyCard);
                 });
             });
+        }
+
+        function updateFilterTabsDynamic(orders) {
+            const tabsContainer = document.getElementById('filterTabsContainer');
+            
+            // Collect unique dates present in records
+            let uniqueDatesMap = new Set();
+            orders.forEach(o => {
+                const cat = getDateCategory(o.timestamp);
+                if (cat !== "Today" && cat !== "Yesterday" && cat !== "Archive") {
+                    uniqueDatesMap.add(cat);
+                }
+            });
+
+            // Keep 'All Time', 'Today', 'Yesterday', then append past dates
+            let tabsHtml = `
+                <button class="filter-tab ${currentFilter === 'all' ? 'active' : ''}" data-filter="all">All Time</button>
+                <button class="filter-tab ${currentFilter === 'Today' ? 'active' : ''}" data-filter="Today">Today</button>
+                <button class="filter-tab ${currentFilter === 'Yesterday' ? 'active' : ''}" data-filter="Yesterday">Yesterday</button>
+            `;
+
+            uniqueDatesMap.forEach(dateStr => {
+                tabsHtml += `<button class="filter-tab ${currentFilter === dateStr ? 'active' : ''}" data-filter="${dateStr}">${dateStr}</button>`;
+            });
+
+            tabsContainer.innerHTML = tabsHtml;
+
+            // Re-bind click events
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                    e.target.classList.add('active');
+                    currentFilter = e.target.getAttribute('data-filter');
+                    renderOrders();
+                });
+            });
+        }
+
+        onSnapshot(collection(db, "orders"), (snapshot) => {
+            globalOrdersCache = [];
+            snapshot.forEach(docSnap => {
+                globalOrdersCache.push({ id: docSnap.id, ...docSnap.data() });
+            });
+
+            globalOrdersCache.sort((a, b) => {
+                const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+                const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+                return timeB - timeA;
+            });
+
+            updateFilterTabsDynamic(globalOrdersCache);
+            renderOrders();
         });
     </script>
 </body>
