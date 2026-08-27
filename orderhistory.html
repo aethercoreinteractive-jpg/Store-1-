@@ -36,6 +36,8 @@
         header h1 { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.5px; }
         header h1 span { color: var(--kfc-red); }
 
+        .header-actions { display: flex; gap: 8px; align-items: center; }
+
         .back-btn {
             background: #f4f4f5; color: var(--text); border: 1px solid var(--border);
             padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 700;
@@ -43,6 +45,13 @@
             transition: background 0.2s;
         }
         .back-btn:hover { background: #e4e4e7; }
+
+        .btn-danger { 
+            background: var(--danger); color: white; border: none; 
+            padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; 
+            font-weight: 700; cursor: pointer; transition: opacity 0.2s;
+        }
+        .btn-danger:hover { opacity: 0.9; }
 
         /* Filter Tab Bar */
         .filter-tabs {
@@ -105,17 +114,20 @@
     <div class="container">
         <header>
             <h1>🍗 Quick<span>History</span></h1>
-            <a href="testmerchandise.html" class="back-btn">⬅ Back to Admin</a>
+            <div class="header-actions">
+                <button id="clearHistoryBtn" class="btn-danger">Clear History</button>
+                <a href="testmerchandise.html" class="back-btn">⬅ Admin</a>
+            </div>
         </header>
 
         <div class="card">
             <h2>📜 Permanent Archive</h2>
             
-            <!-- Dynamic Filter Tabs -->
+            <!-- Dynamic Filter Tabs: Yesterday, Today, All Time -->
             <div id="filterTabsContainer" class="filter-tabs">
-                <button class="filter-tab active" data-filter="all">All Time</button>
-                <button class="filter-tab" data-filter="Today">Today</button>
                 <button class="filter-tab" data-filter="Yesterday">Yesterday</button>
+                <button class="filter-tab active" data-filter="Today">Today</button>
+                <button class="filter-tab" data-filter="all">All Time</button>
             </div>
 
             <div id="historyContainer">Loading permanent order history...</div>
@@ -124,7 +136,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCevmUKn9jsh3VrttK8MAyXEO5JjaFOTyM",
@@ -139,7 +151,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        let currentFilter = "all";
+        let currentFilter = "Today"; // Default view starts on Today
         let globalOrdersCache = [];
 
         function getDateCategory(dateString) {
@@ -190,11 +202,12 @@
                 groupedOrders[category].push(order);
             });
 
+            // Specific sorting order sequence: Yesterday, Today, then other formatted dates, then All Time
             const sortedKeys = Object.keys(groupedOrders).sort((a, b) => {
-                if (a === "Today") return -1;
-                if (b === "Today") return 1;
                 if (a === "Yesterday") return -1;
                 if (b === "Yesterday") return 1;
+                if (a === "Today") return -1;
+                if (b === "Today") return 1;
                 return new Date(b) - new Date(a);
             });
 
@@ -235,22 +248,17 @@
                 }
             });
 
+            // Configured sequence: Yesterday, Today, dynamic past dates, All Time
             let tabsHtml = `
-                <button class="filter-tab ${currentFilter === 'all' ? 'active' : ''}" data-filter="all">All Time</button>
-                <button class="filter-tab ${currentFileter === 'Today' ? 'active' : ''}" data-filter="Today">Today</button>
                 <button class="filter-tab ${currentFilter === 'Yesterday' ? 'active' : ''}" data-filter="Yesterday">Yesterday</button>
-            `;
-
-            // Fix variable typo in code template
-            tabsHtml = `
-                <button class="filter-tab ${currentFilter === 'all' ? 'active' : ''}" data-filter="all">All Time</button>
                 <button class="filter-tab ${currentFilter === 'Today' ? 'active' : ''}" data-filter="Today">Today</button>
-                <button class="filter-tab ${currentFilter === 'Yesterday' ? 'active' : ''}" data-filter="Yesterday">Yesterday</button>
             `;
 
             uniqueDatesMap.forEach(dateStr => {
                 tabsHtml += `<button class="filter-tab ${currentFilter === dateStr ? 'active' : ''}" data-filter="${dateStr}">${dateStr}</button>`;
             });
+
+            tabsHtml += `<button class="filter-tab ${currentFilter === 'all' ? 'active' : ''}" data-filter="all">All Time</button>`;
 
             tabsContainer.innerHTML = tabsHtml;
 
@@ -264,7 +272,35 @@
             });
         }
 
-        // Now pulling from a dedicated permanent archive collection called "orderHistory"
+        // Secure Clear History implementation requiring password verification and confirmation
+        document.getElementById('clearHistoryBtn').addEventListener('click', async () => {
+            const enteredPassword = prompt("Enter Admin Password to clear order history archive:");
+            if (enteredPassword === null) return; // Cancelled
+
+            // Retrieve saved admin password from localStorage or fallback default configuration
+            const storedPassword = localStorage.getItem("adminPassword") || "admin123";
+
+            if (enteredPassword !== storedPassword) {
+                alert("Incorrect admin password. Action denied.");
+                return;
+            }
+
+            const confirmed = confirm("Are you sure you want to completely clear all saved order history? This cannot be undone.");
+            if (!confirmed) return;
+
+            try {
+                const querySnapshot = await getDocs(collection(db, "orderHistory"));
+                const deletePromises = querySnapshot.docs.map(documentSnapshot => 
+                    deleteDoc(doc(db, "orderHistory", documentSnapshot.id))
+                );
+                await Promise.all(deletePromises);
+                alert("Order history archive cleared successfully.");
+            } catch (error) {
+                console.error("Error clearing history:", error);
+                alert("Failed to clear history. Check console for details.");
+            }
+        });
+
         onSnapshot(collection(db, "orderHistory"), (snapshot) => {
             globalOrdersCache = [];
             snapshot.forEach(docSnap => {
