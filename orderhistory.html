@@ -41,7 +41,7 @@
         .back-btn {
             background: #f4f4f5; color: var(--text); border: 1px solid var(--border);
             padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 700;
-            text-decoration: none; display: inline-flex; align-items: center; gap: 4px;
+            cursor: pointer; display: inline-flex; align-items: center; gap: 4px;
             transition: background 0.2s;
         }
         .back-btn:hover { background: #e4e4e7; }
@@ -108,7 +108,7 @@
         .badge-declined { background: #fee2e2; color: var(--danger); }
         .badge-completed { background: #e0e7ff; color: #4f46e5; }
 
-        /* Custom Website Modal Overlay */
+        /* Custom Website Modal Popup */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.6); display: none; justify-content: center;
@@ -141,7 +141,7 @@
             <h1>History</h1>
             <div class="header-actions">
                 <button id="clearHistoryBtn" class="btn-danger">Clear History</button>
-                <a href="testmerchandise.html" class="back-btn">⬅ Back</a>
+                <button onclick="history.back();" class="back-btn">⬅ Back</button>
             </div>
         </header>
 
@@ -311,7 +311,7 @@
         const modalConfirmBtn = document.getElementById('modalConfirmBtn');
         const clearHistoryBtn = document.getElementById('clearHistoryBtn');
 
-        let modalStep = 'password'; // 'password' or 'confirm'
+        let modalStep = 'password';
 
         clearHistoryBtn.addEventListener('click', () => {
             modalStep = 'password';
@@ -339,7 +339,6 @@
                     return;
                 }
 
-                // Switch to confirmation step
                 modalStep = 'confirm';
                 modalTitle.textContent = "Are you sure?";
                 modalDesc.textContent = "This will permanently delete all saved order history archive records. This action cannot be undone.";
@@ -354,7 +353,6 @@
                     );
                     await Promise.all(deletePromises);
                     
-                    // Custom notification alert or message inside website style if needed
                     const container = document.getElementById('historyContainer');
                     container.innerHTML = "<p style='color:var(--success); font-size:0.85rem; padding: 10px 0; font-weight:700;'>Order history archive cleared successfully.</p>";
                 } catch (error) {
