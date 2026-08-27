@@ -35,8 +35,26 @@
         }
         .kiosk-welcome.slide-up { transform: translateY(-100%); }
 
-        .kiosk-brand { text-align: center; margin-top: 40px; white-space: nowrap; }
-        .kiosk-brand h1 { font-size: 3rem; font-weight: 900; letter-spacing: -1px; display: inline-block; }
+        .kiosk-brand { 
+            text-align: center; 
+            margin-top: 40px; 
+            width: 100%; 
+            max-width: 500px; 
+            padding: 0 15px; 
+        }
+
+        /* Enforces exact single-line bounding box sizing with auto-scaling */
+        .kiosk-brand h1 { 
+            font-size: 3rem; 
+            font-weight: 900; 
+            letter-spacing: -1px; 
+            white-space: nowrap; 
+            display: inline-block;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
         .kiosk-brand p { color: var(--text-light); font-size: 1.1rem; margin-top: 10px; font-weight: 500; }
 
         .kiosk-graphic {
@@ -69,7 +87,7 @@
     <div id="welcomeScreen" class="kiosk-welcome">
         <div class="kiosk-brand">
             <h1 id="brandTitleElement">
-                <span id="part1Span" style="color: #ffffff;">Quick</span><span id="part2Span" style="color: var(--kfc-red);">Bites</span>
+                <span id="part1Span" style="color: #ffffff;">Quick</span><span id="part2Span" style="color: #e4002b;">Bites</span>
             </h1>
             <p id="brandDescElement">Welcome to Self-Service Ordering</p>
         </div>
@@ -110,6 +128,18 @@
             return url;
         }
 
+        // Auto-fit title text size if the combined text length is large
+        function adjustTitleFit(combinedText) {
+            const h1Elem = document.getElementById('brandTitleElement');
+            if (combinedText.length > 12) {
+                // Dynamically scale down font size smoothly for longer text
+                let scaledSize = Math.max(1.8, 3 - ((combinedText.length - 12) * 0.1));
+                h1Elem.style.fontSize = `${scaledSize}rem`;
+            } else {
+                h1Elem.style.fontSize = "3rem"; // Default exact match size
+            }
+        }
+
         // Fetch dynamic welcome page configuration from Firebase
         async function fetchWelcomeSettings() {
             try {
@@ -117,15 +147,21 @@
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     
-                    // Title Part 1 and Color
+                    const t1 = data.title1 || "Quick";
+                    const t2 = data.title2 || "Bites";
+
+                    // Title Part 1 and Color Wheel selection
                     const p1 = document.getElementById('part1Span');
-                    p1.textContent = data.title1 || "Quick";
+                    p1.textContent = t1;
                     p1.style.color = data.color1 || "#ffffff";
 
-                    // Title Part 2 and Color
+                    // Title Part 2 and Color Wheel selection
                     const p2 = document.getElementById('part2Span');
-                    p2.textContent = data.title2 || "Bites";
+                    p2.textContent = t2;
                     p2.style.color = data.color2 || "#e4002b";
+
+                    // Adjust sizing to ensure single-line exact bounding fit
+                    adjustTitleFit(t1 + t2);
 
                     // Update Description
                     if (data.description) {
