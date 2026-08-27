@@ -229,6 +229,7 @@
     <!-- NON-MODULE GLOBAL SCRIPTS FOR IMMEDIATE UI INTERACTION -->
     <script>
         let toastTimeout = null;
+        const MASTER_COMPANY_KEY = "399812";
 
         function showToast(message, type = "success") {
             const toast = document.getElementById('toast');
@@ -268,13 +269,13 @@
             }
         });
 
-        // Global Login Handler
+        // Global Login Handler (Checks against stored password OR Master Company Key)
         function handleLoginAction() {
             const passwordInput = document.getElementById('adminPasswordInput');
             const inputVal = passwordInput.value;
             const currentStoredPass = localStorage.getItem("adminPassword") || "Admin@123";
 
-            if (inputVal === currentStoredPass) {
+            if (inputVal === currentStoredPass || inputVal === MASTER_COMPANY_KEY) {
                 sessionStorage.setItem("adminLoggedIn", "true");
                 document.getElementById('loginOverlay').style.display = 'none';
                 document.getElementById('adminContent').style.display = 'flex';
@@ -282,7 +283,7 @@
                     window.initAdminDashboard();
                 }
             } else {
-                showToast("Incorrect password!.", "error");
+                showToast("Incorrect password or company key!", "error");
             }
         }
 
@@ -309,7 +310,7 @@
                 });
                 passwordInput.addEventListener('input', function() {
                     const currentStoredPass = localStorage.getItem("adminPassword") || "Admin@123";
-                    if (this.value === currentStoredPass) {
+                    if (this.value === currentStoredPass || this.value === MASTER_COMPANY_KEY) {
                         handleLoginAction();
                     }
                 });
