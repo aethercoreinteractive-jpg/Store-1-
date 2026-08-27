@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QuickBites - Admin Settings</title>
+    <!-- Include iro.js Color Wheel Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
     <style>
         :root {
             --kfc-red: #e4002b;
@@ -36,13 +38,12 @@
         input, textarea { width: 100%; padding: 12px 14px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 0.95rem; background: #fff; }
         label { font-size: 0.8rem; font-weight: 700; color: var(--text-light); margin-bottom: 4px; display: block; text-transform: uppercase; }
 
-        .title-row-group { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+        .title-row-group { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
         .title-row-group input { margin-bottom: 0; flex-grow: 1; }
-        .color-picker-wrapper { display: flex; align-items: center; gap: 6px; background: #f4f4f5; padding: 6px 10px; border-radius: 10px; border: 1px solid var(--border); flex-shrink: 0; }
-        .color-picker-wrapper label { font-size: 0.7rem; margin-bottom: 0; cursor: pointer; }
-        input[type="color"] { -webkit-appearance: none; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; background: none; padding: 0; }
-        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
-        input[type="color"]::-webkit-color-swatch { border: 2px solid var(--border); border-radius: 50%; }
+        
+        .color-picker-container { display: flex; flex-direction: column; align-items: center; background: #fafafa; padding: 10px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 12px; }
+        .color-wheel-wrapper { margin: 10px 0; display: flex; justify-content: center; }
+        .selected-hex-display { font-size: 0.85rem; font-weight: 600; color: var(--text-light); margin-top: 4px; }
 
         .btn { width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 700; cursor: pointer; display: inline-flex; justify-content: center; align-items: center; gap: 8px; transition: opacity 0.2s; }
         .btn-primary { background: var(--kfc-red); color: white; }
@@ -70,19 +71,21 @@
             <label>Title Part 1 (First Row)</label>
             <div class="title-row-group">
                 <input type="text" id="titlePart1" placeholder="e.g. Quick">
-                <div class="color-picker-wrapper">
-                    <label>Color</label>
-                    <input type="color" id="colorPart1" value="#ffffff">
-                </div>
+            </div>
+            <div class="color-picker-container">
+                <label>Part 1 Color Wheel</label>
+                <div class="color-wheel-wrapper" id="wheelPart1"></div>
+                <div class="selected-hex-display" id="hexDisplay1">Selected: #ffffff</div>
             </div>
 
             <label>Title Part 2 (Second Row)</label>
             <div class="title-row-group">
                 <input type="text" id="titlePart2" placeholder="e.g. Bites">
-                <div class="color-picker-wrapper">
-                    <label>Color</label>
-                    <input type="color" id="colorPart2" value="#e4002b">
-                </div>
+            </div>
+            <div class="color-picker-container">
+                <label>Part 2 Color Wheel</label>
+                <div class="color-wheel-wrapper" id="wheelPart2"></div>
+                <div class="selected-hex-display" id="hexDisplay2">Selected: #e4002b</div>
             </div>
 
             <label for="welcomeDesc">Welcome Description</label>
@@ -112,7 +115,7 @@
         </div>
     </div>
 
-    <!-- Firebase Script Logic -->
+    <!-- Firebase Script Logic & Color Wheel Initialization -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -130,6 +133,25 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        // Initialize iro.js Color Wheels
+        let colorWheel1 = new iro.ColorPicker("#wheelPart1", {
+            width: 160,
+            color: "#ffffff"
+        });
+
+        let colorWheel2 = new iro.ColorPicker("#wheelPart2", {
+            width: 160,
+            color: "#e4002b"
+        });
+
+        // Update hex text indicators on wheel interaction
+        colorWheel1.on("color:change", function(color) {
+            document.getElementById('hexDisplay1').textContent = `Selected: ${color.hexString}`;
+        });
+        colorWheel2.on("color:change", function(color) {
+            document.getElementById('hexDisplay2').textContent = `Selected: ${color.hexString}`;
+        });
+
         // Load existing welcome settings from Firebase on start
         async function loadWelcomeSettings() {
             try {
@@ -137,9 +159,17 @@
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     document.getElementById('titlePart1').value = data.title1 || "Quick";
-                    document.getElementById('colorPart1').value = data.color1 || "#ffffff";
+                    if (data.color1) {
+                        colorWheel1.color.set(data.color1);
+                        document.getElementById('hexDisplay1').textContent = `Selected: ${data.color1}`;
+                    }
+
                     document.getElementById('titlePart2').value = data.title2 || "Bites";
-                    document.getElementById('colorPart2').value = data.color2 || "#e4002b";
+                    if (data.color2) {
+                        colorWheel2.color.set(data.color2);
+                        document.getElementById('hexDisplay2').textContent = `Selected: ${data.color2}`;
+                    }
+
                     document.getElementById('welcomeDesc').value = data.description || "Welcome to Self-Service Ordering";
                     document.getElementById('welcomeImage').value = data.imageLink || "";
                 }
@@ -152,18 +182,18 @@
         // Save welcome settings to Firebase
         document.getElementById('saveWelcomeBtn').addEventListener('click', async () => {
             const title1 = document.getElementById('titlePart1').value.trim();
-            const color1 = document.getElementById('colorPart1').value;
+            const color1 = colorWheel1.color.hexString;
             const title2 = document.getElementById('titlePart2').value.trim();
-            const color2 = document.getElementById('colorPart2').value;
+            const color2 = colorWheel2.color.hexString;
             const description = document.getElementById('welcomeDesc').value.trim();
             const imageLink = document.getElementById('welcomeImage').value.trim();
 
             try {
                 await setDoc(doc(db, "settings", "welcomeConfig"), {
                     title1: title1 || "Quick",
-                    color1: color1 || "#ffffff",
+                    color1: color1,
                     title2: title2 || "Bites",
-                    color2: color2 || "#e4002b",
+                    color2: color2,
                     description: description || "Welcome to Self-Service Ordering",
                     imageLink: imageLink
                 }, { merge: true });
