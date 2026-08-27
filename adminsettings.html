@@ -41,6 +41,7 @@
         body { background: var(--bg); color: var(--text); padding: 12px; padding-bottom: 50px; }
 
         .container { max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+        
         header { display: flex; justify-content: space-between; align-items: center; background: var(--kfc-dark); color: white; padding: 16px 20px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
         header h1 { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.5px; }
         header h1 span { color: var(--kfc-red); }
@@ -48,14 +49,23 @@
         .nav-btn { background: rgba(255,255,255,0.1); border: none; color: white; padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; transition: background 0.2s; }
         .nav-btn:hover { background: rgba(255,255,255,0.2); }
 
-        .card { background: var(--card-bg); padding: 20px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border); }
-        .card h2 { font-size: 1.1rem; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; color: var(--text); font-weight: 800; }
+        /* Main Selector Cards (Togglable Accordions) */
+        .accordion-card { background: var(--card-bg); border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border); overflow: hidden; transition: all 0.3s ease; }
+        
+        .accordion-header { padding: 20px; font-size: 1.1rem; font-weight: 800; color: var(--text); display: flex; align-items: center; justify-content: space-between; cursor: pointer; background: var(--card-bg); transition: background 0.2s; }
+        .accordion-header:hover { background: #fafafa; }
+        .accordion-arrow { font-size: 1rem; transition: transform 0.3s ease; color: var(--text-light); }
+        
+        .accordion-card.active .accordion-arrow { transform: rotate(180deg); color: var(--kfc-red); }
+
+        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0, 1, 0, 1); padding: 0 20px; background: #fff; }
+        .accordion-card.active .accordion-content { max-height: 2000px; padding: 0 20px 20px 20px; transition: max-height 0.6s ease-in-out; }
 
         input, textarea { width: 100%; padding: 12px 14px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 0.95rem; background: #fff; outline: none; }
         input:focus { border-color: var(--text-light); }
         label { font-size: 0.8rem; font-weight: 700; color: var(--text-light); margin-bottom: 4px; display: block; text-transform: uppercase; }
 
-        .title-section-box { background: #fafafa; padding: 14px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 14px; display: flex; flex-direction: column; gap: 10px; }
+        .title-section-box { background: #fafafa; padding: 14px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 14px; display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
         .title-row-group { display: flex; gap: 10px; align-items: center; }
         .title-row-group input { margin-bottom: 0; flex-grow: 1; }
 
@@ -111,82 +121,108 @@
             <a href="admin.html" class="nav-btn">← Back</a>
         </header>
 
-        <!-- WELCOME PAGE CUSTOMIZATION PANEL -->
-        <div class="card">
-            <h2>🎨 Welcome Page Customization</h2>
-            
-            <!-- Title Part 1 Group -->
-            <div class="title-section-box">
-                <label>Title Part 1 (First Word/Part)</label>
-                <div class="title-row-group">
-                    <input type="text" id="titlePart1" placeholder="e.g. Quick">
-                    <button type="button" class="color-toggle-btn" data-target="wheelContainer1">
-                        <span class="color-preview-dot" id="dot1" style="background: #ffffff;"></span> Customize
-                    </button>
-                </div>
-                <div class="color-picker-container" id="wheelContainer1">
-                    <label>Select Color</label>
-                    <div class="color-wheel-wrapper" id="wheelPart1"></div>
-                    <div class="selected-hex-display" id="hexDisplay1">Selected: #ffffff</div>
-                    <button type="button" class="btn btn-primary btn-close-color" data-target="wheelContainer1">Save & Close Color</button>
-                </div>
+        <!-- WELCOME PAGE CUSTOMIZATION ACCORDION CARD -->
+        <div class="accordion-card active" id="cardWelcome">
+            <div class="accordion-header" onclick="toggleAccordion('cardWelcome')">
+                <span>🎨 Welcome Page Customization</span>
+                <span class="accordion-arrow">▼</span>
             </div>
-
-            <!-- Space Slide Toggle Switch -->
-            <div class="space-slide-container">
-                <span class="space-slide-label">Space Between Titles</span>
-                <label class="switch">
-                    <input type="checkbox" id="spaceSlideToggle">
-                    <span class="slider"></span>
-                </label>
-            </div>
-
-            <!-- Title Part 2 Group -->
-            <div class="title-section-box">
-                <label>Title Part 2 (Second Word/Part)</label>
-                <div class="title-row-group">
-                    <input type="text" id="titlePart2" placeholder="e.g. Bites">
-                    <button type="button" class="color-toggle-btn" data-target="wheelContainer2">
-                        <span class="color-preview-dot" id="dot2" style="background: #e4002b;"></span> Customize
-                    </button>
+            <div class="accordion-content">
+                <!-- Title Part 1 Group -->
+                <div class="title-section-box">
+                    <label>Title Part 1 (First Word/Part)</label>
+                    <div class="title-row-group">
+                        <input type="text" id="titlePart1" placeholder="e.g. Quick">
+                        <button type="button" class="color-toggle-btn" data-target="wheelContainer1">
+                            <span class="color-preview-dot" id="dot1" style="background: #ffffff;"></span> Customize
+                        </button>
+                    </div>
+                    <div class="color-picker-container" id="wheelContainer1">
+                        <label>Select Color</label>
+                        <div class="color-wheel-wrapper" id="wheelPart1"></div>
+                        <div class="selected-hex-display" id="hexDisplay1">Selected: #ffffff</div>
+                        <button type="button" class="btn btn-primary btn-close-color" data-target="wheelContainer1">Save & Close Color</button>
+                    </div>
                 </div>
-                <div class="color-picker-container" id="wheelContainer2">
-                    <label>Select Color</label>
-                    <div class="color-wheel-wrapper" id="wheelPart2"></div>
-                    <div class="selected-hex-display" id="hexDisplay2">Selected: #e4002b</div>
-                    <button type="button" class="btn btn-primary btn-close-color" data-target="wheelContainer2">Save & Close Color</button>
+
+                <!-- Space Slide Toggle Switch -->
+                <div class="space-slide-container">
+                    <span class="space-slide-label">Space Between Titles</span>
+                    <label class="switch">
+                        <input type="checkbox" id="spaceSlideToggle">
+                        <span class="slider"></span>
+                    </label>
                 </div>
+
+                <!-- Title Part 2 Group -->
+                <div class="title-section-box">
+                    <label>Title Part 2 (Second Word/Part)</label>
+                    <div class="title-row-group">
+                        <input type="text" id="titlePart2" placeholder="e.g. Bites">
+                        <button type="button" class="color-toggle-btn" data-target="wheelContainer2">
+                            <span class="color-preview-dot" id="dot2" style="background: #e4002b;"></span> Customize
+                        </button>
+                    </div>
+                    <div class="color-picker-container" id="wheelContainer2">
+                        <label>Select Color</label>
+                        <div class="color-wheel-wrapper" id="wheelPart2"></div>
+                        <div class="selected-hex-display" id="hexDisplay2">Selected: #e4002b</div>
+                        <button type="button" class="btn btn-primary btn-close-color" data-target="wheelContainer2">Save & Close Color</button>
+                    </div>
+                </div>
+
+                <label for="welcomeDesc">Welcome Description</label>
+                <input type="text" id="welcomeDesc" placeholder="e.g. Welcome to Self-Service Ordering">
+
+                <label for="welcomeImage">Welcome Graphic (Google Drive Link)</label>
+                <input type="text" id="welcomeImage" placeholder="Paste Google Drive sharing URL">
+
+                <button class="btn btn-primary" id="saveWelcomeBtn" style="margin-top: 6px;">Save All Welcome Settings</button>
             </div>
-
-            <label for="welcomeDesc">Welcome Description</label>
-            <input type="text" id="welcomeDesc" placeholder="e.g. Welcome to Self-Service Ordering">
-
-            <label for="welcomeImage">Welcome Graphic (Google Drive Link)</label>
-            <input type="text" id="welcomeImage" placeholder="Paste Google Drive sharing URL">
-
-            <button class="btn btn-primary" id="saveWelcomeBtn">Save All Welcome Settings</button>
         </div>
 
-        <!-- PASSWORD MANAGEMENT PANEL -->
-        <div class="card">
-            <h2>🔒 Change Admin Password</h2>
-            
-            <div class="input-with-eye">
-                <input type="password" id="currentPass" placeholder="Current Password">
-                <button type="button" class="toggle-password" data-target="currentPass">👁️</button>
+        <!-- PASSWORD MANAGEMENT ACCORDION CARD -->
+        <div class="accordion-card" id="cardPassword">
+            <div class="accordion-header" onclick="toggleAccordion('cardPassword')">
+                <span>🔒 Change Admin Password</span>
+                <span class="accordion-arrow">▼</span>
             </div>
-            
-            <div class="input-with-eye">
-                <input type="password" id="newPass" placeholder="New Password (Min 4 chars)">
-                <button type="button" class="toggle-password" data-target="newPass">👁️</button>
+            <div class="accordion-content">
+                <div style="padding-top: 10px;">
+                    <div class="input-with-eye">
+                        <input type="password" id="currentPass" placeholder="Current Password">
+                        <button type="button" class="toggle-password" data-target="currentPass">👁️</button>
+                    </div>
+                    
+                    <div class="input-with-eye">
+                        <input type="password" id="newPass" placeholder="New Password (Min 4 chars)">
+                        <button type="button" class="toggle-password" data-target="newPass">👁️</button>
+                    </div>
+                    
+                    <button class="btn btn-secondary" id="updatePassBtn">Update Password</button>
+                </div>
             </div>
-            
-            <button class="btn btn-secondary" id="updatePassBtn">Update Password</button>
         </div>
     </div>
 
     <!-- Custom Toast Notification Container -->
     <div id="toast" class="toast-notification"></div>
+
+    <!-- Accordion Script Handler -->
+    <script>
+        function toggleAccordion(cardId) {
+            const card = document.getElementById(cardId);
+            const wasActive = card.classList.contains('active');
+            
+            // Close all cards first (Optional: remove this loop if you want multiple open simultaneously)
+            document.querySelectorAll('.accordion-card').forEach(c => c.classList.remove('active'));
+            
+            // If it wasn't active before, open it now
+            if (!wasActive) {
+                card.classList.add('active');
+            }
+        }
+    </script>
 
     <!-- Firebase Script Logic & Color Wheel Initialization -->
     <script type="module">
@@ -217,14 +253,16 @@
         let colorWheel2 = new iro.ColorPicker("#wheelPart2", { width: 150, color: "#e4002b" });
 
         document.querySelectorAll('.color-toggle-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
                 const targetId = btn.getAttribute('data-target');
                 document.getElementById(targetId).classList.toggle('active');
             });
         });
 
         document.querySelectorAll('.btn-close-color').forEach(btn => {
-            btn.addEventListener('click', () => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
                 const targetId = btn.getAttribute('data-target');
                 document.getElementById(targetId).classList.remove('active');
             });
@@ -258,9 +296,7 @@
                         document.getElementById('dot2').style.background = data.color2;
                     }
 
-                    // Load Space toggle state
                     document.getElementById('spaceSlideToggle').checked = data.hasSpace === true;
-
                     document.getElementById('welcomeDesc').value = data.description || "Welcome to Self-Service Ordering";
                     document.getElementById('welcomeImage').value = data.imageLink || "";
                 }
@@ -297,7 +333,55 @@
             }
         });
 
-        // Password Logic
+        if (!localStorage.getItem("adminPassword")) {
+            localStorage.setItem("adminPassword", "Admin@123");
+        }
+
+        document.addEventListener('click', (e) => {
+            const toggleBtn = e.target.closest('.toggle-password');
+            if (!toggleBtn) return;
+            const targetId = toggleBtn.getAttribute('data-target');
+            if (targetId) {
+                const inputField = document.getElementById(targetId);
+                if (inputField) {
+                    if (inputField.type === "password") {
+                        inputField.type = "text";
+                        toggleBtn.textContent = "🙈";
+                    } else {
+                        inputField.type = "password";
+                        toggleBtn.textContent = "👁️";
+                    }
+                }
+            }
+        });
+
+        document.getElementById('saveWelcomeBtn').addEventListener('click', async () => {
+            const title1 = document.getElementById('titlePart1').value.trim();
+            const color1 = colorWheel1.color.hexString;
+            const title2 = document.getElementById('titlePart2').value.trim();
+            const color2 = colorWheel2.color.hexString;
+            const hasSpace = document.getElementById('spaceSlideToggle').checked;
+            const description = document.getElementById('welcomeDesc').value.trim();
+            const imageLink = document.getElementById('welcomeImage').value.trim();
+
+            try {
+                await setDoc(doc(db, "settings", "welcomeConfig"), {
+                    title1: title1 || "Quick",
+                    color1: color1,
+                    title2: title2 || "Bites",
+                    color2: color2,
+                    hasSpace: hasSpace,
+                    description: description || "Welcome to Self-Service Ordering",
+                    imageLink: imageLink
+                }, { merge: true });
+
+                showToast("Welcome settings saved successfully!");
+            } catch (e) {
+                console.error("Error saving welcome settings:", e);
+                showToast("Failed to update settings.", "error");
+            }
+        });
+
         if (!localStorage.getItem("adminPassword")) {
             localStorage.setItem("adminPassword", "Admin@123");
         }
