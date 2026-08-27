@@ -64,11 +64,50 @@
         header h1 { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.5px; }
         header h1 span { color: var(--kfc-red); }
 
-        /* Top Navigation Bar (Product Control Tab & Gear Icon) */
-        .admin-nav-bar { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 10px 16px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-        .tab-link { background: #fee2e2; color: var(--kfc-red); padding: 8px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; transition: background 0.2s; }
-        .tab-link:hover { background: #fecaca; }
-        .gear-btn { background: #f4f4f5; color: var(--text); border: 1px solid var(--border); width: 36px; height: 36px; border-radius: 50%; display: inline-flex; justify-content: center; align-items: center; font-size: 1.1rem; text-decoration: none; cursor: pointer; transition: background 0.2s; }
+        /* Corporate Standard Navigation Bar */
+        .admin-nav-bar { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            background: var(--card-bg); 
+            padding: 10px 14px; 
+            border-radius: 12px; 
+            border: 1px solid var(--border); 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02); 
+            gap: 8px;
+        }
+        
+        .nav-links-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .tab-link { 
+            background: #f4f4f5; 
+            color: var(--text); 
+            padding: 8px 12px; 
+            border-radius: 8px; 
+            font-size: 0.8rem; 
+            font-weight: 700; 
+            text-decoration: none; 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 6px; 
+            border: 1px solid var(--border);
+            transition: all 0.2s; 
+        }
+        .tab-link:hover { background: #e4e4e7; }
+        
+        .tab-link.highlight {
+            background: #fee2e2; 
+            color: var(--kfc-red); 
+            border-color: #fecaca;
+        }
+        .tab-link.highlight:hover { background: #fecaca; }
+
+        .gear-btn { background: #f4f4f5; color: var(--text); border: 1px solid var(--border); width: 36px; height: 36px; border-radius: 50%; display: inline-flex; justify-content: center; align-items: center; font-size: 1.1rem; text-decoration: none; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
         .gear-btn:hover { background: #e4e4e7; }
         
         .card { background: var(--card-bg); padding: 20px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border); }
@@ -154,9 +193,12 @@
             <button id="logoutBtn" class="btn btn-danger" style="width: auto; padding: 8px 14px; font-size: 0.85rem;">Logout</button>
         </header>
 
-        <!-- TOP NAVIGATION BAR (PRODUCT CONTROL TAB & GEAR ICON) -->
+        <!-- CORPORATE STANDARD TOP NAVIGATION BAR -->
         <div class="admin-nav-bar">
-            <a href="productcontrol.html" class="tab-link">📦 Product Control</a>
+            <div class="nav-links-group">
+                <a href="productcontrol.html" class="tab-link highlight">📦 Product Control</a>
+                <a href="orderhistory.html" class="tab-link">📋 Order History</a>
+            </div>
             <a href="adminsettings.html" class="gear-btn" title="Admin Settings">⚙️</a>
         </div>
 
@@ -359,7 +401,7 @@
             }
         }
 
-         // --- ORDER QUEUE WORKFLOW ---
+     // --- ORDER QUEUE WORKFLOW ---
         function initOrderListener() {
             onSnapshot(collection(db, "orders"), (snapshot) => {
                 const container = document.getElementById('ordersContainer');
