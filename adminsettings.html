@@ -57,7 +57,7 @@
         .accordion-card.active .accordion-arrow { transform: rotate(180deg); color: var(--kfc-red); }
 
         .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0, 1, 0, 1); padding: 0 20px; background: #fff; }
-        .accordion-card.active .accordion-content { max-height: 2000px; padding: 0 20px 20px 20px; transition: max-height 0.6s ease-in-out; }
+        .accordion-card.active .accordion-content { max-height: 2500px; padding: 0 20px 20px 20px; transition: max-height 0.6s ease-in-out; }
 
         input, textarea { width: 100%; padding: 12px 14px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 0.95rem; background: #fff; outline: none; }
         input:focus { border-color: var(--text-light); }
@@ -77,6 +77,11 @@
         input:checked + .slider { background-color: var(--kfc-red); }
         input:checked + .slider:before { transform: translateX(22px); }
 
+        .control-group-box { background: #fff; padding: 14px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 14px; display: flex; flex-direction: column; gap: 8px; }
+        .control-sub-row { display: flex; gap: 8px; align-items: center; }
+        .control-sub-row button { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: #f4f4f5; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: background 0.2s, color 0.2s; }
+        .control-sub-row button.active-control { background: var(--kfc-red); color: white; border-color: var(--kfc-red); }
+
         .color-toggle-btn { background: #f4f4f5; border: 1px solid var(--border); color: var(--text); padding: 10px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.2s; flex-shrink: 0; }
         .color-toggle-btn:hover { background: #e4e4e7; }
         .color-preview-dot { width: 16px; height: 16px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.1); display: inline-block; }
@@ -87,11 +92,13 @@
         .selected-hex-display { font-size: 0.85rem; font-weight: 600; color: var(--text-light); margin-bottom: 12px; }
 
         .btn { width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 700; cursor: pointer; display: inline-flex; justify-content: center; align-items: center; gap: 8px; transition: opacity 0.2s; }
-        .btn-primary { background: var(--kfc-red); color: white; }
+        .btn-primary { background: var(--kfc-red); color: white; margin-bottom: 8px; }
         .btn-primary:hover { background: var(--kfc-red-hover); }
         .btn-secondary { background: #e4e4e7; color: var(--text); }
         .btn-secondary:hover { background: #d4d4d8; }
-        .btn-close-color { padding: 10px; font-size: 0.85rem; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-close-color { padding: 10px; font-size: 0.85rem; margin-bottom: 0; }
 
         .input-with-eye { position: relative; width: 100%; margin-bottom: 12px; }
         .input-with-eye input { padding-right: 42px; margin-bottom: 0; }
@@ -117,7 +124,7 @@
             <a href="admin.html" class="nav-btn">← Back</a>
         </header>
 
-        <!-- WELCOME PAGE CUSTOMIZATION ACCORDION CARD (Starts hidden/closed) -->
+        <!-- WELCOME PAGE CUSTOMIZATION ACCORDION CARD -->
         <div class="accordion-card" id="cardWelcome">
             <div class="accordion-header" onclick="toggleAccordion('cardWelcome')">
                 <span>🎨 Welcome Page Customization</span>
@@ -140,10 +147,20 @@
                     </div>
                 </div>
 
+                <!-- SPACE TOGGLE WITH AUTO-SAVE -->
                 <div class="space-slide-container">
                     <span class="space-slide-label">Space Between Titles</span>
                     <label class="switch">
                         <input type="checkbox" id="spaceSlideToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <!-- TWO ROWS TOGGLE WITH AUTO-SAVE -->
+                <div class="space-slide-container">
+                    <span class="space-slide-label">Stack into Two Rows</span>
+                    <label class="switch">
+                        <input type="checkbox" id="twoRowsToggle">
                         <span class="slider"></span>
                     </label>
                 </div>
@@ -164,17 +181,38 @@
                     </div>
                 </div>
 
+                <!-- TITLE ALIGNMENT OPTIONS -->
+                <div class="control-group-box">
+                    <label>Title Alignment</label>
+                    <div class="control-sub-row">
+                        <button type="button" id="alignLeft" onclick="updateAlignment('left')">Left</button>
+                        <button type="button" id="alignCenter" onclick="updateAlignment('center')" class="active-control">Center</button>
+                        <button type="button" id="alignRight" onclick="updateAlignment('right')">Right</button>
+                    </div>
+                </div>
+
+                <!-- FONT RESIZE BUTTONS (- and +) -->
+                <div class="control-group-box">
+                    <label>Title Font Size Scale</label>
+                    <div class="control-sub-row">
+                        <button type="button" onclick="adjustFontSize(-0.2)">Smaller (-)</button>
+                        <button type="button" id="fontSizeDisplay" style="background: #fff; cursor: default; flex: 1.5;">2.75rem</button>
+                        <button type="button" onclick="adjustFontSize(0.2)">Larger (+)</button>
+                    </div>
+                </div>
+
                 <label for="welcomeDesc">Welcome Description</label>
                 <input type="text" id="welcomeDesc" placeholder="e.g. Welcome to Self-Service Ordering">
 
                 <label for="welcomeImage">Welcome Graphic (Google Drive Link)</label>
                 <input type="text" id="welcomeImage" placeholder="Paste Google Drive sharing URL">
 
-                <button class="btn btn-primary" id="saveWelcomeBtn" style="margin-top: 6px;">Save All Welcome Settings</button>
+                <button class="btn btn-primary" id="saveWelcomeBtn">Save All Welcome Settings</button>
+                <button class="btn btn-danger" id="resetWelcomeBtn">Reset to Default</button>
             </div>
         </div>
 
-        <!-- PASSWORD MANAGEMENT ACCORDION CARD (Starts hidden/closed) -->
+        <!-- PASSWORD MANAGEMENT ACCORDION CARD -->
         <div class="accordion-card" id="cardPassword">
             <div class="accordion-header" onclick="toggleAccordion('cardPassword')">
                 <span>🔒 Change Admin Password</span>
@@ -200,21 +238,6 @@
 
     <div id="toast" class="toast-notification"></div>
 
-    <script>
-        function toggleAccordion(cardId) {
-            const card = document.getElementById(cardId);
-            const wasActive = card.classList.contains('active');
-            
-            // Close all cards first so only one can open at a time
-            document.querySelectorAll('.accordion-card').forEach(c => c.classList.remove('active'));
-            
-            // If it wasn't active before, open it now
-            if (!wasActive) {
-                card.classList.add('active');
-            }
-        }
-    </script>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -232,12 +255,24 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        let currentFontSize = 2.75;
+        let currentAlignment = 'center';
+
         function showToast(message, type = "success") {
             const toast = document.getElementById('toast');
             toast.textContent = type === "success" ? `✅ ${message}` : `⚠️ ${message}`;
             toast.className = `toast-notification show ${type === "success" ? 'toast-success' : 'toast-error'}`;
             setTimeout(() => { toast.classList.remove('show'); }, 3000);
         }
+
+        window.toggleAccordion = function(cardId) {
+            const card = document.getElementById(cardId);
+            const wasActive = card.classList.contains('active');
+            document.querySelectorAll('.accordion-card').forEach(c => c.classList.remove('active'));
+            if (!wasActive) {
+                card.classList.add('active');
+            }
+        };
 
         let colorWheel1 = new iro.ColorPicker("#wheelPart1", { width: 150, color: "#ffffff" });
         let colorWheel2 = new iro.ColorPicker("#wheelPart2", { width: 150, color: "#e4002b" });
@@ -287,6 +322,14 @@
                     }
 
                     document.getElementById('spaceSlideToggle').checked = data.hasSpace === true;
+                    document.getElementById('twoRowsToggle').checked = data.twoRows === true;
+                    
+                    currentAlignment = data.alignment || 'center';
+                    updateAlignmentUI(currentAlignment);
+
+                    currentFontSize = data.fontSize ? Number(data.fontSize) : 2.75;
+                    document.getElementById('fontSizeDisplay').textContent = `${currentFontSize.toFixed(1)}rem`;
+
                     document.getElementById('welcomeDesc').value = data.description || "Welcome to Self-Service Ordering";
                     document.getElementById('welcomeImage').value = data.imageLink || "";
                 }
@@ -297,17 +340,40 @@
         loadWelcomeSettings();
 
         document.getElementById('spaceSlideToggle').addEventListener('change', async (e) => {
-            const hasSpace = e.target.checked;
-            try {
-                await setDoc(doc(db, "settings", "welcomeConfig"), {
-                    hasSpace: hasSpace
-                }, { merge: true });
-                showToast(hasSpace ? "Space enabled" : "Space disabled");
-            } catch (err) {
-                console.error("Error auto-saving space toggle:", err);
-                showToast("Failed to update space setting.", "error");
-            }
+            await autoSaveConfig({ hasSpace: e.target.checked }, "Space setting updated");
         });
+
+        document.getElementById('twoRowsToggle').addEventListener('change', async (e) => {
+            await autoSaveConfig({ twoRows: e.target.checked }, "Row layout updated");
+        });
+
+        window.updateAlignment = async function(align) {
+            currentAlignment = align;
+            updateAlignmentUI(align);
+            await autoSaveConfig({ alignment: align }, `Alignment set to ${align}`);
+        };
+
+        function updateAlignmentUI(align) {
+            document.getElementById('alignLeft').className = align === 'left' ? 'active-control' : '';
+            document.getElementById('alignCenter').className = align === 'center' ? 'active-control' : '';
+            document.getElementById('alignRight').className = align === 'right' ? 'active-control' : '';
+        }
+
+        window.adjustFontSize = async function(amount) {
+            currentFontSize = Math.max(1.2, Math.min(5.0, currentFontSize + amount));
+            document.getElementById('fontSizeDisplay').textContent = `${currentFontSize.toFixed(1)}rem`;
+            await autoSaveConfig({ fontSize: currentFontSize }, "Font size updated");
+        };
+
+        async function autoSaveConfig(updatedFields, successMessage) {
+            try {
+                await setDoc(doc(db, "settings", "welcomeConfig"), updatedFields, { merge: true });
+                showToast(successMessage);
+            } catch (err) {
+                console.error("Auto-save error:", err);
+                showToast("Failed to update setting.", "error");
+            }
+        }
 
         document.getElementById('saveWelcomeBtn').addEventListener('click', async () => {
             const title1 = document.getElementById('titlePart1').value.trim();
@@ -315,6 +381,7 @@
             const title2 = document.getElementById('titlePart2').value.trim();
             const color2 = colorWheel2.color.hexString;
             const hasSpace = document.getElementById('spaceSlideToggle').checked;
+            const twoRows = document.getElementById('twoRowsToggle').checked;
             const description = document.getElementById('welcomeDesc').value.trim();
             const imageLink = document.getElementById('welcomeImage').value.trim();
 
@@ -325,6 +392,9 @@
                     title2: title2 || "Bites",
                     color2: color2,
                     hasSpace: hasSpace,
+                    twoRows: twoRows,
+                    alignment: currentAlignment,
+                    fontSize: currentFontSize,
                     description: description || "Welcome to Self-Service Ordering",
                     imageLink: imageLink
                 }, { merge: true });
@@ -333,6 +403,56 @@
             } catch (e) {
                 console.error("Error saving welcome settings:", e);
                 showToast("Failed to update settings.", "error");
+            }
+        });
+
+        // RESET TO DEFAULT BUTTON EVENT
+        document.getElementById('resetWelcomeBtn').addEventListener('click', async () => {
+            if (!confirm("Are you sure you want to reset all welcome settings to default?")) return;
+
+            try {
+                const defaultSettings = {
+                    title1: "Quick",
+                    color1: "#ffffff",
+                    title2: "Bites",
+                    color2: "#e4002b",
+                    hasSpace: false,
+                    twoRows: false,
+                    alignment: "center",
+                    fontSize: 2.75,
+                    description: "Welcome to Self-Service Ordering",
+                    imageLink: ""
+                };
+
+                await setDoc(doc(db, "settings", "welcomeConfig"), defaultSettings);
+
+                // Update Local UI elements
+                document.getElementById('titlePart1').value = defaultSettings.title1;
+                colorWheel1.color.set(defaultSettings.color1);
+                document.getElementById('hexDisplay1').textContent = `Selected: ${defaultSettings.color1}`;
+                document.getElementById('dot1').style.background = defaultSettings.color1;
+
+                document.getElementById('titlePart2').value = defaultSettings.title2;
+                colorWheel2.color.set(defaultSettings.color2);
+                document.getElementById('hexDisplay2').textContent = `Selected: ${defaultSettings.color2}`;
+                document.getElementById('dot2').style.background = defaultSettings.color2;
+
+                document.getElementById('spaceSlideToggle').checked = defaultSettings.hasSpace;
+                document.getElementById('twoRowsToggle').checked = defaultSettings.twoRows;
+
+                currentAlignment = defaultSettings.alignment;
+                updateAlignmentUI(currentAlignment);
+
+                currentFontSize = defaultSettings.fontSize;
+                document.getElementById('fontSizeDisplay').textContent = `${currentFontSize.toFixed(1)}rem`;
+
+                document.getElementById('welcomeDesc').value = defaultSettings.description;
+                document.getElementById('welcomeImage').value = defaultSettings.imageLink;
+
+                showToast("Settings reset to default!");
+            } catch (e) {
+                console.error("Error resetting settings:", e);
+                showToast("Failed to reset settings.", "error");
             }
         });
 
