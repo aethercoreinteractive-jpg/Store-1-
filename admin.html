@@ -68,36 +68,34 @@
             justify-content: space-between; 
             align-items: center; 
             background: var(--card-bg); 
-            padding: 10px 14px; 
+            padding: 8px 10px; 
             border-radius: 12px; 
             border: 1px solid var(--border); 
             box-shadow: 0 2px 4px rgba(0,0,0,0.02); 
-            gap: 12px;
+            gap: 6px;
         }
         
         .nav-links-group {
             display: flex;
-            flex-direction: row; /* Forces side-by-side layout */
+            flex-direction: row; 
             align-items: center;
-            gap: 8px;
-            flex-wrap: nowrap; /* Prevents dropping below unless layout is extremely constrained */
-            overflow-x: auto; /* Allows smooth horizontal scrolling if screen is too small */
-            padding-bottom: 2px;
+            gap: 5px;
+            flex-wrap: nowrap; 
         }
 
         .tab-link { 
             background: #f4f4f5; 
             color: var(--text); 
-            padding: 8px 14px; 
+            padding: 6px 9px; /* Reduced padding to fit better */
             border-radius: 8px; 
-            font-size: 0.8rem; 
+            font-size: 0.72rem; /* Compact font size to prevent overflow */
             font-weight: 700; 
             text-decoration: none; 
             display: inline-flex; 
             align-items: center; 
-            gap: 6px; 
+            gap: 4px; 
             border: 1px solid var(--border);
-            white-space: nowrap; /* Keeps text on a single line */
+            white-space: nowrap; 
             transition: all 0.2s; 
         }
         .tab-link:hover { background: #e4e4e7; }
@@ -109,7 +107,7 @@
         }
         .tab-link.highlight:hover { background: #fecaca; }
 
-        .gear-btn { background: #f4f4f5; color: var(--text); border: 1px solid var(--border); width: 36px; height: 36px; border-radius: 50%; display: inline-flex; justify-content: center; align-items: center; font-size: 1.1rem; text-decoration: none; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
+        .gear-btn { background: #f4f4f5; color: var(--text); border: 1px solid var(--border); width: 32px; height: 32px; border-radius: 50%; display: inline-flex; justify-content: center; align-items: center; font-size: 1rem; text-decoration: none; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
         .gear-btn:hover { background: #e4e4e7; }
         
         .card { background: var(--card-bg); padding: 20px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border); }
@@ -403,7 +401,7 @@
             }
         }
 
-           // --- ORDER QUEUE WORKFLOW ---
+         // --- ORDER QUEUE WORKFLOW ---
         function initOrderListener() {
             onSnapshot(collection(db, "orders"), (snapshot) => {
                 const container = document.getElementById('ordersContainer');
