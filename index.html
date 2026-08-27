@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QuickBites - Welcome</title>
-    <!-- Link to Web App Manifest -->
     <link rel="manifest" href="manifest.json">
     <style>
         :root {
@@ -24,41 +23,82 @@
             -webkit-touch-callout: none; 
             -webkit-tap-highlight-color: transparent;
         }
-        body { background: var(--bg); color: white; height: 100vh; overflow: hidden; display: flex; justify-content: center; align-items: center; position: relative; }
+
+        body { 
+            background: var(--bg); 
+            color: white; 
+            height: 100vh; 
+            overflow: hidden; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            position: relative; 
+        }
 
         /* Welcome Kiosk Overlay Screen */
         .kiosk-welcome {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
             background: linear-gradient(135deg, #18181b 0%, var(--kfc-dark) 100%);
-            display: flex; flex-direction: column; justify-content: space-between; align-items: center;
-            padding: 50px 20px; z-index: 2000; transition: transform 0.6s cubic-bezier(0.77, 0, 0.175, 1);
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between; 
+            align-items: center;
+            padding: 50px 20px; 
+            z-index: 2000; 
+            transition: transform 0.6s cubic-bezier(0.77, 0, 0.175, 1);
         }
         .kiosk-welcome.slide-up { transform: translateY(-100%); }
 
+        /* Corporate Centered Branding Wrapper */
         .kiosk-brand { 
             text-align: center; 
-            margin-top: 40px; 
+            margin-top: 45px; 
             width: 100%; 
-            max-width: 600px; 
-            padding: 0 15px; 
+            max-width: 700px; 
+            padding: 0 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
 
-        /* Enforces exact single-line bounding box sizing with auto-scaling */
+        /* Corporate Standard Headline Style with Absolute Center Alignment */
         .kiosk-brand h1 { 
-            font-size: 3rem; 
-            font-weight: 900; 
-            letter-spacing: -1px; 
+            font-size: 2.75rem; 
+            font-weight: 800; 
+            letter-spacing: -0.75px; 
             white-space: nowrap; 
             display: inline-block;
             max-width: 100%;
+            text-align: center;
+            line-height: 1.2;
         }
 
-        .kiosk-brand p { color: var(--text-light); font-size: 1.1rem; margin-top: 10px; font-weight: 500; }
+        .kiosk-brand p { 
+            color: var(--text-light); 
+            font-size: 1.05rem; 
+            margin-top: 12px; 
+            font-weight: 500; 
+            text-align: center;
+            letter-spacing: 0.2px;
+        }
 
         .kiosk-graphic {
-            width: 160px; height: 160px; background: rgba(228, 0, 43, 0.1); border: 2px solid rgba(228, 0, 43, 0.3);
-            border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 4rem;
-            box-shadow: 0 0 40px rgba(228, 0, 43, 0.2); animation: pulse 2s infinite ease-in-out;
+            width: 160px; 
+            height: 160px; 
+            background: rgba(228, 0, 43, 0.1); 
+            border: 2px solid rgba(228, 0, 43, 0.3);
+            border-radius: 50%; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            font-size: 4rem;
+            box-shadow: 0 0 40px rgba(228, 0, 43, 0.2); 
+            animation: pulse 2s infinite ease-in-out; 
             overflow: hidden;
         }
         .kiosk-graphic img { width: 100%; height: 100%; object-fit: cover; }
@@ -85,13 +125,11 @@
     <div id="welcomeScreen" class="kiosk-welcome">
         <div class="kiosk-brand">
             <h1 id="brandTitleElement">
-                <span id="part1Span" style="color: #ffffff;">Quick</span><span id="part2Span" style="color: #e4002b;">Bites</span>
+                <span id="part1Span" style="color: #ffffff;">Quick</span><span id="spaceSpan"></span><span id="part2Span" style="color: #e4002b;">Bites</span>
             </h1>
             <p id="brandDescElement">Welcome to Self-Service Ordering</p>
         </div>
-        <div class="kiosk-graphic" id="graphicContainer">
-            🍗
-        </div>
+        <div class="kiosk-graphic" id="graphicContainer">🍗</div>
         <div class="swipe-instruction" id="swipeTrigger">
             <div class="swipe-arrow">▲</div>
             <p>Swipe up to start order</p>
@@ -116,7 +154,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Convert Google Drive sharing link to direct embedded image URL
         function getDirectImageUrl(url) {
             if (!url) return null;
             const match = url.match(/\/d\/(.*?)\/view/) || url.match(/id=([^&]+)/);
@@ -126,18 +163,17 @@
             return url;
         }
 
-        // Auto-fit title text size if the combined text length is large
+        // Professional Corporate Scaling Engine
         function adjustTitleFit(combinedText) {
             const h1Elem = document.getElementById('brandTitleElement');
-            if (combinedText.length > 12) {
-                let scaledSize = Math.max(1.8, 3 - ((combinedText.length - 12) * 0.1));
+            if (combinedText.length > 14) {
+                let scaledSize = Math.max(1.6, 2.75 - ((combinedText.length - 14) * 0.08));
                 h1Elem.style.fontSize = `${scaledSize}rem`;
             } else {
-                h1Elem.style.fontSize = "3rem";
+                h1Elem.style.fontSize = "2.75rem";
             }
         }
 
-        // Fetch dynamic welcome page configuration from Firebase
         async function fetchWelcomeSettings() {
             try {
                 const docSnap = await getDoc(doc(db, "settings", "welcomeConfig"));
@@ -146,26 +182,25 @@
                     
                     const t1 = data.title1 || "Quick";
                     const t2 = data.title2 || "Bites";
+                    const hasSpace = data.hasSpace === true;
 
-                    // Title Part 1 and Color
                     const p1 = document.getElementById('part1Span');
                     p1.textContent = t1;
                     p1.style.color = data.color1 || "#ffffff";
 
-                    // Title Part 2 and Color
+                    const spaceSpan = document.getElementById('spaceSpan');
+                    spaceSpan.textContent = hasSpace ? " " : "";
+
                     const p2 = document.getElementById('part2Span');
                     p2.textContent = t2;
                     p2.style.color = data.color2 || "#e4002b";
 
-                    // Adjust sizing to ensure single-line exact bounding fit
-                    adjustTitleFit(t1 + t2);
+                    adjustTitleFit(t1 + (hasSpace ? " " : "") + t2);
 
-                    // Update Description
                     if (data.description) {
                         document.getElementById('brandDescElement').textContent = data.description;
                     }
 
-                    // Update Image Graphic
                     if (data.imageLink) {
                         const directUrl = getDirectImageUrl(data.imageLink);
                         const graphicContainer = document.getElementById('graphicContainer');
@@ -181,14 +216,12 @@
     </script>
 
     <script>
-        // Register Service Worker for App Installation support
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').catch(() => {});
         }
 
         const welcomeScreen = document.getElementById('welcomeScreen');
         const swipeTrigger = document.getElementById('swipeTrigger');
-        
         let deferredPrompt;
 
         window.addEventListener('beforeinstallprompt', (e) => {
@@ -196,17 +229,10 @@
             deferredPrompt = e;
         });
 
-        // Robotic Touch & Fullscreen Enforcer
         function roboticFullscreenTrigger() {
             let elem = document.documentElement;
             if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-                let clickEvent = new MouseEvent('click', {
-                    view: window,
-                    bubbles: true,
-                    cancelable: true,
-                    clientX: 10,
-                    clientY: 10
-                });
+                let clickEvent = new MouseEvent('click', { view: window, bubbles: true, cancelable: true, clientX: 10, clientY: 10 });
                 document.body.dispatchEvent(clickEvent);
 
                 if (elem.requestFullscreen) {
@@ -220,10 +246,7 @@
             }
         }
 
-        setInterval(() => {
-            roboticFullscreenTrigger();
-        }, 1000);
-
+        setInterval(() => { roboticFullscreenTrigger(); }, 1000);
         window.addEventListener('load', roboticFullscreenTrigger);
         window.addEventListener('pointerdown', roboticFullscreenTrigger, { once: true });
 
@@ -237,18 +260,12 @@
 
         function dismissWelcome() {
             roboticFullscreenTrigger();
-
             if (deferredPrompt) {
                 deferredPrompt.prompt();
-                deferredPrompt.userChoice.then(() => {
-                    deferredPrompt = null;
-                });
+                deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
             }
-
             welcomeScreen.classList.add('slide-up');
-            setTimeout(() => {
-                window.location.href = "afterswipe.html";
-            }, 500);
+            setTimeout(() => { window.location.href = "afterswipe.html"; }, 500);
         }
 
         swipeTrigger.addEventListener('click', dismissWelcome);
@@ -257,9 +274,7 @@
         window.addEventListener('touchstart', (e) => { touchStartY = e.touches[0].clientY; });
         window.addEventListener('touchend', (e) => {
             let touchEndY = e.changedTouches[0].clientY;
-            if (touchStartY - touchEndY > 50) {
-                dismissWelcome();
-            }
+            if (touchStartY - touchEndY > 50) { dismissWelcome(); }
         });
     </script>
 </body>
