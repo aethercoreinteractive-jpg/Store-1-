@@ -250,7 +250,6 @@
                     subtotal: i.price * (i.quantity || 1)
                 }));
 
-                // Removed redundant Order Number from inside product summary HTML string
                 let itemsListHtml = formattedItems.map(i => 
                     `<div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>${i.quantity}x ${i.name}</span><span style="text-align:right;">₹${i.subtotal}</span></div>`
                 ).join('');
@@ -260,6 +259,7 @@
                     `<div style="border-top:1px dashed #ccc; margin-top:8px; padding-top:6px; display:flex; justify-content:space-between; font-weight:bold;"><span>Total Amount:</span><span>₹${totalPrice}</span></div>` +
                     `</div>`;
 
+                // 1. Send to Firebase Kitchen Database
                 await addDoc(collection(db, "orders"), {
                     orderNumber: currentOrderNum,
                     productName: readableSummary,
@@ -272,6 +272,16 @@
 
                 await updateDoc(storeRef, { nextOrderNumber: currentOrderNum + 1 });
 
+                // 2. Save a copy locally for orderhistory.html
+                let existingHistory = JSON.parse(localStorage.getItem("quickbites_order_history")) || [];
+                existingHistory.unshift({
+                    orderNumber: currentOrderNum,
+                    items: formattedItems,
+                    totalPrice: totalPrice,
+                    createdAt: new Date().toISOString()
+                });
+                localStorage.setItem("quickbites_order_history", JSON.stringify(existingHistory));
+
                 localStorage.setItem("lastActiveOrderNum", currentOrderNum);
 
                 clearTimeout(showAnimationTimer);
@@ -282,7 +292,6 @@
                 document.getElementById('modalOrderNum').innerText = `#${currentOrderNum}`;
                 document.getElementById('successModal').style.display = 'flex';
 
-                // Push state history so pressing phone/browser back button triggers back action redirection cleanly
                 history.pushState({ orderPlaced: true }, "", window.location.href);
 
             } catch (e) {
@@ -294,12 +303,10 @@
             }
         });
 
-        // Listen for phone back-button trigger
         window.addEventListener('popstate', () => {
             finalizeOrderAndRedirect();
         });
 
-        // Thanks button also utilizes the same clean function
         document.getElementById('thanksBtn').addEventListener('click', () => {
             finalizeOrderAndRedirect();
         });
@@ -307,4 +314,5 @@
         renderCart();
     </script>
 </body>
-</html>
+    </html>
+    
