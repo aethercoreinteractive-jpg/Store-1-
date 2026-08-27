@@ -35,7 +35,6 @@
             position: relative; 
         }
 
-        /* Welcome Kiosk Overlay Screen */
         .kiosk-welcome {
             position: fixed; 
             top: 0; 
@@ -53,7 +52,6 @@
         }
         .kiosk-welcome.slide-up { transform: translateY(-100%); }
 
-        /* Corporate Centered Branding Wrapper */
         .kiosk-brand { 
             text-align: center; 
             margin-top: 45px; 
@@ -66,7 +64,6 @@
             justify-content: center;
         }
 
-        /* Corporate Standard Headline Style with Absolute Center Alignment */
         .kiosk-brand h1 { 
             font-size: 2.75rem; 
             font-weight: 800; 
@@ -121,7 +118,6 @@
 </head>
 <body>
 
-    <!-- KIOSK WELCOME SCREEN -->
     <div id="welcomeScreen" class="kiosk-welcome">
         <div class="kiosk-brand">
             <h1 id="brandTitleElement">
@@ -136,10 +132,10 @@
         </div>
     </div>
 
-    <!-- Firebase Script Logic -->
+    <!-- Real-Time Firebase Listener Script -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCevmUKn9jsh3VrttK8MAyXEO5JjaFOTyM",
@@ -163,7 +159,6 @@
             return url;
         }
 
-        // Professional Corporate Scaling Engine
         function adjustTitleFit(combinedText) {
             const h1Elem = document.getElementById('brandTitleElement');
             if (combinedText.length > 14) {
@@ -174,45 +169,40 @@
             }
         }
 
-        async function fetchWelcomeSettings() {
-            try {
-                const docSnap = await getDoc(doc(db, "settings", "welcomeConfig"));
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    
-                    const t1 = data.title1 || "Quick";
-                    const t2 = data.title2 || "Bites";
-                    const hasSpace = data.hasSpace === true;
+        // onSnapshot listens continuously and updates instantly with zero delay
+        onSnapshot(doc(db, "settings", "welcomeConfig"), (docSnap) => {
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                
+                const t1 = data.title1 || "Quick";
+                const t2 = data.title2 || "Bites";
+                const hasSpace = data.hasSpace === true;
 
-                    const p1 = document.getElementById('part1Span');
-                    p1.textContent = t1;
-                    p1.style.color = data.color1 || "#ffffff";
+                const p1 = document.getElementById('part1Span');
+                p1.textContent = t1;
+                p1.style.color = data.color1 || "#ffffff";
 
-                    const spaceSpan = document.getElementById('spaceSpan');
-                    spaceSpan.textContent = hasSpace ? " " : "";
+                // Immediately applies or removes the space based on the toggle state
+                const spaceSpan = document.getElementById('spaceSpan');
+                spaceSpan.textContent = hasSpace ? " " : "";
 
-                    const p2 = document.getElementById('part2Span');
-                    p2.textContent = t2;
-                    p2.style.color = data.color2 || "#e4002b";
+                const p2 = document.getElementById('part2Span');
+                p2.textContent = t2;
+                p2.style.color = data.color2 || "#e4002b";
 
-                    adjustTitleFit(t1 + (hasSpace ? " " : "") + t2);
+                adjustTitleFit(t1 + (hasSpace ? " " : "") + t2);
 
-                    if (data.description) {
-                        document.getElementById('brandDescElement').textContent = data.description;
-                    }
-
-                    if (data.imageLink) {
-                        const directUrl = getDirectImageUrl(data.imageLink);
-                        const graphicContainer = document.getElementById('graphicContainer');
-                        graphicContainer.innerHTML = `<img src="${directUrl}" alt="Welcome Graphic" onerror="this.parentElement.innerHTML='🍗'">`;
-                    }
+                if (data.description) {
+                    document.getElementById('brandDescElement').textContent = data.description;
                 }
-            } catch (e) {
-                console.error("Error loading welcome settings:", e);
-            }
-        }
 
-        fetchWelcomeSettings();
+                if (data.imageLink) {
+                    const directUrl = getDirectImageUrl(data.imageLink);
+                    const graphicContainer = document.getElementById('graphicContainer');
+                    graphicContainer.innerHTML = `<img src="${directUrl}" alt="Welcome Graphic" onerror="this.parentElement.innerHTML='🍗'">`;
+                }
+            }
+        });
     </script>
 
     <script>
