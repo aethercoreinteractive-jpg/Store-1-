@@ -11,6 +11,8 @@
             --kfc-dark: #202124;
             --success: #10b981;
             --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
             --bg: #f4f4f5;
             --card-bg: #ffffff;
             --text: #18181b;
@@ -103,7 +105,10 @@
         .history-header { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 0.95rem; }
         .history-details { font-size: 0.85rem; color: var(--text-light); display: flex; justify-content: space-between; }
         
-        .badge { padding: 3px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+        /* Dynamic Status Badges */
+        .badge { padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+        .badge-pending { background: #fef3c7; color: #d97706; }
+        .badge-preparing { background: #dbeafe; color: #2563eb; }
         .badge-ready, .badge-picked { background: #d1fae5; color: #059669; }
         .badge-declined { background: #fee2e2; color: var(--danger); }
         .badge-completed { background: #e0e7ff; color: #4f46e5; }
@@ -238,12 +243,13 @@
 
                 groupedOrders[dateKey].forEach(order => {
                     const itemsSummary = order.items ? order.items.map(i => `${i.quantity}x ${i.name}`).join(', ') : (order.productName || 'Custom Item');
+                    const orderStatus = order.status || 'pending';
                     const historyCard = document.createElement('div');
                     historyCard.className = "history-card";
                     historyCard.innerHTML = `
                         <div class="history-header">
                             <span>Order #${order.orderNumber || '---'}</span>
-                            <span class="badge badge-${order.status || 'completed'}">${order.status || 'completed'}</span>
+                            <span class="badge badge-${orderStatus}">${orderStatus}</span>
                         </div>
                         <div class="history-details">
                             <span><strong>${itemsSummary}</strong> (${order.totalPrice ? '₹' + order.totalPrice : ''})</span>
