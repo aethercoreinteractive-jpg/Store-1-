@@ -438,7 +438,7 @@
             
             // Allow update if input matches their active password OR the master company key
             if (currentInput !== currentStoredPass && currentInput !== MASTER_COMPANY_KEY) {
-                showToast("Incorrect current password or company key!", "error");
+                showToast("Incorrect current password !", "error");
                 return;
             }
             if (!newInput || newInput.length < 4) {
