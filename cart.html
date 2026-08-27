@@ -48,9 +48,28 @@
         .cart-details h3 { font-size: 0.95rem; font-weight: 700; color: var(--text); }
         .cart-details p { font-size: 0.85rem; color: var(--text-light); margin-top: 2px; font-weight: 600; }
 
-        .qty-controls { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
-        .qty-btn { background: #e4e4e7; border: none; width: 26px; height: 26px; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .qty-btn:hover { background: #d4d4d8; }
+        /* Inline Qty Controls with Input Field */
+        .inline-qty-box { display: flex; align-items: center; background: #f4f4f5; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-top: 6px; width: fit-content; }
+        .qty-action-btn { background: var(--kfc-red); color: white; border: none; width: 28px; height: 30px; font-size: 0.85rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+        .qty-action-btn:hover { background: var(--kfc-red-hover); }
+        
+        .qty-input-field { 
+            width: 36px; 
+            height: 30px; 
+            border: none; 
+            background: white; 
+            text-align: center; 
+            font-size: 0.85rem; 
+            font-weight: 800; 
+            color: var(--text); 
+            outline: none; 
+            -moz-appearance: textfield; 
+            user-select: text; 
+            -webkit-user-select: text; 
+            -webkit-touch-callout: default; 
+        }
+        .qty-input-field::-webkit-outer-spin-button,
+        .qty-input-field::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         
         .cart-summary { border-top: 1px solid var(--border); padding-top: 14px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 1.1rem; font-weight: 800; }
         
@@ -177,7 +196,8 @@
             let total = 0;
 
             cart.forEach((item, index) => {
-                let itemTotal = item.price * (item.quantity || 1);
+                let currentQty = item.quantity || 1;
+                let itemTotal = item.price * currentQty;
                 total += itemTotal;
 
                 container.innerHTML += `
@@ -186,10 +206,10 @@
                         <div class="cart-details">
                             <h3>${item.name}</h3>
                             <p>₹${itemTotal}</p>
-                            <div class="qty-controls">
-                                <button class="qty-btn" onclick="changeQty(${index}, -1)">-</button>
-                                <span style="font-size: 0.9rem; font-weight: 700;">${item.quantity || 1}</span>
-                                <button class="qty-btn" onclick="changeQty(${index}, 1)">+</button>
+                            <div class="inline-qty-box">
+                                <button class="qty-action-btn" onclick="changeQty(${index}, -1)">-</button>
+                                <input type="number" class="qty-input-field" value="${currentQty}" min="0" onchange="setExactQty(${index}, this.value)">
+                                <button class="qty-action-btn" onclick="changeQty(${index}, 1)">+</button>
                             </div>
                         </div>
                     </div>
@@ -202,10 +222,28 @@
 
         window.changeQty = function(index, delta) {
             let cart = JSON.parse(localStorage.getItem("quickbites_cart")) || [];
+            if (!cart[index]) return;
+            
             cart[index].quantity = (cart[index].quantity || 1) + delta;
             
             if (cart[index].quantity <= 0) {
                 cart.splice(index, 1);
+            }
+
+            localStorage.setItem("quickbites_cart", JSON.stringify(cart));
+            renderCart();
+        }
+
+        window.setExactQty = function(index, newQtyValue) {
+            let cart = JSON.parse(localStorage.getItem("quickbites_cart")) || [];
+            if (!cart[index]) return;
+
+            let parsedQty = parseInt(newQtyValue);
+
+            if (isNaN(parsedQty) || parsedQty <= 0) {
+                cart.splice(index, 1);
+            } else {
+                cart[index].quantity = parsedQty;
             }
 
             localStorage.setItem("quickbites_cart", JSON.stringify(cart));
