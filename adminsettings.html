@@ -153,13 +153,13 @@
                         <label>Select Color</label>
                         <div class="color-wheel-wrapper" id="wheelPart1"></div>
                         <div class="selected-hex-display" id="hexDisplay1">Selected: #ffffff</div>
-                        <button type="button" class="btn btn-primary btn-close-color" data-target="wheelContainer1">Save</button>
+                        <button type="button" class="btn btn-primary btn-close-color" data-target="wheelContainer1">Save & Close Color</button>
                     </div>
                 </div>
 
                 <!-- SPACE TOGGLE -->
                 <div class="space-slide-container">
-                    <span class="space-slide-label">Space Between Titles</span>
+                    <span class="space-slide-label">Space Between Titles (Auto-Fit & Center)</span>
                     <label class="switch">
                         <input type="checkbox" id="spaceSlideToggle">
                         <span class="slider"></span>
@@ -187,7 +187,7 @@
                         <label>Select Color</label>
                         <div class="color-wheel-wrapper" id="wheelPart2"></div>
                         <div class="selected-hex-display" id="hexDisplay2">Selected: #e4002b</div>
-                        <button type="button" class="btn btn-primary btn-close-color" data-target="wheelContainer2">Save</button>
+                        <button type="button" class="btn btn-primary btn-close-color" data-target="wheelContainer2">Save & Close Color</button>
                     </div>
                 </div>
 
@@ -274,13 +274,11 @@
             toast.textContent = type === "success" ? `✅ ${message}` : `⚠️ ${message}`;
             toast.className = `toast-notification ${type === "success" ? 'toast-success' : 'toast-error'}`;
             
-            // Force reflow to restart transition smoothly
             void toast.offsetWidth;
             toast.classList.add('show');
 
             if (toastTimeout) clearTimeout(toastTimeout);
             
-            // Fade out quickly after 1.5 seconds
             toastTimeout = setTimeout(() => {
                 toast.classList.remove('show');
             }, 1500);
@@ -361,7 +359,19 @@
         loadWelcomeSettings();
 
         document.getElementById('spaceSlideToggle').addEventListener('change', async (e) => {
-            await autoSaveConfig({ hasSpace: e.target.checked }, "Space setting updated");
+            const hasSpace = e.target.checked;
+            // If space is turned on, automatically reduce font size to fit and align center
+            let adjustmentPayload = { hasSpace: hasSpace, alignment: 'center' };
+            currentAlignment = 'center';
+            updateAlignmentUI('center');
+
+            if (hasSpace) {
+                currentFontSize = Math.max(1.2, Number((currentFontSize * 0.8).toFixed(1)));
+                document.getElementById('fontSizeDisplay').textContent = `${currentFontSize.toFixed(1)}rem`;
+                adjustmentPayload.fontSize = currentFontSize;
+            }
+
+            await autoSaveConfig(adjustmentPayload, "Space and alignment updated");
         });
 
         document.getElementById('twoRowsToggle').addEventListener('change', async (e) => {
