@@ -39,7 +39,7 @@
             text-align: center; 
             margin-top: 40px; 
             width: 100%; 
-            max-width: 500px; 
+            max-width: 600px; 
             padding: 0 15px; 
         }
 
@@ -51,8 +51,6 @@
             white-space: nowrap; 
             display: inline-block;
             max-width: 100%;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
 
         .kiosk-brand p { color: var(--text-light); font-size: 1.1rem; margin-top: 10px; font-weight: 500; }
@@ -132,11 +130,10 @@
         function adjustTitleFit(combinedText) {
             const h1Elem = document.getElementById('brandTitleElement');
             if (combinedText.length > 12) {
-                // Dynamically scale down font size smoothly for longer text
                 let scaledSize = Math.max(1.8, 3 - ((combinedText.length - 12) * 0.1));
                 h1Elem.style.fontSize = `${scaledSize}rem`;
             } else {
-                h1Elem.style.fontSize = "3rem"; // Default exact match size
+                h1Elem.style.fontSize = "3rem";
             }
         }
 
@@ -150,12 +147,12 @@
                     const t1 = data.title1 || "Quick";
                     const t2 = data.title2 || "Bites";
 
-                    // Title Part 1 and Color Wheel selection
+                    // Title Part 1 and Color
                     const p1 = document.getElementById('part1Span');
                     p1.textContent = t1;
                     p1.style.color = data.color1 || "#ffffff";
 
-                    // Title Part 2 and Color Wheel selection
+                    // Title Part 2 and Color
                     const p2 = document.getElementById('part2Span');
                     p2.textContent = t2;
                     p2.style.color = data.color2 || "#e4002b";
