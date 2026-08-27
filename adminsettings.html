@@ -48,7 +48,6 @@
             color: var(--text); 
             padding: 12px; 
             padding-bottom: 50px; 
-            /* Prevent unwanted context menus/popups on long press across the body */
             -webkit-touch-callout: none;
         }
 
@@ -129,7 +128,7 @@
         .toast-success { background: var(--success); }
     </style>
 </head>
-<body oncontextmenu="return false;"> <!-- Block right-click browser context menus globally -->
+<body oncontextmenu="return false;">
 
     <div class="container">
         <header>
@@ -160,7 +159,7 @@
                     </div>
                 </div>
 
-                <!-- SPACE TOGGLE WITH AUTO-SAVE -->
+                <!-- SPACE TOGGLE -->
                 <div class="space-slide-container">
                     <span class="space-slide-label">Space Between Titles</span>
                     <label class="switch">
@@ -169,7 +168,7 @@
                     </label>
                 </div>
 
-                <!-- TWO ROWS TOGGLE WITH AUTO-SAVE -->
+                <!-- TWO ROWS TOGGLE -->
                 <div class="space-slide-container">
                     <span class="space-slide-label">Stack into Two Rows</span>
                     <label class="switch">
@@ -204,7 +203,7 @@
                     </div>
                 </div>
 
-                <!-- FONT RESIZE BUTTONS (- and +) -->
+                <!-- FONT RESIZE BUTTONS -->
                 <div class="control-group-box">
                     <label>Title Font Size Scale</label>
                     <div class="control-sub-row">
@@ -316,6 +315,7 @@
         });
 
         async function loadWelcomeSettings() {
+        async function loadWelcomeSettings() {
             try {
                 const docSnap = await getDoc(doc(db, "settings", "welcomeConfig"));
                 if (docSnap.exists()) {
@@ -419,9 +419,8 @@
             }
         });
 
+        // Instant reset without browser confirmation popup
         document.getElementById('resetWelcomeBtn').addEventListener('click', async () => {
-            if (!confirm("Are you sure you want to reset all welcome settings to default?")) return;
-
             try {
                 const defaultSettings = {
                     title1: "Quick",
