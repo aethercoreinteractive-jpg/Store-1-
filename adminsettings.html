@@ -38,10 +38,18 @@
         input, textarea { width: 100%; padding: 12px 14px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 0.95rem; background: #fff; }
         label { font-size: 0.8rem; font-weight: 700; color: var(--text-light); margin-bottom: 4px; display: block; text-transform: uppercase; }
 
-        .title-row-group { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
+        .title-section-box { background: #fafafa; padding: 14px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 14px; display: flex; flex-direction: column; gap: 10px; }
+        .title-row-group { display: flex; gap: 10px; align-items: center; }
         .title-row-group input { margin-bottom: 0; flex-grow: 1; }
-        
-        .color-picker-container { display: flex; flex-direction: column; align-items: center; background: #fafafa; padding: 10px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 12px; }
+
+        /* Color Customizer Toggle Button */
+        .color-toggle-btn { background: #f4f4f5; border: 1px solid var(--border); color: var(--text); padding: 10px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.2s; flex-shrink: 0; }
+        .color-toggle-btn:hover { background: #e4e4e7; }
+        .color-preview-dot { width: 16px; height: 16px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.1); display: inline-block; }
+
+        /* Color Wheel Popup Container */
+        .color-picker-container { display: none; flex-direction: column; align-items: center; background: #ffffff; padding: 14px; border-radius: 12px; border: 1px solid var(--border); margin-top: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .color-picker-container.active { display: flex; }
         .color-wheel-wrapper { margin: 10px 0; display: flex; justify-content: center; }
         .selected-hex-display { font-size: 0.85rem; font-weight: 600; color: var(--text-light); margin-top: 4px; }
 
@@ -68,24 +76,36 @@
         <div class="card">
             <h2>🎨 Welcome Page Customization</h2>
             
-            <label>Title Part 1 (First Row)</label>
-            <div class="title-row-group">
-                <input type="text" id="titlePart1" placeholder="e.g. Quick">
-            </div>
-            <div class="color-picker-container">
-                <label>Part 1 Color Wheel</label>
-                <div class="color-wheel-wrapper" id="wheelPart1"></div>
-                <div class="selected-hex-display" id="hexDisplay1">Selected: #ffffff</div>
+            <!-- Title Part 1 Group -->
+            <div class="title-section-box">
+                <label>Title Part 1 (First Row)</label>
+                <div class="title-row-group">
+                    <input type="text" id="titlePart1" placeholder="e.g. Quick">
+                    <button type="button" class="color-toggle-btn" data-target="wheelContainer1">
+                        <span class="color-preview-dot" id="dot1" style="background: #ffffff;"></span> Customize Color
+                    </button>
+                </div>
+                <div class="color-picker-container" id="wheelContainer1">
+                    <label>Select Color Wheel</label>
+                    <div class="color-wheel-wrapper" id="wheelPart1"></div>
+                    <div class="selected-hex-display" id="hexDisplay1">Selected: #ffffff</div>
+                </div>
             </div>
 
-            <label>Title Part 2 (Second Row)</label>
-            <div class="title-row-group">
-                <input type="text" id="titlePart2" placeholder="e.g. Bites">
-            </div>
-            <div class="color-picker-container">
-                <label>Part 2 Color Wheel</label>
-                <div class="color-wheel-wrapper" id="wheelPart2"></div>
-                <div class="selected-hex-display" id="hexDisplay2">Selected: #e4002b</div>
+            <!-- Title Part 2 Group -->
+            <div class="title-section-box">
+                <label>Title Part 2 (Second Row)</label>
+                <div class="title-row-group">
+                    <input type="text" id="titlePart2" placeholder="e.g. Bites">
+                    <button type="button" class="color-toggle-btn" data-target="wheelContainer2">
+                        <span class="color-preview-dot" id="dot2" style="background: #e4002b;"></span> Customize Color
+                    </button>
+                </div>
+                <div class="color-picker-container" id="wheelContainer2">
+                    <label>Select Color Wheel</label>
+                    <div class="color-wheel-wrapper" id="wheelPart2"></div>
+                    <div class="selected-hex-display" id="hexDisplay2">Selected: #e4002b</div>
+                </div>
             </div>
 
             <label for="welcomeDesc">Welcome Description</label>
@@ -135,21 +155,33 @@
 
         // Initialize iro.js Color Wheels
         let colorWheel1 = new iro.ColorPicker("#wheelPart1", {
-            width: 160,
+            width: 150,
             color: "#ffffff"
         });
 
         let colorWheel2 = new iro.ColorPicker("#wheelPart2", {
-            width: 160,
+            width: 150,
             color: "#e4002b"
         });
 
-        // Update hex text indicators on wheel interaction
+        // Toggle Color Wheel Popups
+        document.querySelectorAll('.color-toggle-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetId = btn.getAttribute('data-target');
+                const container = document.getElementById(targetId);
+                // Close other open containers if needed, or toggle current
+                container.classList.toggle('active');
+            });
+        });
+
+        // Update hex text indicators and preview dots on wheel interaction
         colorWheel1.on("color:change", function(color) {
             document.getElementById('hexDisplay1').textContent = `Selected: ${color.hexString}`;
+            document.getElementById('dot1').style.background = color.hexString;
         });
         colorWheel2.on("color:change", function(color) {
             document.getElementById('hexDisplay2').textContent = `Selected: ${color.hexString}`;
+            document.getElementById('dot2').style.background = color.hexString;
         });
 
         // Load existing welcome settings from Firebase on start
@@ -162,12 +194,14 @@
                     if (data.color1) {
                         colorWheel1.color.set(data.color1);
                         document.getElementById('hexDisplay1').textContent = `Selected: ${data.color1}`;
+                        document.getElementById('dot1').style.background = data.color1;
                     }
 
                     document.getElementById('titlePart2').value = data.title2 || "Bites";
                     if (data.color2) {
                         colorWheel2.color.set(data.color2);
                         document.getElementById('hexDisplay2').textContent = `Selected: ${data.color2}`;
+                        document.getElementById('dot2').style.background = data.color2;
                     }
 
                     document.getElementById('welcomeDesc').value = data.description || "Welcome to Self-Service Ordering";
