@@ -107,13 +107,38 @@
         .badge-ready, .badge-picked { background: #d1fae5; color: #059669; }
         .badge-declined { background: #fee2e2; color: var(--danger); }
         .badge-completed { background: #e0e7ff; color: #4f46e5; }
+
+        /* Custom Website Modal Overlay */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6); display: none; justify-content: center;
+            align-items: center; z-index: 1000; padding: 16px;
+        }
+        .modal-card {
+            background: var(--card-bg); width: 100%; max-width: 360px;
+            padding: 20px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            display: flex; flex-direction: column; gap: 14px; border: 1px solid var(--border);
+        }
+        .modal-card h3 { font-size: 1rem; font-weight: 800; color: var(--text); }
+        .modal-card p { font-size: 0.85rem; color: var(--text-light); }
+        .modal-input {
+            width: 100%; padding: 10px 12px; border: 1px solid var(--border);
+            border-radius: 8px; font-size: 0.9rem; outline: none; background: #fafafa;
+        }
+        .modal-input:focus { border-color: var(--kfc-red); background: #fff; }
+        .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+        .modal-btn {
+            padding: 8px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; cursor: pointer; border: none;
+        }
+        .modal-btn-cancel { background: #f4f4f5; color: var(--text); border: 1px solid var(--border); }
+        .modal-btn-confirm { background: var(--danger); color: white; }
     </style>
 </head>
 <body>
 
     <div class="container">
         <header>
-            <h1>History</span></h1>
+            <h1>History</h1>
             <div class="header-actions">
                 <button id="clearHistoryBtn" class="btn-danger">Clear History</button>
                 <a href="testmerchandise.html" class="back-btn">⬅ Back</a>
@@ -134,6 +159,19 @@
         </div>
     </div>
 
+    <!-- Custom Website Modal Popup -->
+    <div id="customModal" class="modal-overlay">
+        <div class="modal-card">
+            <h3 id="modalTitle">Admin Authorization</h3>
+            <p id="modalDesc">Enter Admin Password to clear order history archive:</p>
+            <input type="password" id="modalPasswordInput" class="modal-input" placeholder="Password..." style="display:none;">
+            <div class="modal-actions">
+                <button id="modalCancelBtn" class="modal-btn modal-btn-cancel">Cancel</button>
+                <button id="modalConfirmBtn" class="modal-btn modal-btn-confirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, onSnapshot, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -151,24 +189,20 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        let currentFilter = "Today"; // Default view starts on Today
+        let currentFilter = "Today";
         let globalOrdersCache = [];
 
         function getDateCategory(dateString) {
             if (!dateString) return "Archive";
-            
             const orderDate = new Date(dateString);
             const today = new Date();
-            
             const isToday = orderDate.toDateString() === today.toDateString();
-            
             const yesterday = new Date();
             yesterday.setDate(today.getDate() - 1);
             const isYesterday = orderDate.toDateString() === yesterday.toDateString();
 
             if (isToday) return "Today";
             if (isYesterday) return "Yesterday";
-            
             return orderDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         }
 
@@ -202,7 +236,6 @@
                 groupedOrders[category].push(order);
             });
 
-            // Specific sorting order sequence: Yesterday, Today, then other formatted dates, then All Time
             const sortedKeys = Object.keys(groupedOrders).sort((a, b) => {
                 if (a === "Yesterday") return -1;
                 if (b === "Yesterday") return 1;
@@ -239,7 +272,6 @@
 
         function updateFilterTabsDynamic(orders) {
             const tabsContainer = document.getElementById('filterTabsContainer');
-            
             let uniqueDatesMap = new Set();
             orders.forEach(o => {
                 const cat = getDateCategory(o.timestamp);
@@ -248,7 +280,6 @@
                 }
             });
 
-            // Configured sequence: Yesterday, Today, dynamic past dates, All Time
             let tabsHtml = `
                 <button class="filter-tab ${currentFilter === 'Yesterday' ? 'active' : ''}" data-filter="Yesterday">Yesterday</button>
                 <button class="filter-tab ${currentFilter === 'Today' ? 'active' : ''}" data-filter="Today">Today</button>
@@ -259,7 +290,6 @@
             });
 
             tabsHtml += `<button class="filter-tab ${currentFilter === 'all' ? 'active' : ''}" data-filter="all">All Time</button>`;
-
             tabsContainer.innerHTML = tabsHtml;
 
             document.querySelectorAll('.filter-tab').forEach(tab => {
@@ -272,32 +302,65 @@
             });
         }
 
-        // Secure Clear History implementation requiring password verification and confirmation
-        document.getElementById('clearHistoryBtn').addEventListener('click', async () => {
-            const enteredPassword = prompt("Enter Admin Password to clear order history archive:");
-            if (enteredPassword === null) return; // Cancelled
+        // Custom Modal Workflow Logic
+        const modal = document.getElementById('customModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalDesc = document.getElementById('modalDesc');
+        const modalPasswordInput = document.getElementById('modalPasswordInput');
+        const modalCancelBtn = document.getElementById('modalCancelBtn');
+        const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
 
-            // Retrieve saved admin password from localStorage or fallback default configuration
-            const storedPassword = localStorage.getItem("adminPassword") || "admin123";
+        let modalStep = 'password'; // 'password' or 'confirm'
 
-            if (enteredPassword !== storedPassword) {
-                alert("Incorrect admin password. Action denied.");
-                return;
-            }
+        clearHistoryBtn.addEventListener('click', () => {
+            modalStep = 'password';
+            modalTitle.textContent = "Admin Authorization";
+            modalDesc.textContent = "Enter Admin Password to clear order history archive:";
+            modalPasswordInput.value = "";
+            modalPasswordInput.style.display = "block";
+            modalConfirmBtn.textContent = "Confirm";
+            modal.style.display = "flex";
+            modalPasswordInput.focus();
+        });
 
-            const confirmed = confirm("Are you sure you want to completely clear all saved order history? This cannot be undone.");
-            if (!confirmed) return;
+        modalCancelBtn.addEventListener('click', () => {
+            modal.style.display = "none";
+        });
 
-            try {
-                const querySnapshot = await getDocs(collection(db, "orderHistory"));
-                const deletePromises = querySnapshot.docs.map(documentSnapshot => 
-                    deleteDoc(doc(db, "orderHistory", documentSnapshot.id))
-                );
-                await Promise.all(deletePromises);
-                alert("Order history archive cleared successfully.");
-            } catch (error) {
-                console.error("Error clearing history:", error);
-                alert("Failed to clear history. Check console for details.");
+        modalConfirmBtn.addEventListener('click', async () => {
+            if (modalStep === 'password') {
+                const enteredPassword = modalPasswordInput.value;
+                const storedPassword = localStorage.getItem("adminPassword") || "admin123";
+
+                if (enteredPassword !== storedPassword) {
+                    modalDesc.textContent = "Incorrect password! Try again:";
+                    modalPasswordInput.value = "";
+                    return;
+                }
+
+                // Switch to confirmation step
+                modalStep = 'confirm';
+                modalTitle.textContent = "Are you sure?";
+                modalDesc.textContent = "This will permanently delete all saved order history archive records. This action cannot be undone.";
+                modalPasswordInput.style.display = "none";
+                modalConfirmBtn.textContent = "Yes, Clear All";
+            } else if (modalStep === 'confirm') {
+                modal.style.display = "none";
+                try {
+                    const querySnapshot = await getDocs(collection(db, "orderHistory"));
+                    const deletePromises = querySnapshot.docs.map(documentSnapshot => 
+                        deleteDoc(doc(db, "orderHistory", documentSnapshot.id))
+                    );
+                    await Promise.all(deletePromises);
+                    
+                    // Custom notification alert or message inside website style if needed
+                    const container = document.getElementById('historyContainer');
+                    container.innerHTML = "<p style='color:var(--success); font-size:0.85rem; padding: 10px 0; font-weight:700;'>Order history archive cleared successfully.</p>";
+                } catch (error) {
+                    console.error("Error clearing history:", error);
+                    alert("Failed to clear history. Check console for details.");
+                }
             }
         });
 
