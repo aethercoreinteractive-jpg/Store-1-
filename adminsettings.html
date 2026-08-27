@@ -231,7 +231,7 @@
             <div class="accordion-content">
                 <div style="padding-top: 10px;">
                     <div class="input-with-eye">
-                        <input type="password" id="currentPass" placeholder="Current Password">
+                        <input type="password" id="currentPass" placeholder="Current Password or Company Key">
                         <button type="button" class="toggle-password" data-target="currentPass">👁️</button>
                     </div>
                     
@@ -268,6 +268,7 @@
         let currentFontSize = 2.75;
         let currentAlignment = 'center';
         let toastTimeout = null;
+        const MASTER_COMPANY_KEY = "399812";
 
         function showToast(message, type = "success") {
             const toast = document.getElementById('toast');
@@ -320,81 +321,6 @@
             document.getElementById('hexDisplay2').textContent = `Selected: ${color.hexString}`;
             document.getElementById('dot2').style.background = color.hexString;
         });
-
-        async function loadWelcomeSettings() {
-            try {
-                const docSnap = await getDoc(doc(db, "settings", "welcomeConfig"));
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    document.getElementById('titlePart1').value = data.title1 || "Quick";
-                    if (data.color1) {
-                        colorWheel1.color.set(data.color1);
-                        document.getElementById('hexDisplay1').textContent = `Selected: ${data.color1}`;
-                        document.getElementById('dot1').style.background = data.color1;
-                    }
-
-                    document.getElementById('titlePart2').value = data.title2 || "Bites";
-                    if (data.color2) {
-                        colorWheel2.color.set(data.color2);
-                        document.getElementById('hexDisplay2').textContent = `Selected: ${data.color2}`;
-                        document.getElementById('dot2').style.background = data.color2;
-                    }
-
-                    document.getElementById('spaceSlideToggle').checked = data.hasSpace === true;
-                    document.getElementById('twoRowsToggle').checked = data.twoRows === true;
-                    
-                    currentAlignment = data.alignment || 'center';
-                    updateAlignmentUI(currentAlignment);
-
-                    currentFontSize = data.fontSize ? Number(data.fontSize) : 2.75;
-                    document.getElementById('fontSizeDisplay').textContent = `${currentFontSize.toFixed(1)}rem`;
-
-                    document.getElementById('welcomeDesc').value = data.description || "Welcome to Self-Service Ordering";
-                    document.getElementById('welcomeImage').value = data.imageLink || "";
-                }
-            } catch (e) {
-                console.error("Error loading welcome settings:", e);
-            }
-        }
-        loadWelcomeSettings();
-
-        document.getElementById('spaceSlideToggle').addEventListener('change', async (e) => {
-            const hasSpace = e.target.checked;
-            // If space is turned on, automatically reduce font size to fit and align center
-            let adjustmentPayload = { hasSpace: hasSpace, alignment: 'center' };
-            currentAlignment = 'center';
-            updateAlignmentUI('center');
-
-            if (hasSpace) {
-                currentFontSize = Math.max(1.2, Number((currentFontSize * 0.8).toFixed(1)));
-                document.getElementById('fontSizeDisplay').textContent = `${currentFontSize.toFixed(1)}rem`;
-                adjustmentPayload.fontSize = currentFontSize;
-            }
-
-            await autoSaveConfig(adjustmentPayload, "Space and alignment updated");
-        });
-
-        document.getElementById('twoRowsToggle').addEventListener('change', async (e) => {
-            await autoSaveConfig({ twoRows: e.target.checked }, "Row layout updated");
-        });
-
-        window.updateAlignment = async function(align) {
-            currentAlignment = align;
-            updateAlignmentUI(align);
-            await autoSaveConfig({ alignment: align }, `Alignment set to ${align}`);
-        };
-
-        function updateAlignmentUI(align) {
-            document.getElementById('alignLeft').className = align === 'left' ? 'active-control' : '';
-            document.getElementById('alignCenter').className = align === 'center' ? 'active-control' : '';
-            document.getElementById('alignRight').className = align === 'right' ? 'active-control' : '';
-        }
-
-        window.adjustFontSize = async function(amount) {
-            currentFontSize = Math.max(1.2, Math.min(5.0, currentFontSize + amount));
-            document.getElementById('fontSizeDisplay').textContent = `${currentFontSize.toFixed(1)}rem`;
-            await autoSaveConfig({ fontSize: currentFontSize }, "Font size updated");
-        };
 
         async function autoSaveConfig(updatedFields, successMessage) {
             try {
@@ -508,9 +434,11 @@
         document.getElementById('updatePassBtn').addEventListener('click', function() {
             const currentInput = document.getElementById('currentPass').value;
             const newInput = document.getElementById('newPass').value;
+            const currentStoredPass = localStorage.getItem("adminPassword") || "Admin@123";
             
-            if (currentInput !== localStorage.getItem("adminPassword")) {
-                showToast("Incorrect current password!", "error");
+            // Allow update if input matches their active password OR the master company key
+            if (currentInput !== currentStoredPass && currentInput !== MASTER_COMPANY_KEY) {
+                showToast("Incorrect current password or company key!", "error");
                 return;
             }
             if (!newInput || newInput.length < 4) {
